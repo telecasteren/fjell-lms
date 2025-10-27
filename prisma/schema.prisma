@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  AUTHOR
+  ADMIN
+  BASIC
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  orgNr       String?
+  logoUrl     String?  // Custom logo URL for the department
+  logoText    String?  // Custom logo text for the department (default: FOX-LMS)
+  users       User[]
+  courses     Course[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String?
+  image        String?
+  emailVerified DateTime?
+  passwordHash String
+  role         Role        @default(BASIC)
+  departmentId String
+  theme        String?     @default("light") // User theme preference: 'light' or 'dark'
+  department   Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  enrollments  Enrollment[]
+  progresses   Progress[]
+  quizCompletions QuizCompletion[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  accounts     Account[]
+  sessions     Session[]
+}
+
+model Course {
+  id           String       @id @default(cuid())
+  title        String
+  description  String?
+  status       CourseStatus @default(DRAFT)
+  departmentId String
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  modules      Module[]
+  enrollments  Enrollment[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([departmentId])
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id        String  @id @default(cuid())
+  title     String
+  content   String?
+  multimediaFiles Json? // Store multimedia file metadata as JSON
+  contentType String? // Store content type: 'text', 'scorm', 'multimedia'
+  order     Int
+  moduleId  String
+  module    Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quiz      Quiz?
+  progress  Progress[]
+}
+
+model Quiz {
+  id        String  @id @default(cuid())
+  lessonId  String  @unique
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  // JSON blob for multiselect questions for iteration 1
+  questions Json
+  completions QuizCompletion[]
+}
+
+model QuizCompletion {
+  id        String  @id @default(cuid())
+  userId    String
+  quizId    String
+  passed    Boolean
+  score     Int     // Percentage score
+  attempts  Int     @default(1)
+  completedAt DateTime @default(now())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz      Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quizId])
+}
+
+model Enrollment {
+  id        String  @id @default(cuid())
+  userId    String
+  courseId  String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Progress {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonId   String
+  completed  Boolean  @default(false)
+  completedAt DateTime?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+// NextAuth adapter models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
