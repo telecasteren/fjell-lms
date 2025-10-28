@@ -81,13 +81,13 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           departmentId: user.departmentId,
-          theme: (user as any).theme || "light"
+          theme: user.theme || "light"
         } as any;
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -96,6 +96,18 @@ export const authOptions: NextAuthOptions = {
         token.departmentId = (user as any).departmentId;
         token.theme = (user as any).theme || "light";
       }
+      
+      // Re-fetch theme from database on session update or refresh
+      if (token.id && (trigger === "update" || !user)) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { theme: true },
+        });
+        if (dbUser?.theme) {
+          token.theme = dbUser.theme;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {

@@ -34,6 +34,7 @@ type DepartmentDetails = {
   id: string;
   name: string;
   logoUrl?: string | null;
+  darkModeLogoUrl?: string | null;
   logoText?: string | null;
   completionRate: number;
   totalLessons: number;
@@ -430,6 +431,7 @@ export default function AuthorDashboard() {
                             departmentName={departmentDetails.name}
                             currentLogoUrl={departmentDetails.logoUrl}
                             currentLogoText={departmentDetails.logoText}
+                            currentDarkModeLogoUrl={departmentDetails.darkModeLogoUrl}
                           />
                         )}
                       </div>

@@ -19,6 +19,7 @@ export async function GET(
         name: true,
         orgNr: true,
         logoUrl: true,
+        darkModeLogoUrl: true,
         logoText: true,
         createdAt: true,
         users: {

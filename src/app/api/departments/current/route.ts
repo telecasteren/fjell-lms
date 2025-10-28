@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
         name: true,
         orgNr: true,
         logoUrl: true,
+        darkModeLogoUrl: true,
         logoText: true,
       },
     });

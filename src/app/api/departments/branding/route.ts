@@ -15,6 +15,8 @@ export async function POST(req: Request) {
     const departmentId = formData.get("departmentId") as string;
     const logoText = formData.get("logoText") as string;
     const file = formData.get("file") as File;
+    const darkModeFile = formData.get("darkModeFile") as File;
+    const useSameLogoForDarkMode = formData.get("useSameLogoForDarkMode") === "true";
 
     if (!departmentId) {
       return NextResponse.json(
@@ -23,17 +25,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get current department to check for existing logo
+    // Get current department to check for existing logos
     const currentDepartment = await prisma.department.findUnique({
       where: { id: departmentId },
-      select: { logoUrl: true },
+      select: { 
+        logoUrl: true,
+        darkModeLogoUrl: true 
+      },
     });
 
     let logoUrl: string | undefined = undefined;
+    let darkModeLogoUrl: string | undefined = undefined;
 
-    // Upload logo file if provided
+    // Upload light mode logo file if provided
     if (file && file.size > 0) {
-      // Delete old logo if it exists
+      // Delete old light logo if it exists
       if (currentDepartment?.logoUrl) {
         try {
           // Extract the storage path from the CDN URL
@@ -43,10 +49,10 @@ export async function POST(req: Request) {
           if (urlMatch) {
             const oldFilePath = urlMatch[1];
             await storageManager.deleteFile(oldFilePath);
-            console.log("Deleted old logo:", oldFilePath);
+            console.log("Deleted old light logo:", oldFilePath);
           }
         } catch (error) {
-          console.error("Failed to delete old logo (continuing anyway):", error);
+          console.error("Failed to delete old light logo (continuing anyway):", error);
           // Continue even if delete fails - we don't want to block the upload
         }
       }
@@ -64,7 +70,62 @@ export async function POST(req: Request) {
         logoUrl = result.file.url;
       } else {
         return NextResponse.json(
-          { error: "Failed to upload logo" },
+          { error: "Failed to upload light logo" },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Handle dark mode logo
+    if (useSameLogoForDarkMode) {
+      // If using same logo for dark mode, set darkModeLogoUrl to null
+      darkModeLogoUrl = null;
+      
+      // Also delete the existing dark mode logo from storage if it exists
+      if (currentDepartment?.darkModeLogoUrl) {
+        try {
+          const oldDarkLogoUrl = currentDepartment.darkModeLogoUrl;
+          const urlMatch = oldDarkLogoUrl.match(/b-cdn\.net\/(.+)/);
+          if (urlMatch) {
+            const oldFilePath = urlMatch[1];
+            await storageManager.deleteFile(oldFilePath);
+            console.log("Deleted old dark logo:", oldFilePath);
+          }
+        } catch (error) {
+          console.error("Failed to delete old dark logo (continuing anyway):", error);
+        }
+      }
+    } else if (darkModeFile && darkModeFile.size > 0) {
+      // Upload dark mode logo file if provided
+      // Delete old dark logo if it exists
+      if (currentDepartment?.darkModeLogoUrl) {
+        try {
+          const oldDarkLogoUrl = currentDepartment.darkModeLogoUrl;
+          const urlMatch = oldDarkLogoUrl.match(/b-cdn\.net\/(.+)/);
+          if (urlMatch) {
+            const oldFilePath = urlMatch[1];
+            await storageManager.deleteFile(oldFilePath);
+            console.log("Deleted old dark logo:", oldFilePath);
+          }
+        } catch (error) {
+          console.error("Failed to delete old dark logo (continuing anyway):", error);
+        }
+      }
+
+      const path = `departments/${departmentId}/logo-dark`;
+      const result = await storageManager.uploadFile(darkModeFile, path, {
+        fileName: darkModeFile.name,
+        contentType: darkModeFile.type,
+        departmentId,
+        uploadedBy: user.id,
+        uploadedAt: new Date().toISOString(),
+      });
+
+      if (result.success && result.file) {
+        darkModeLogoUrl = result.file.url;
+      } else {
+        return NextResponse.json(
+          { error: "Failed to upload dark logo" },
           { status: 500 }
         );
       }
@@ -73,9 +134,11 @@ export async function POST(req: Request) {
     // Update department branding
     const updateData: {
       logoUrl?: string;
+      darkModeLogoUrl?: string | null;
       logoText?: string;
     } = {};
     if (logoUrl) updateData.logoUrl = logoUrl;
+    if (darkModeLogoUrl !== undefined) updateData.darkModeLogoUrl = darkModeLogoUrl;
     if (logoText !== null && logoText !== undefined)
       updateData.logoText = logoText;
 

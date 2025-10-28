@@ -35,6 +35,7 @@ export function Logo({
   const logo = useBrandingValue("logo");
   const [departmentBranding, setDepartmentBranding] = useState<{
     logoUrl?: string;
+    darkModeLogoUrl?: string;
     logoText?: string;
   } | null>(null);
 
@@ -50,11 +51,12 @@ export function Logo({
           if (data.department) {
             setDepartmentBranding({
               logoUrl: data.department.logoUrl,
+              darkModeLogoUrl: data.department.darkModeLogoUrl,
               logoText: data.department.logoText,
             });
           }
         }
-      } catch {
+      } catch (error) {
         console.error("Failed to fetch department branding:", error);
       }
     }
@@ -64,6 +66,7 @@ export function Logo({
 
   // Determine which logo URL to use
   const logoUrl = departmentBranding?.logoUrl || logo.light;
+  const darkModeLogoUrl = departmentBranding?.darkModeLogoUrl || logo.dark;
   const logoTextDisplay = departmentBranding?.logoText || "FOX-LMS";
 
   return (
@@ -71,14 +74,26 @@ export function Logo({
       <div className={cn("relative flex-shrink-0", sizeClasses[size])}>
         {/* Use department logo if available, otherwise use default */}
         {departmentBranding?.logoUrl ? (
-          <Image
-            src={logoUrl}
-            alt={logo.alt}
-            fill
-            sizes="(max-width: 768px) 24px, 64px"
-            className="object-contain"
-            unoptimized
-          />
+          <>
+            {/* Light theme logo */}
+            <Image
+              src={logoUrl}
+              alt={logo.alt}
+              fill
+              sizes="(max-width: 768px) 24px, 64px"
+              className="object-contain dark:hidden"
+              unoptimized
+            />
+            {/* Dark theme logo - use darkModeLogoUrl if available, otherwise use same logo or default */}
+            <Image
+              src={departmentBranding.darkModeLogoUrl || logoUrl}
+              alt={logo.alt}
+              fill
+              sizes="(max-width: 768px) 24px, 64px"
+              className="hidden object-contain dark:block"
+              unoptimized
+            />
+          </>
         ) : (
           <>
             {/* Light theme logo */}
