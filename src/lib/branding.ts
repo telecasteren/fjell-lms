@@ -82,9 +82,9 @@ export const defaultBranding: BrandingConfig = {
   companyName: "FOX-LMS",
 
   logo: {
-    light: "/fox-lms-sharp.png",
-    dark: "/fox-lms-sharp.png",
-    favicon: "/favicon.svg",
+    light: "/fox-lms-sharp.svg",
+    dark: "/fox-lms-sharp-white.png",
+    favicon: "/fox-lms-sharp.svg",
     alt: "App Logo",
   },
 
