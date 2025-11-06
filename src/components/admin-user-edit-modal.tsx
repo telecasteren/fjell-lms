@@ -68,7 +68,7 @@ export function AdminUserEditModal({
     // ADMIN/BASIC users cannot edit AUTHOR users
     if (user.role === "AUTHOR") return false;
 
-    // ADMIN users can edit BASIC/ADMIN users
+    // ADMIN users can edit BASIC/ADMIN/WRITER users
     if (currentUserRole === "ADMIN") return true;
 
     // BASIC users cannot edit anyone
@@ -113,7 +113,7 @@ export function AdminUserEditModal({
         const error = await res.json();
         toast.error(error.error || "Failed to update user");
       }
-    } catch {
+    } catch (error) {
       console.error("Update user error:", error);
       toast.error("Failed to update user");
     } finally {
@@ -142,7 +142,7 @@ export function AdminUserEditModal({
         const error = await res.json();
         toast.error(error.error || "Failed to delete user");
       }
-    } catch {
+    } catch (error) {
       console.error("Delete user error:", error);
       toast.error("Failed to delete user");
     } finally {
@@ -155,6 +155,7 @@ export function AdminUserEditModal({
     return [
       { value: "BASIC", label: "Basic User" },
       { value: "ADMIN", label: "Admin" },
+      { value: "WRITER", label: "Writer" },
       { value: "AUTHOR", label: "Author" },
     ];
   };
@@ -167,11 +168,13 @@ export function AdminUserEditModal({
     // AUTHOR users can select any role
     if (currentUserRole === "AUTHOR") return false;
 
+    // ADMIN users cannot select AUTHOR role, but can select BASIC, ADMIN, or WRITER
+    if (currentUserRole === "ADMIN") {
+      return roleValue === "AUTHOR";
+    }
+
     // ADMIN/BASIC users cannot select AUTHOR role
     if (roleValue === "AUTHOR") return true;
-
-    // ADMIN users can select BASIC or ADMIN
-    if (currentUserRole === "ADMIN") return false;
 
     // BASIC users cannot select any roles (they shouldn't be editing anyway)
     return true;
@@ -239,7 +242,7 @@ export function AdminUserEditModal({
               </Select>
               {currentUserRole === "ADMIN" && (
                 <p className="text-muted-foreground text-xs">
-                  ADMIN users can only set BASIC or ADMIN roles
+                  ADMIN users can only set BASIC, ADMIN, or WRITER roles
                 </p>
               )}
               {currentUserRole === "BASIC" && (

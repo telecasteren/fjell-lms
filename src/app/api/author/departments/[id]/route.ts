@@ -11,7 +11,7 @@ export async function GET(
     await requireAuthorOnly(req); // Authorization check only
     const { id } = await params;
 
-    // Get department details
+    // Get department details with hierarchy
     const department = await prisma.department.findUnique({
       where: { id },
       select: {
@@ -21,6 +21,37 @@ export async function GET(
         logoUrl: true,
         darkModeLogoUrl: true,
         logoText: true,
+        parentDepartmentId: true,
+        parentDepartment: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        // Footer fields
+        footerLinkSectionTitle: true,
+        footerLink1Url: true,
+        footerLink1Text: true,
+        footerLink2Url: true,
+        footerLink2Text: true,
+        footerLink3Url: true,
+        footerLink3Text: true,
+        footerContactEmail: true,
+        footerContactPhone: true,
+        footerContactAddress: true,
+        footerContactAddress2: true,
+        subDepartments: {
+          select: {
+            id: true,
+            name: true,
+            _count: {
+              select: {
+                users: true,
+                courses: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         users: {
           select: {

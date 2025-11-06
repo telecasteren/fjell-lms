@@ -31,7 +31,7 @@ export default function FAQPage() {
         } else {
           console.error("Failed to load FAQ sections");
         }
-      } catch {
+      } catch (error) {
         console.error("Error loading FAQ:", error);
       } finally {
         setLoading(false);
@@ -97,14 +97,14 @@ export default function FAQPage() {
 
           // Wrap lists in ul tags
           .replace(
-            /(<li class="mb-2 ml-4 text-muted-foreground">.*<\/li>)/gs,
+            /(<li class="mb-2 ml-4 text-muted-foreground">[\s\S]*?<\/li>)/g,
             '<ul class="mb-6 mt-4 space-y-2">$1</ul>'
           )
 
           // Clean up nested ul tags
           .replace(/<\/ul>\s*<ul class="mb-6 mt-4 space-y-2">/g, "")
       );
-    } catch {
+    } catch (error) {
       console.error("Error processing markdown:", error);
       return content;
     }

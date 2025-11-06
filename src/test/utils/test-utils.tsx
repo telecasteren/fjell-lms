@@ -1,6 +1,7 @@
 import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { SessionProvider } from "next-auth/react";
+import { Session } from "next-auth";
 import { ThemeProvider } from "@/components/theme-provider";
 import { BrandingProvider } from "@/components/providers/branding-provider";
 import { vi } from "vitest";
@@ -64,7 +65,7 @@ global.fetch = vi.fn();
 
 // Custom render function with providers
 interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
-  session?: unknown;
+  session?: Session | null;
   theme?: "light" | "dark";
 }
 
@@ -79,11 +80,7 @@ function customRender(
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <SessionProvider session={session}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme={theme}
-          enableSystem={false}
-        >
+        <ThemeProvider defaultTheme={theme}>
           <BrandingProvider>{children}</BrandingProvider>
         </ThemeProvider>
       </SessionProvider>

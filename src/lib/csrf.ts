@@ -44,7 +44,7 @@ export async function validateCSRF(request: NextRequest): Promise<boolean> {
         console.warn("CSRF: No valid session token");
         return false;
       }
-    } catch {
+    } catch (error) {
       console.warn("CSRF: Token validation failed", error);
       return false;
     }

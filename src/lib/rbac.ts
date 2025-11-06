@@ -44,3 +44,15 @@ export async function requireAuthorOnly(req?: NextRequest) {
 export async function requireBasicOrAbove(req?: NextRequest) {
   return await requireRole([Role.AUTHOR, Role.ADMIN, Role.BASIC], req);
 }
+
+export async function requireWriter(req?: NextRequest) {
+  return await requireRole([Role.WRITER], req);
+}
+
+export async function requireWriterOrAuthor(req?: NextRequest) {
+  return await requireRole([Role.WRITER, Role.AUTHOR], req);
+}
+
+export async function requireWriterOrAdminOrAuthor(req?: NextRequest) {
+  return await requireRole([Role.WRITER, Role.ADMIN, Role.AUTHOR], req);
+}

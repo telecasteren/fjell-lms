@@ -42,7 +42,7 @@ export const userUpdateSchema = z.object({
     .email("Invalid email format")
     .max(255, "Email too long")
     .optional(),
-  role: z.enum(["BASIC", "ADMIN", "AUTHOR"]).optional(),
+  role: z.enum(["BASIC", "ADMIN", "AUTHOR", "WRITER"]).optional(),
 });
 
 export const passwordChangeSchema = z.object({

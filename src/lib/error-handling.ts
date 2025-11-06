@@ -2,16 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 
-// Import AuthError for proper handling
-class AuthError extends Error {
-  status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "AuthError";
-    this.status = status;
-  }
-}
+// AuthError type definition (class removed as unused)
 
 // Custom error types
 export class AppError extends Error {
@@ -138,8 +129,8 @@ export function handleError(error: unknown, request?: Request): NextResponse {
     const response: ErrorResponse = {
       error: "Validation failed",
       code: "VALIDATION_ERROR",
-      details: error.errors.map(err => ({
-        field: err.path.join("."),
+      details: error.issues.map(err => ({
+        field: err.path.map(String).join("."),
         message: err.message,
       })),
       timestamp,
@@ -210,7 +201,7 @@ export function handleError(error: unknown, request?: Request): NextResponse {
 }
 
 // Async error handler wrapper
-export function withErrorHandling<T extends unknown[], R>(
+export function withErrorHandling<T extends unknown[]>(
   handler: (...args: T) => Promise<Response | undefined>
 ) {
   return async (...args: T): Promise<Response> => {
@@ -224,7 +215,7 @@ export function withErrorHandling<T extends unknown[], R>(
         );
       }
       return result;
-    } catch {
+    } catch (error) {
       // Extract request from args if available
       const request = args.find(arg => arg instanceof Request) as
         | Request

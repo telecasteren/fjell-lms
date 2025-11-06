@@ -3,9 +3,17 @@
 import { MultimediaUploader } from "@/components/multimedia-uploader";
 import { useState } from "react";
 
+type MultimediaFile = {
+  id: string;
+  file: File;
+  type: "image" | "video" | "interactive";
+  url: string;
+  name: string;
+};
+
 // Example 1: Images only uploader
 export function ImageUploader() {
-  const [images, setImages] = useState<any[]>([]);
+  const [, setImages] = useState<MultimediaFile[]>([]);
 
   return (
     <MultimediaUploader
@@ -19,7 +27,7 @@ export function ImageUploader() {
 
 // Example 2: Videos only uploader
 export function VideoUploader() {
-  const [videos, setVideos] = useState<any[]>([]);
+  const [, setVideos] = useState<MultimediaFile[]>([]);
 
   return (
     <MultimediaUploader
@@ -33,7 +41,7 @@ export function VideoUploader() {
 
 // Example 3: Interactive content only uploader
 export function InteractiveContentUploader() {
-  const [interactiveFiles, setInteractiveFiles] = useState<any[]>([]);
+  const [, setInteractiveFiles] = useState<MultimediaFile[]>([]);
 
   return (
     <MultimediaUploader
@@ -47,7 +55,7 @@ export function InteractiveContentUploader() {
 
 // Example 4: All types with custom settings
 export function FullMultimediaUploader() {
-  const [allFiles, setAllFiles] = useState<any[]>([]);
+  const [, setAllFiles] = useState<MultimediaFile[]>([]);
 
   return (
     <MultimediaUploader
@@ -62,7 +70,7 @@ export function FullMultimediaUploader() {
 
 // Example 5: Future text editor integration
 export function TextEditorWithMedia() {
-  const [mediaFiles, setMediaFiles] = useState<any[]>([]);
+  const [, setMediaFiles] = useState<MultimediaFile[]>([]);
 
   return (
     <div className="space-y-4">

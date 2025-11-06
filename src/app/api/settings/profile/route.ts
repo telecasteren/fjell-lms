@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest) {
     const validation = profileUpdateSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json({ 
-        error: validation.error.errors[0]?.message || "Invalid data" 
+        error: validation.error.issues[0]?.message || "Invalid data" 
       }, { status: 400 });
     }
     const { name } = validation.data;

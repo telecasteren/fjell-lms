@@ -16,9 +16,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     
     // Restrict role changes based on user role
     if (user.role === "ADMIN") {
-      // ADMIN users can only set BASIC or ADMIN roles
-      if (role !== "BASIC" && role !== "ADMIN") {
-        return NextResponse.json({ error: "ADMIN users can only set BASIC or ADMIN roles" }, { status: 403 });
+      // ADMIN users can only set BASIC, ADMIN, or WRITER roles
+      if (role !== "BASIC" && role !== "ADMIN" && role !== "WRITER") {
+        return NextResponse.json(
+          { error: "ADMIN users can only set BASIC, ADMIN, or WRITER roles" },
+          { status: 403 }
+        );
       }
     } else if (user.role === "AUTHOR") {
       // AUTHOR users can set any role

@@ -8,7 +8,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireAuthorOnly(req);
+    await requireAuthorOnly(req);
 
     // Get overall statistics
     const totalUsers = await prisma.user.count();
@@ -58,9 +58,27 @@ export async function GET(req: NextRequest) {
           ) / 10
         : 0;
 
-    // Get all departments with detailed progress info
+    // Get all departments with detailed progress info and hierarchy
     const departments = await prisma.department.findMany({
       include: {
+        parentDepartment: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        subDepartments: {
+          select: {
+            id: true,
+            name: true,
+            _count: {
+              select: {
+                users: true,
+                courses: true,
+              },
+            },
+          },
+        },
         users: {
           select: { id: true },
         },
@@ -91,6 +109,9 @@ export async function GET(req: NextRequest) {
     type DepartmentWithData = {
       id: string;
       name: string;
+      parentDepartmentId: string | null;
+      parentDepartment: { id: string; name: string } | null;
+      subDepartments: Array<{ id: string; name: string; _count: { users: number; courses: number } }>;
       courses: Array<CourseWithModules>;
       users: Array<{ id: string }>;
     };
@@ -128,6 +149,9 @@ export async function GET(req: NextRequest) {
         return {
           id: dept.id,
           name: dept.name,
+          parentDepartmentId: dept.parentDepartmentId || null,
+          parentDepartment: dept.parentDepartment || null,
+          subDepartments: dept.subDepartments || [],
           _count: {
             users: dept.users.length,
             courses: dept.courses.length,
@@ -150,7 +174,15 @@ export async function GET(req: NextRequest) {
       },
       departments: departmentsWithProgress,
     });
-  } catch {
+  } catch (error) {
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      const message = (error as { message?: string }).message || "Unauthorized";
+      console.error("Author dashboard AuthError:", { status, message, error });
+      return NextResponse.json({ error: message }, { status });
+    }
+    console.error("Author dashboard error:", error);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

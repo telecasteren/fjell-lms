@@ -131,7 +131,7 @@ export function BrandingSettings() {
 
   const updateTypography = (
     typographyKey: keyof BrandingConfig["typography"],
-    value: any
+    value: string | BrandingConfig["typography"]["fontWeights"] | BrandingConfig["typography"]["fontSizes"]
   ) => {
     setFormData(prev => ({
       ...prev,
@@ -194,12 +194,13 @@ export function BrandingSettings() {
     setFormData(prev => ({
       ...prev,
       links: {
-        homepage: prev.links?.homepage || "https://www.cubit.no",
-        contact: prev.links?.contact || "https://www.cubit.no/#contact",
+        homepage: prev.links?.homepage || "https://www.telecasternilsen.com",
+        contact: prev.links?.contact || "https://www.telecasternilsen.com/#contact",
         cubit: prev.links?.cubit || "https://tilsyn.cubit.no",
         koti: prev.links?.koti || "https://www.koti.no",
         sanako: prev.links?.sanako || "https://www.sanako.no",
         terms: prev.links?.terms || "",
+        faq: prev.links?.faq || "/faq",
         [linkKey]: value,
       },
     }));

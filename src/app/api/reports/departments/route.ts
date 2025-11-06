@@ -1,13 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminOrAuthor } from "@/lib/rbac";
 import { withRateLimit, rateLimiters } from "@/lib/rate-limit";
-import {
-  getLessonCompletions,
-  calculateOverallProgress,
-} from "@/lib/progress-utils";
+import { calculateOverallProgress } from "@/lib/progress-utils";
+import { getDepartmentWhereClause } from "@/lib/department-utils";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     // Apply rate limiting
     const rateLimitResult = await withRateLimit(req, rateLimiters.reports);
@@ -17,11 +15,8 @@ export async function GET(req: Request) {
 
     const user = await requireAdminOrAuthor(req);
 
-    // For AUTHOR users, show all departments. For ADMIN/BASIC users, show only their department
-    const whereClause =
-      user.role === "AUTHOR"
-        ? {} // AUTHOR sees all departments
-        : { id: user.departmentId }; // ADMIN/BASIC see only their department
+    // Use reusable utility to get department where clause based on role and hierarchy
+    const whereClause = await getDepartmentWhereClause(user.id);
 
     // Get departments with detailed statistics
     const departments = await prisma.department.findMany({
@@ -78,6 +73,7 @@ export async function GET(req: Request) {
             BASIC: dept.users.filter(u => u.role === "BASIC").length,
             ADMIN: dept.users.filter(u => u.role === "ADMIN").length,
             AUTHOR: dept.users.filter(u => u.role === "AUTHOR").length,
+            WRITER: dept.users.filter(u => u.role === "WRITER").length,
           },
           recentUsers: dept.users
             .sort(
@@ -112,13 +108,6 @@ export async function GET(req: Request) {
             }, 0)
           );
         }, 0);
-
-        // Get all lesson IDs for the department
-        const allLessonIds = dept.courses.flatMap(course =>
-          course.modules.flatMap(module =>
-            module.lessons.map(lesson => lesson.id)
-          )
-        );
 
         // Calculate individual user progress using standardized utilities
         const userProgressDetails = await Promise.all(

@@ -42,7 +42,7 @@ export default function SignInPage() {
       } else if (result?.ok) {
         router.push("/");
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);

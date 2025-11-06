@@ -14,11 +14,11 @@ export async function createDevUser() {
       return existing;
     }
 
-    // Ensure Cubit department exists
+    // Ensure FOX-LMS department exists
     const department = await prisma.department.upsert({
-      where: { name: "Cubit" },
+      where: { name: "FOX-LMS" },
       update: {},
-      create: { name: "Cubit" },
+      create: { name: "FOX-LMS" },
     });
 
     // Create dev user with Author role
@@ -35,7 +35,7 @@ export async function createDevUser() {
 
     console.log("Dev user created:", devUser.email);
     return devUser;
-  } catch {
+  } catch (error) {
     console.error("Error creating dev user:", error);
     throw error;
   }

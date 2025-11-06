@@ -1,20 +1,16 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireAuthorOnly } from "@/lib/rbac";
+import { requireAuth, requireWriterOrAuthor } from "@/lib/rbac";
 import { courseCreateSchema, validateRequestBody } from "@/lib/validation";
 import { withRateLimit, rateLimiters } from "@/lib/rate-limit";
+import { getCourseWhereClause } from "@/lib/department-utils";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth(req);
 
-    // FIXED: AUTHORs see ALL courses (platform-wide), ADMIN/BASIC see only published courses
-    const whereClause =
-      user.role === "ADMIN" || user.role === "BASIC"
-        ? {
-            status: "PUBLISHED", // ADMIN and BASIC see all published courses (archived are excluded)
-          }
-        : {}; // AUTHOR sees ALL courses regardless of department
+    // Use reusable utility to get course where clause based on role and hierarchy
+    const whereClause = await getCourseWhereClause(user.id, true);
 
     // Get courses with enrollment counts
     const courses = await prisma.course.findMany({
@@ -67,7 +63,7 @@ export async function GET(req: NextRequest) {
         departmentId: user.departmentId,
       },
     });
-  } catch {
+  } catch (error) {
     // Handle custom AuthError with status
     if (error && typeof error === "object" && "status" in error) {
       const status = (error as { status: number }).status;
@@ -85,18 +81,22 @@ export async function POST(req: NextRequest) {
       return rateLimitResult.error;
     }
 
-    await requireAuthorOnly(req); // Authorization check only // FIXED: Only AUTHORs can create courses
+    // Allow AUTHOR and WRITER roles to create courses
+    const user = await requireWriterOrAuthor(req);
     const body = await req.json();
     const validation = validateRequestBody(courseCreateSchema, body);
     if (!validation.success) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
     const { title, description } = validation.data;
+    
+    // WRITER can only create courses in their own department
+    // AUTHOR can create courses in any department (but defaults to their own)
     const course = await prisma.course.create({
       data: { title, description, departmentId: user.departmentId },
     });
     return NextResponse.json({ course });
-  } catch {
+  } catch (error) {
     // Handle custom AuthError with status
     if (error && typeof error === "object" && "status" in error) {
       const status = (error as { status: number }).status;

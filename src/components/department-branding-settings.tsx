@@ -16,14 +16,35 @@ interface DepartmentBrandingSettingsProps {
   currentLogoUrl?: string | null;
   currentLogoText?: string | null;
   currentDarkModeLogoUrl?: string | null;
+  currentFooterLinkSectionTitle?: string | null;
+  currentFooterLink1Url?: string | null;
+  currentFooterLink1Text?: string | null;
+  currentFooterLink2Url?: string | null;
+  currentFooterLink2Text?: string | null;
+  currentFooterLink3Url?: string | null;
+  currentFooterLink3Text?: string | null;
+  currentFooterContactEmail?: string | null;
+  currentFooterContactPhone?: string | null;
+  currentFooterContactAddress?: string | null;
+  currentFooterContactAddress2?: string | null;
 }
 
 export function DepartmentBrandingSettings({
   departmentId,
-  departmentName,
   currentLogoUrl,
   currentLogoText,
   currentDarkModeLogoUrl,
+  currentFooterLinkSectionTitle,
+  currentFooterLink1Url,
+  currentFooterLink1Text,
+  currentFooterLink2Url,
+  currentFooterLink2Text,
+  currentFooterLink3Url,
+  currentFooterLink3Text,
+  currentFooterContactEmail,
+  currentFooterContactPhone,
+  currentFooterContactAddress,
+  currentFooterContactAddress2,
 }: DepartmentBrandingSettingsProps) {
   const [logoText, setLogoText] = useState(currentLogoText || "FOX-LMS");
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -37,6 +58,20 @@ export function DepartmentBrandingSettings({
   const [darkModeLogoPreview, setDarkModeLogoPreview] = useState<string | null>(
     currentDarkModeLogoUrl || null
   );
+  // Footer fields
+  const [footerLinkSectionTitle, setFooterLinkSectionTitle] = useState(
+    currentFooterLinkSectionTitle || "Products"
+  );
+  const [footerLink1Url, setFooterLink1Url] = useState(currentFooterLink1Url || "");
+  const [footerLink1Text, setFooterLink1Text] = useState(currentFooterLink1Text || "");
+  const [footerLink2Url, setFooterLink2Url] = useState(currentFooterLink2Url || "");
+  const [footerLink2Text, setFooterLink2Text] = useState(currentFooterLink2Text || "");
+  const [footerLink3Url, setFooterLink3Url] = useState(currentFooterLink3Url || "");
+  const [footerLink3Text, setFooterLink3Text] = useState(currentFooterLink3Text || "");
+  const [footerContactEmail, setFooterContactEmail] = useState(currentFooterContactEmail || "");
+  const [footerContactPhone, setFooterContactPhone] = useState(currentFooterContactPhone || "");
+  const [footerContactAddress, setFooterContactAddress] = useState(currentFooterContactAddress || "");
+  const [footerContactAddress2, setFooterContactAddress2] = useState(currentFooterContactAddress2 || "");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -44,7 +79,33 @@ export function DepartmentBrandingSettings({
     setLogoPreview(currentLogoUrl || null);
     setDarkModeLogoPreview(currentDarkModeLogoUrl || null);
     setUseSameLogoForDarkMode(!currentDarkModeLogoUrl);
-  }, [currentLogoText, currentLogoUrl, currentDarkModeLogoUrl]);
+    setFooterLinkSectionTitle(currentFooterLinkSectionTitle || "Products");
+    setFooterLink1Url(currentFooterLink1Url || "");
+    setFooterLink1Text(currentFooterLink1Text || "");
+    setFooterLink2Url(currentFooterLink2Url || "");
+    setFooterLink2Text(currentFooterLink2Text || "");
+    setFooterLink3Url(currentFooterLink3Url || "");
+    setFooterLink3Text(currentFooterLink3Text || "");
+    setFooterContactEmail(currentFooterContactEmail || "");
+    setFooterContactPhone(currentFooterContactPhone || "");
+    setFooterContactAddress(currentFooterContactAddress || "");
+    setFooterContactAddress2(currentFooterContactAddress2 || "");
+  }, [
+    currentLogoText,
+    currentLogoUrl,
+    currentDarkModeLogoUrl,
+    currentFooterLinkSectionTitle,
+    currentFooterLink1Url,
+    currentFooterLink1Text,
+    currentFooterLink2Url,
+    currentFooterLink2Text,
+    currentFooterLink3Url,
+    currentFooterLink3Text,
+    currentFooterContactEmail,
+    currentFooterContactPhone,
+    currentFooterContactAddress,
+    currentFooterContactAddress2,
+  ]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -119,6 +180,18 @@ export function DepartmentBrandingSettings({
         "useSameLogoForDarkMode",
         useSameLogoForDarkMode.toString()
       );
+      // Footer fields
+      formData.append("footerLinkSectionTitle", footerLinkSectionTitle);
+      formData.append("footerLink1Url", footerLink1Url);
+      formData.append("footerLink1Text", footerLink1Text);
+      formData.append("footerLink2Url", footerLink2Url);
+      formData.append("footerLink2Text", footerLink2Text);
+      formData.append("footerLink3Url", footerLink3Url);
+      formData.append("footerLink3Text", footerLink3Text);
+      formData.append("footerContactEmail", footerContactEmail);
+      formData.append("footerContactPhone", footerContactPhone);
+      formData.append("footerContactAddress", footerContactAddress);
+      formData.append("footerContactAddress2", footerContactAddress2);
 
       if (logoFile) {
         formData.append("file", logoFile);
@@ -314,8 +387,148 @@ export function DepartmentBrandingSettings({
             placeholder="FOX-LMS"
           />
           <p className="text-muted-foreground text-xs">
-            This text will appear next to your logo in the navbar
+            This text will appear next to your logo in the navbar and footer
           </p>
+        </div>
+
+        {/* Footer Settings */}
+        <div className="space-y-4 border-t pt-6">
+          <Label className="text-base font-semibold">Footer Settings</Label>
+          
+          {/* Footer Link Section Title */}
+          <div className="space-y-2">
+            <Label htmlFor="footer-link-section-title">Link Section Title</Label>
+            <Input
+              id="footer-link-section-title"
+              value={footerLinkSectionTitle}
+              onChange={(e) => setFooterLinkSectionTitle(e.target.value)}
+              placeholder="Products"
+            />
+            <p className="text-muted-foreground text-xs">
+              Title for the footer links section
+            </p>
+          </div>
+
+          {/* Footer Links */}
+          <div className="space-y-4">
+            <Label>Footer Links (up to 3)</Label>
+            
+            {/* Link 1 */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="footer-link-1-text" className="text-xs">Link 1 Text</Label>
+                <Input
+                  id="footer-link-1-text"
+                  value={footerLink1Text}
+                  onChange={(e) => setFooterLink1Text(e.target.value)}
+                  placeholder="Link 1"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="footer-link-1-url" className="text-xs">Link 1 URL</Label>
+                <Input
+                  id="footer-link-1-url"
+                  value={footerLink1Url}
+                  onChange={(e) => setFooterLink1Url(e.target.value)}
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            {/* Link 2 */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="footer-link-2-text" className="text-xs">Link 2 Text</Label>
+                <Input
+                  id="footer-link-2-text"
+                  value={footerLink2Text}
+                  onChange={(e) => setFooterLink2Text(e.target.value)}
+                  placeholder="Link 2"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="footer-link-2-url" className="text-xs">Link 2 URL</Label>
+                <Input
+                  id="footer-link-2-url"
+                  value={footerLink2Url}
+                  onChange={(e) => setFooterLink2Url(e.target.value)}
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            {/* Link 3 */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="footer-link-3-text" className="text-xs">Link 3 Text</Label>
+                <Input
+                  id="footer-link-3-text"
+                  value={footerLink3Text}
+                  onChange={(e) => setFooterLink3Text(e.target.value)}
+                  placeholder="Link 3"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="footer-link-3-url" className="text-xs">Link 3 URL</Label>
+                <Input
+                  id="footer-link-3-url"
+                  value={footerLink3Url}
+                  onChange={(e) => setFooterLink3Url(e.target.value)}
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Section */}
+          <div className="space-y-4 border-t pt-4">
+            <Label className="text-base font-semibold">Contact Information</Label>
+            <p className="text-muted-foreground text-xs">
+              Contact information will be displayed in the footer
+            </p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="footer-contact-email">Email</Label>
+              <Input
+                id="footer-contact-email"
+                type="email"
+                value={footerContactEmail}
+                onChange={(e) => setFooterContactEmail(e.target.value)}
+                placeholder="contact@example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="footer-contact-phone">Phone</Label>
+              <Input
+                id="footer-contact-phone"
+                type="tel"
+                value={footerContactPhone}
+                onChange={(e) => setFooterContactPhone(e.target.value)}
+                placeholder="+47 123 45 678"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="footer-contact-address">Address Line 1</Label>
+              <Input
+                id="footer-contact-address"
+                value={footerContactAddress}
+                onChange={(e) => setFooterContactAddress(e.target.value)}
+                placeholder="Street Address, City"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="footer-contact-address2">Address Line 2</Label>
+              <Input
+                id="footer-contact-address2"
+                value={footerContactAddress2}
+                onChange={(e) => setFooterContactAddress2(e.target.value)}
+                placeholder="Postal Code, Country"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Actions */}

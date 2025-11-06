@@ -18,7 +18,7 @@ type Quiz = {
   id: string;
   questions: Array<{
     id: string;
-    question: string;
+    text: string;
     options: string[];
     correctAnswers: number[];
   }>;
@@ -73,6 +73,7 @@ export default function LearnPage({
   useEffect(() => {
     loadLessons();
     loadProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams.id]);
 
   async function loadLessons() {
@@ -82,12 +83,6 @@ export default function LearnPage({
     if (res.ok) {
       const data = await res.json();
       const allLessons: Lesson[] = [];
-
-      type ModuleData = {
-        id: string;
-        title: string;
-        order: number;
-      };
 
       for (const moduleData of data.modules) {
         const lessonRes = await fetch(`/api/modules/${moduleData.id}/lessons`, {
@@ -159,7 +154,7 @@ export default function LearnPage({
           setQuizModalOpen(true);
         }
       }
-    } catch {
+    } catch (error) {
       console.error("Failed to load quiz:", error);
     }
   }

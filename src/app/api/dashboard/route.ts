@@ -66,7 +66,19 @@ export async function GET(req: NextRequest) {
   const completionMap = await getLessonCompletions(user.id, allLessonIds);
 
   // Calculate stats for each course
-  const courseStats = courses.map(course => {
+  type CourseStat = {
+    id: string;
+    title: string;
+    description: string | null;
+    status: string;
+    completedCount: number;
+    totalCount: number;
+    percentage: number;
+    isOngoing: boolean;
+    isCompleted: boolean;
+  };
+  
+  const courseStats: CourseStat[] = courses.map(course => {
     const courseLessonIds = course.modules.flatMap(module =>
       module.lessons.map(lesson => lesson.id)
     );
@@ -91,16 +103,16 @@ export async function GET(req: NextRequest) {
   });
 
   // Separate courses by status
-  const ongoingCourses = courseStats.filter((c: any) => c.isOngoing);
-  const completedCourses = courseStats.filter((c: any) => c.isCompleted);
+  const ongoingCourses = courseStats.filter(c => c.isOngoing);
+  const completedCourses = courseStats.filter(c => c.isCompleted);
   const notStartedCourses = courseStats.filter(
-    (c: any) => c.completedCount === 0
+    c => c.completedCount === 0
   );
 
   // Find current course in focus (most recently active ongoing course)
   const currentCourse =
     ongoingCourses.length > 0
-      ? ongoingCourses.sort((a: any, b: any) => b.percentage - a.percentage)[0]
+      ? ongoingCourses.sort((a, b) => b.percentage - a.percentage)[0]
       : null;
 
   // Overall statistics

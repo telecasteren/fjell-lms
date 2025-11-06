@@ -1,22 +1,30 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireWriterOrAuthor } from "@/lib/rbac";
 import { validateRequestBody } from "@/lib/validation";
 import { lessonUpdateSchema } from "@/lib/validation";
 import { storageManager } from "@/lib/storage";
+import { canManageLesson } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
-    // FIXED: AUTHORs can access ANY lesson, not just their department
+
+    // Check if user can manage this lesson
+    const canManage = await canManageLesson(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to access this lesson" },
+        { status: 403 }
+      );
+    }
+
     const lesson = await prisma.lesson.findFirst({
-      where: {
-        id,
-      },
+      where: { id },
       select: {
         id: true,
         title: true,
@@ -37,8 +45,13 @@ export async function GET(
     };
 
     return NextResponse.json({ lesson: lessonWithDefaults });
-  } catch {
+  } catch (error) {
     console.error("Lesson GET error:", error);
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
@@ -48,11 +61,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
     const body = await req.json();
 
     console.log("Lesson PATCH request body:", body);
+
+    // Check if user can manage this lesson
+    const canManage = await canManageLesson(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to manage this lesson" },
+        { status: 403 }
+      );
+    }
 
     const validation = validateRequestBody(lessonUpdateSchema, body);
     if (!validation.success) {
@@ -63,16 +85,18 @@ export async function PATCH(
     const { title, content, contentType, order } = validation.data;
     console.log("Validated data:", { title, content, contentType, order });
 
-    // FIXED: AUTHORs can update ANY lesson, not just their department
     const updated = await prisma.lesson.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: { title, content, contentType, order },
     });
     return NextResponse.json({ lesson: updated });
-  } catch {
+  } catch (error) {
     console.error("Lesson PATCH error:", error);
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
@@ -82,8 +106,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
+
+    // Check if user can manage this lesson
+    const canManage = await canManageLesson(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to delete this lesson" },
+        { status: 403 }
+      );
+    }
 
     // Get lesson details including multimedia files before deletion
     const lesson = await prisma.lesson.findFirst({
@@ -106,7 +139,13 @@ export async function DELETE(
     const fileDeletionErrors = [];
     if (lesson.multimediaFiles) {
       try {
-        const multimediaFiles = lesson.multimediaFiles as any[];
+        type MultimediaFile = {
+          id: string;
+          name?: string;
+          url?: string;
+          metadata?: { fullPath?: string };
+        };
+        const multimediaFiles = (lesson.multimediaFiles as MultimediaFile[]);
         console.log(
           "Found multimedia files to delete:",
           multimediaFiles.length
@@ -115,7 +154,19 @@ export async function DELETE(
         for (const file of multimediaFiles) {
           try {
             // Use the metadata fullPath or construct from file structure
-            const filePath = file.metadata?.fullPath || file.id || file.url;
+            const metadataFullPath = file.metadata?.fullPath;
+            const filePath: string = 
+              (typeof metadataFullPath === "string" ? metadataFullPath : null) ||
+              (typeof file.id === "string" ? file.id : null) ||
+              (typeof file.url === "string" ? file.url : null) ||
+              "";
+            
+            if (!filePath) {
+              console.error(`Unable to determine file path for ${file.name || "unknown"}`);
+              fileDeletionErrors.push(file.name || "unknown");
+              continue;
+            }
+            
             console.log("Deleting file:", filePath);
 
             // Delete from Bunny Storage
@@ -126,7 +177,7 @@ export async function DELETE(
               fileDeletionErrors.push(file.name || filePath);
               console.log(`✗ Failed to delete: ${file.name || filePath}`);
             }
-          } catch {
+          } catch (error) {
             console.error(
               `Failed to delete file ${file.name || "unknown"}:`,
               error
@@ -135,7 +186,7 @@ export async function DELETE(
             // Continue deleting other files even if one fails
           }
         }
-      } catch {
+      } catch (error) {
         console.error("Error during multimedia file deletion:", error);
         // Non-critical error, continue with lesson deletion
       }
@@ -155,7 +206,6 @@ export async function DELETE(
     });
 
     // Now delete lesson from database (critical operation)
-    // FIXED: AUTHORs can delete ANY lesson, not just their department
     await prisma.lesson.delete({
       where: { id },
     });
@@ -163,10 +213,16 @@ export async function DELETE(
     console.log("✓ Lesson deleted successfully");
 
     // Return success even if some file deletions failed
+    type MultimediaFile = {
+      id: string;
+      name?: string;
+      url?: string;
+    };
+    const multimediaFiles = lesson.multimediaFiles as MultimediaFile[] | null;
     return NextResponse.json({
       success: true,
-      deletedFiles: lesson.multimediaFiles
-        ? (lesson.multimediaFiles as any[]).length - fileDeletionErrors.length
+      deletedFiles: multimediaFiles
+        ? multimediaFiles.length - fileDeletionErrors.length
         : 0,
       failedFiles: fileDeletionErrors.length,
       warnings:
@@ -174,7 +230,7 @@ export async function DELETE(
           ? "Some multimedia files could not be deleted from storage."
           : undefined,
     });
-  } catch {
+  } catch (error) {
     console.error("Lesson deletion error:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }

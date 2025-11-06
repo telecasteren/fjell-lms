@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/rbac";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth(req);
 
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ quizCompletion });
-  } catch {
+  } catch (error) {
     console.error("Quiz completion error:", error);
     return NextResponse.json(
       { error: "Failed to save quiz completion" },
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth(req);
 
@@ -122,7 +122,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ quizCompletion });
-  } catch {
+  } catch (error) {
     console.error("Quiz completion fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch quiz completion" },

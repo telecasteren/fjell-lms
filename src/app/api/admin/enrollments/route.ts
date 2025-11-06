@@ -50,6 +50,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get user's department with parent department info
+    const userDepartment = await prisma.department.findUnique({
+      where: { id: user.departmentId },
+      select: {
+        parentDepartmentId: true,
+      },
+    });
+
     // Check if target user is in same department
     const targetUser = await prisma.user.findFirst({
       where: {
@@ -65,16 +73,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if course exists and is in department
+    // Check if course exists and is in department or parent department
+    const departmentIds = [user.departmentId];
+    if (userDepartment?.parentDepartmentId) {
+      departmentIds.push(userDepartment.parentDepartmentId);
+    }
+
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
-        departmentId: user.departmentId,
+        departmentId: {
+          in: departmentIds,
+        },
       },
     });
 
     if (!course) {
-      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Course not found or not available for enrollment" },
+        { status: 404 }
+      );
     }
 
     // Check if already enrolled

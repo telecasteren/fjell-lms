@@ -4,12 +4,12 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { CheckCircle, XCircle } from "lucide-react";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { register, handleSubmit, watch, setValue } = useForm<{
@@ -207,5 +207,24 @@ export default function SignUpPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto max-w-md p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">Loading...</div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   );
 }

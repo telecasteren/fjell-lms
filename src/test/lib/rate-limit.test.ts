@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { checkRateLimit, getClientIP, withRateLimit } from '@/lib/rate-limit'
 import { simpleRateLimiters } from '@/lib/simple-rate-limit'
+import type { Ratelimit } from '@upstash/ratelimit'
+
+// Mock type for Ratelimit that matches the interface
+type MockRatelimit = {
+  limit: (identifier: string) => Promise<{
+    success: boolean
+    limit: number
+    remaining: number
+    reset: number
+  }>
+}
 
 // Mock the simple rate limiter
 vi.mock('@/lib/simple-rate-limit', () => ({
@@ -128,11 +139,11 @@ describe('Rate Limiting', () => {
 
   describe('checkRateLimit', () => {
     it('handles rate limiter errors gracefully', async () => {
-      const mockLimiter = {
+      const mockLimiter: MockRatelimit = {
         limit: vi.fn().mockRejectedValue(new Error('Rate limiter error')),
       }
 
-      const result = await checkRateLimit(mockLimiter as any, 'test-id')
+      const result = await checkRateLimit(mockLimiter as Ratelimit, 'test-id')
 
       expect(result.success).toBe(true)
       expect(result.limit).toBe(0)
@@ -141,7 +152,7 @@ describe('Rate Limiting', () => {
     })
 
     it('returns rate limit result when successful', async () => {
-      const mockLimiter = {
+      const mockLimiter: MockRatelimit = {
         limit: vi.fn().mockResolvedValue({
           success: true,
           limit: 10,
@@ -150,7 +161,7 @@ describe('Rate Limiting', () => {
         }),
       }
 
-      const result = await checkRateLimit(mockLimiter as any, 'test-id')
+      const result = await checkRateLimit(mockLimiter as Ratelimit, 'test-id')
 
       expect(result.success).toBe(true)
       expect(result.limit).toBe(10)

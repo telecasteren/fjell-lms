@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { EnrollmentManager } from "@/components/enrollment-manager";
 import { AdminUserEditModal } from "@/components/admin-user-edit-modal";
 import { UserReassignmentModal } from "@/components/user-reassignment-modal";
-import { TrendingUp, Users, BookOpen, Building2, Link } from "lucide-react";
+import { DepartmentBrandingSettings } from "@/components/department-branding-settings";
+import { TrendingUp, Users, BookOpen, Building2, Link, Settings } from "lucide-react";
 import toast from "react-hot-toast";
 
 type User = {
@@ -25,6 +26,25 @@ type DepartmentStats = {
     id: string;
     name: string;
     orgNr: string | null;
+    logoUrl?: string | null;
+    darkModeLogoUrl?: string | null;
+    logoText?: string | null;
+    parentDepartmentId?: string | null;
+    parentDepartment?: {
+      id: string;
+      name: string;
+    } | null;
+    footerLinkSectionTitle?: string | null;
+    footerLink1Url?: string | null;
+    footerLink1Text?: string | null;
+    footerLink2Url?: string | null;
+    footerLink2Text?: string | null;
+    footerLink3Url?: string | null;
+    footerLink3Text?: string | null;
+    footerContactEmail?: string | null;
+    footerContactPhone?: string | null;
+    footerContactAddress?: string | null;
+    footerContactAddress2?: string | null;
   };
   stats: {
     completionRate: number;
@@ -51,6 +71,7 @@ export default function AdminPage() {
     useState<DepartmentStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showBrandingModal, setShowBrandingModal] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
@@ -113,7 +134,18 @@ export default function AdminPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Department Management</h1>
-        <Button onClick={() => setShowCreateForm(true)}>Add User</Button>
+        <div className="flex items-center gap-2">
+          {currentUserRole === "ADMIN" && (
+            <Button
+              variant="outline"
+              onClick={() => setShowBrandingModal(true)}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Configure
+            </Button>
+          )}
+          <Button onClick={() => setShowCreateForm(true)}>Add User</Button>
+        </div>
       </div>
 
       {/* Department Overview */}
@@ -218,18 +250,20 @@ export default function AdminPage() {
                     <>
                       <option value="BASIC">Basic User</option>
                       <option value="ADMIN">Admin</option>
+                      <option value="WRITER">Writer</option>
                       <option value="AUTHOR">Author</option>
                     </>
                   ) : (
                     <>
                       <option value="BASIC">Basic User</option>
                       <option value="ADMIN">Admin</option>
+                      <option value="WRITER">Writer</option>
                     </>
                   )}
                 </select>
                 {currentUserRole === "ADMIN" && (
                   <p className="text-muted-foreground text-xs">
-                    ADMIN users can only create BASIC or ADMIN users
+                    ADMIN users can only create BASIC, ADMIN, or WRITER users
                   </p>
                 )}
               </div>
@@ -329,6 +363,43 @@ export default function AdminPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Department Branding Modal */}
+      {showBrandingModal && departmentStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Department Branding Configuration</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DepartmentBrandingSettings
+              departmentId={departmentStats.department.id}
+              departmentName={departmentStats.department.name}
+              currentLogoUrl={departmentStats.department.logoUrl}
+              currentLogoText={departmentStats.department.logoText}
+              currentDarkModeLogoUrl={departmentStats.department.darkModeLogoUrl}
+              currentFooterLinkSectionTitle={departmentStats.department.footerLinkSectionTitle}
+              currentFooterLink1Url={departmentStats.department.footerLink1Url}
+              currentFooterLink1Text={departmentStats.department.footerLink1Text}
+              currentFooterLink2Url={departmentStats.department.footerLink2Url}
+              currentFooterLink2Text={departmentStats.department.footerLink2Text}
+              currentFooterLink3Url={departmentStats.department.footerLink3Url}
+              currentFooterLink3Text={departmentStats.department.footerLink3Text}
+              currentFooterContactEmail={departmentStats.department.footerContactEmail}
+              currentFooterContactPhone={departmentStats.department.footerContactPhone}
+              currentFooterContactAddress={departmentStats.department.footerContactAddress}
+              currentFooterContactAddress2={departmentStats.department.footerContactAddress2}
+            />
+            <div className="mt-4 flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowBrandingModal(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

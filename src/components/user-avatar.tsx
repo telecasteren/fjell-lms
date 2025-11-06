@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Shield, Building2 } from "lucide-react";
+import { User, Mail, Shield } from "lucide-react";
 
 interface UserAvatarProps {
   user: {

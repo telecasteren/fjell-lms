@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { requireAuthorOnly } from "@/lib/rbac";
 import { storageManager } from "@/lib/storage";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // Upload multimedia files for a lesson
 export async function POST(
@@ -9,7 +10,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireAuthorOnly(req); // Authorization check only
     const { id } = await params;
 
     // Verify lesson exists and user has access
@@ -66,7 +67,7 @@ export async function POST(
           console.error("Upload failed:", result.error);
           errors.push(`${file.name}: ${result.error || "Upload failed"}`);
         }
-      } catch {
+      } catch (error) {
         console.error("Upload error:", error);
         errors.push(
           `${file.name}: ${error instanceof Error ? error.message : "Upload failed"}`
@@ -96,7 +97,7 @@ export async function POST(
       await prisma.lesson.update({
         where: { id },
         data: {
-          multimediaFiles: updatedFiles,
+          multimediaFiles: updatedFiles as Prisma.InputJsonValue,
           contentType: "multimedia",
         },
       });
@@ -108,7 +109,7 @@ export async function POST(
       errors: errors.length > 0 ? errors : undefined,
       message: `${uploadedFiles.length} file(s) uploaded successfully`,
     });
-  } catch {
+  } catch (error) {
     console.error("Multimedia upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
@@ -146,7 +147,7 @@ export async function GET(
         contentType: lesson.contentType,
       },
     });
-  } catch {
+  } catch (error) {
     console.error("Get multimedia files error:", error);
     return NextResponse.json({ error: "Failed to get files" }, { status: 500 });
   }
@@ -198,7 +199,12 @@ export async function DELETE(
     console.log("Deleting file:", fileToDelete);
 
     // Get the file path for deletion from Bunny Storage
-    const filePath = fileToDelete.metadata?.fullPath || fileToDelete.id;
+    // metadata.fullPath might be a string, otherwise use the file id
+    const metadataFullPath = fileToDelete.metadata?.fullPath;
+    const filePath: string = 
+      (typeof metadataFullPath === "string" ? metadataFullPath : null) || 
+      fileToDelete.id;
+    
     console.log("Deleting from Bunny Storage with path:", filePath);
 
     // Delete from Bunny Storage
@@ -209,12 +215,12 @@ export async function DELETE(
 
       // Remove from lesson's multimedia files in database
       const updatedFiles = existingFiles.filter(
-        (file: any) => file.id !== fileId
+        (file: MultimediaFile) => file.id !== fileId
       );
 
       await prisma.lesson.update({
         where: { id },
-        data: { multimediaFiles: updatedFiles },
+        data: { multimediaFiles: updatedFiles as Prisma.InputJsonValue },
       });
 
       console.log("Successfully removed from database");
@@ -229,7 +235,7 @@ export async function DELETE(
         { status: 500 }
       );
     }
-  } catch {
+  } catch (error) {
     console.error("Delete multimedia file error:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }

@@ -18,7 +18,7 @@ export async function isLessonCompleted(
     // For now, just return based on progress table
     // Quiz completion logic can be added later if needed
     return false;
-  } catch {
+  } catch (error) {
     console.error("Error in isLessonCompleted:", error);
     return false;
   }
@@ -57,7 +57,7 @@ export async function getLessonCompletions(
     });
 
     return completionMap;
-  } catch {
+  } catch (error) {
     console.error("Error in getLessonCompletions:", error);
     // Return empty completion map
     const completionMap: Record<string, boolean> = {};
@@ -182,7 +182,7 @@ export async function calculateOverallProgress(userId: string): Promise<{
       completedLessons,
       percentage,
     };
-  } catch {
+  } catch (error) {
     console.error("Error in calculateOverallProgress:", error);
     // Return fallback values
     return {

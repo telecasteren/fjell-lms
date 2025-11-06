@@ -9,7 +9,7 @@ export async function seedDefaultDepartment() {
       create: { name: "Cubit" },
     });
     console.log("Default department 'Cubit' ensured");
-  } catch {
+  } catch (error) {
     console.error("Error seeding default department:", error);
   }
 }

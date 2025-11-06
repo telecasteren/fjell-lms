@@ -12,7 +12,7 @@ interface BrandingProviderProps {
 
 export function BrandingProvider({ children, initialBranding }: BrandingProviderProps) {
   const [branding, setBranding] = useState<BrandingConfig>(defaultBranding)
-  const [departmentBranding, setDepartmentBranding] = useState<BrandingConfig | null>(null)
+  const [departmentBranding] = useState<BrandingConfig | null>(null)
 
   // Load branding from localStorage on mount
   useEffect(() => {

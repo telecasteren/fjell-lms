@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import bcrypt from "bcrypt";
 import { passwordChangeSchema, validateRequestBody } from "@/lib/validation";
 
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user)

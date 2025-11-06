@@ -87,7 +87,7 @@ export function UserEditModal({ user, onUserUpdate }: UserEditModalProps) {
         const error = await res.json();
         toast.error(error.error || "Failed to update user");
       }
-    } catch {
+    } catch (error) {
       console.error("Update user error:", error);
       toast.error("Failed to update user");
     } finally {
@@ -183,6 +183,7 @@ export function UserEditModal({ user, onUserUpdate }: UserEditModalProps) {
               <SelectContent>
                 <SelectItem value="BASIC">Basic</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="WRITER">Writer</SelectItem>
                 <SelectItem value="AUTHOR">Author</SelectItem>
               </SelectContent>
             </Select>

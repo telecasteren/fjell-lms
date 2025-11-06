@@ -118,11 +118,11 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Delete user error:", error);
 
     // Handle foreign key constraint violations
-    if (error?.code === "P2003") {
+    if (error && typeof error === "object" && error !== null && "code" in error && error.code === "P2003") {
       return NextResponse.json(
         {
           error:

@@ -266,7 +266,7 @@ export const brandingStorage = {
       if (stored) {
         try {
           return JSON.parse(stored);
-        } catch {
+        } catch (error) {
           console.error("Failed to parse stored branding:", error);
           localStorage.removeItem("fox-lms-branding");
         }

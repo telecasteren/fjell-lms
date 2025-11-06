@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireAdminOrAuthor } from "@/lib/rbac";
 import { storageManager } from "@/lib/storage";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuthorOnly(req);
+    const user = await requireAdminOrAuthor(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -17,11 +17,32 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File;
     const darkModeFile = formData.get("darkModeFile") as File;
     const useSameLogoForDarkMode = formData.get("useSameLogoForDarkMode") === "true";
+    // Footer fields
+    const footerLinkSectionTitle = formData.get("footerLinkSectionTitle") as string;
+    const footerLink1Url = formData.get("footerLink1Url") as string;
+    const footerLink1Text = formData.get("footerLink1Text") as string;
+    const footerLink2Url = formData.get("footerLink2Url") as string;
+    const footerLink2Text = formData.get("footerLink2Text") as string;
+    const footerLink3Url = formData.get("footerLink3Url") as string;
+    const footerLink3Text = formData.get("footerLink3Text") as string;
+    const footerContactEmail = formData.get("footerContactEmail") as string;
+    const footerContactPhone = formData.get("footerContactPhone") as string;
+    const footerContactAddress = formData.get("footerContactAddress") as string;
+    const footerContactAddress2 = formData.get("footerContactAddress2") as string;
 
     if (!departmentId) {
       return NextResponse.json(
         { error: "Department ID is required" },
         { status: 400 }
+      );
+    }
+
+    // ADMIN can only update their own department's branding
+    // AUTHOR can update any department's branding
+    if (user.role === "ADMIN" && user.departmentId !== departmentId) {
+      return NextResponse.json(
+        { error: "You can only update your own department's branding" },
+        { status: 403 }
       );
     }
 
@@ -35,7 +56,7 @@ export async function POST(req: Request) {
     });
 
     let logoUrl: string | undefined = undefined;
-    let darkModeLogoUrl: string | undefined = undefined;
+    let darkModeLogoUrl: string | null | undefined = undefined;
 
     // Upload light mode logo file if provided
     if (file && file.size > 0) {
@@ -136,11 +157,45 @@ export async function POST(req: Request) {
       logoUrl?: string;
       darkModeLogoUrl?: string | null;
       logoText?: string;
+      footerLinkSectionTitle?: string | null;
+      footerLink1Url?: string | null;
+      footerLink1Text?: string | null;
+      footerLink2Url?: string | null;
+      footerLink2Text?: string | null;
+      footerLink3Url?: string | null;
+      footerLink3Text?: string | null;
+      footerContactEmail?: string | null;
+      footerContactPhone?: string | null;
+      footerContactAddress?: string | null;
+      footerContactAddress2?: string | null;
     } = {};
     if (logoUrl) updateData.logoUrl = logoUrl;
     if (darkModeLogoUrl !== undefined) updateData.darkModeLogoUrl = darkModeLogoUrl;
     if (logoText !== null && logoText !== undefined)
       updateData.logoText = logoText;
+    // Footer fields - allow empty strings to clear values
+    if (footerLinkSectionTitle !== null && footerLinkSectionTitle !== undefined)
+      updateData.footerLinkSectionTitle = footerLinkSectionTitle || null;
+    if (footerLink1Url !== null && footerLink1Url !== undefined)
+      updateData.footerLink1Url = footerLink1Url || null;
+    if (footerLink1Text !== null && footerLink1Text !== undefined)
+      updateData.footerLink1Text = footerLink1Text || null;
+    if (footerLink2Url !== null && footerLink2Url !== undefined)
+      updateData.footerLink2Url = footerLink2Url || null;
+    if (footerLink2Text !== null && footerLink2Text !== undefined)
+      updateData.footerLink2Text = footerLink2Text || null;
+    if (footerLink3Url !== null && footerLink3Url !== undefined)
+      updateData.footerLink3Url = footerLink3Url || null;
+    if (footerLink3Text !== null && footerLink3Text !== undefined)
+      updateData.footerLink3Text = footerLink3Text || null;
+    if (footerContactEmail !== null && footerContactEmail !== undefined)
+      updateData.footerContactEmail = footerContactEmail || null;
+    if (footerContactPhone !== null && footerContactPhone !== undefined)
+      updateData.footerContactPhone = footerContactPhone || null;
+    if (footerContactAddress !== null && footerContactAddress !== undefined)
+      updateData.footerContactAddress = footerContactAddress || null;
+    if (footerContactAddress2 !== null && footerContactAddress2 !== undefined)
+      updateData.footerContactAddress2 = footerContactAddress2 || null;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(

@@ -44,6 +44,7 @@ export function useCurrentUser() {
 
   useEffect(() => {
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, session?.user?.email]);
 
   const refreshUser = async () => {

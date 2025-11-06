@@ -73,6 +73,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
   useEffect(() => {
     loadLesson();
     loadQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
 
   async function loadLesson() {
@@ -152,7 +153,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
 
       // Reload lesson to get fresh data
       await loadLesson();
-    } catch {
+    } catch (error) {
       console.error("Error deleting files:", error);
       toast.error("Failed to delete files");
     } finally {
@@ -200,7 +201,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
       // Both saves successful, close editor
       toast.success("Lesson saved!");
       onClose();
-    } catch {
+    } catch (error) {
       console.error("Error saving lesson:", error);
       toast.error("Failed to save lesson. Please try again.");
     } finally {
@@ -222,9 +223,10 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
     setQuestions(questions.map(q => (q.id === id ? { ...q, ...updates } : q)));
   }
 
-  function deleteQuestion(id: string) {
-    setQuestions(questions.filter(q => q.id !== id));
-  }
+  // Function available for future use
+  // function deleteQuestion(id: string) {
+  //   setQuestions(questions.filter(q => q.id !== id));
+  // }
 
   function handleDeleteQuestionClick(questionId: string, questionText: string) {
     setDeleteConfirmation({
@@ -430,7 +432,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                     src={file.url}
                                     controls
                                     className="h-32 w-full bg-black"
-                                    onError={e => {
+                                    onError={() => {
                                       console.error(
                                         "Video load error:",
                                         file.url

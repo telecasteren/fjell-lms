@@ -92,7 +92,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
       if (!res.ok) {
         console.error("Failed to save quiz completion");
       }
-    } catch {
+    } catch (error) {
       console.error("Error saving quiz completion:", error);
     }
   }
@@ -176,7 +176,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
                   Try Again
                 </Button>
                 <Button
-                  onClick={() => onComplete(passed)}
+                  onClick={() => onComplete(passed ?? false)}
                   variant="secondary"
                   className="gap-2"
                 >
@@ -185,7 +185,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
               </>
             ) : (
               <Button
-                onClick={() => onComplete(passed)}
+                onClick={() => onComplete(passed ?? true)}
                 variant="default"
                 className="gap-2"
               >

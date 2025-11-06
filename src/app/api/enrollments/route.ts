@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/rbac";
+import { CourseStatus } from "@prisma/client";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth(req);
 
@@ -23,8 +24,8 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ enrollments });
-  } catch {
-    if (error instanceof Error && "status" in error) {
+  } catch (error) {
+    if (error && typeof error === "object" && "status" in error) {
       const status = (error as { status: number }).status;
       return NextResponse.json({ error: "Unauthorized" }, { status });
     }
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth(req);
     const { courseId } = await req.json();
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
     const whereClause =
       user.role === "AUTHOR"
         ? { id: courseId } // AUTHORs can enroll in any course
-        : { id: courseId, status: "PUBLISHED" }; // ADMIN/BASIC can only enroll in published courses
+        : { id: courseId, status: CourseStatus.PUBLISHED }; // ADMIN/BASIC can only enroll in published courses
 
     const course = await prisma.course.findFirst({
       where: whereClause,
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
     const user = await requireAuth(req);
     const { courseId } = await req.json();

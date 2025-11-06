@@ -1,5 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { SimpleRateLimiter } from "./simple-rate-limit";
+import type { Ratelimit as RatelimitType } from "@upstash/ratelimit";
 
 // Initialize Redis client with fallback
 const redis =
@@ -56,11 +58,11 @@ export const rateLimiters = {
   reports: redis
     ? new Ratelimit({
         redis,
-        limiter: Ratelimit.slidingWindow(5, "1 m"), // 5 requests per minute
+        limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 requests per minute
         analytics: true,
         prefix: "reports",
       })
-    : null,
+    : new SimpleRateLimiter(10, 60000), // Fallback: 10 requests per minute
 
   // General API - lenient limits
   general: redis
@@ -121,23 +123,31 @@ export async function checkRateLimit(
 // Rate limit middleware for API routes
 export async function withRateLimit(
   request: Request,
-  limiter: Ratelimit | null,
+  limiter: RatelimitType | SimpleRateLimiter | null,
   identifier?: string,
-  fallbackLimiter?: Ratelimit | null
+  fallbackLimiter?: RatelimitType | SimpleRateLimiter | null
 ) {
   const ip = getClientIP(request);
   const id = identifier || ip;
 
   let result;
 
-  // Try Redis-based rate limiting first
-  if (limiter) {
+  // Check if limiter is SimpleRateLimiter
+  if (limiter instanceof SimpleRateLimiter) {
+    result = await limiter.checkLimit(id);
+  } else if (limiter) {
+    // Try Redis-based rate limiting
     result = await checkRateLimit(limiter, id);
   } else {
     // Fall back to simple in-memory rate limiting
     console.warn("Using simple rate limiting: Redis not configured");
     if (fallbackLimiter) {
-      result = await fallbackLimiter.checkLimit(id);
+      if (fallbackLimiter instanceof SimpleRateLimiter) {
+        result = await fallbackLimiter.checkLimit(id);
+      } else {
+        // If it's a Ratelimit, use the limit method
+        result = await checkRateLimit(fallbackLimiter, id);
+      }
     } else {
       // No rate limiting available
       return {

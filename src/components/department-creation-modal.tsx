@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Plus, Trash2, Link, Search } from "lucide-react";
 import toast from "react-hot-toast";
@@ -19,7 +17,7 @@ interface DepartmentCreationModalProps {
 interface NewUser {
   name: string;
   email: string;
-  role: "BASIC" | "ADMIN";
+  role: "BASIC" | "ADMIN" | "WRITER";
   userId?: string; // For existing users
   isExisting?: boolean;
   originalRole?: string; // For AUTHOR users
@@ -130,7 +128,7 @@ export function DepartmentCreationModal({
         newShow[index] = true;
         setShowSearchResults(newShow);
       }
-    } catch {
+    } catch (error) {
       console.error("Search error:", error);
       toast.error("Failed to search users");
     } finally {
@@ -149,14 +147,14 @@ export function DepartmentCreationModal({
 
     // Use "ADMIN" as default role for display purposes (will be preserved on reassignment)
     const displayRole =
-      user.role === "BASIC" || user.role === "ADMIN" || user.role === "AUTHOR"
+      user.role === "BASIC" || user.role === "ADMIN" || user.role === "WRITER" || user.role === "AUTHOR"
         ? user.role
         : "BASIC";
 
     updatedUsers[index] = {
       name: user.name,
       email: user.email,
-      role: displayRole as "BASIC" | "ADMIN",
+      role: displayRole as "BASIC" | "ADMIN" | "WRITER",
       userId: user.id,
       isExisting: true,
       originalRole: originalRole,
@@ -416,7 +414,7 @@ export function DepartmentCreationModal({
                             updateUser(
                               index,
                               "role",
-                              e.target.value as "BASIC" | "ADMIN"
+                              e.target.value as "BASIC" | "ADMIN" | "WRITER"
                             )
                           }
                           disabled={user.isExisting}
@@ -424,6 +422,7 @@ export function DepartmentCreationModal({
                         >
                           <option value="BASIC">Basic User</option>
                           <option value="ADMIN">Admin</option>
+                          <option value="WRITER">Writer</option>
                           {user.originalRole && (
                             <option value={user.originalRole}>
                               {user.originalRole === "AUTHOR"

@@ -56,16 +56,16 @@ export async function POST(req: NextRequest) {
 
     // Restrict role creation based on user role
     if (user.role === "ADMIN") {
-      // ADMIN users can only create BASIC or ADMIN users
-      if (role !== "BASIC" && role !== "ADMIN") {
+      // ADMIN users can only create BASIC, ADMIN, or WRITER users
+      if (role !== "BASIC" && role !== "ADMIN" && role !== "WRITER") {
         return NextResponse.json(
-          { error: "ADMIN users can only create BASIC or ADMIN users" },
+          { error: "ADMIN users can only create BASIC, ADMIN, or WRITER users" },
           { status: 403 }
         );
       }
     } else if (user.role === "AUTHOR") {
       // AUTHOR users can create any role
-      if (!["BASIC", "ADMIN", "AUTHOR"].includes(role)) {
+      if (!["BASIC", "ADMIN", "WRITER", "AUTHOR"].includes(role)) {
         return NextResponse.json({ error: "Invalid role" }, { status: 400 });
       }
     }

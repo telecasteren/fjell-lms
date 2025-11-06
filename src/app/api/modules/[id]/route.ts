@@ -1,13 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireWriterOrAuthor } from "@/lib/rbac";
+import { canManageModule } from "@/lib/department-utils";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
     const { title } = await req.json();
 
@@ -15,14 +16,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
-    // FIXED: AUTHORs can update ANY module, not just their department
+    // Check if user can manage this module
+    const canManage = await canManageModule(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to manage this module" },
+        { status: 403 }
+      );
+    }
+
     const existingModule = await prisma.module.findFirst({
-      where: {
-        id,
-      },
-      include: {
-        course: true,
-      },
+      where: { id },
     });
 
     if (!existingModule) {
@@ -36,7 +40,12 @@ export async function PATCH(
     });
 
     return NextResponse.json({ module: updatedModule });
-  } catch {
+  } catch (error) {
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
@@ -46,16 +55,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
 
-    // FIXED: AUTHORs can delete ANY module, not just their department
+    // Check if user can manage this module
+    const canManage = await canManageModule(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to delete this module" },
+        { status: 403 }
+      );
+    }
+
     const existingModule = await prisma.module.findFirst({
-      where: {
-        id,
-      },
+      where: { id },
       include: {
-        course: true,
         lessons: true,
       },
     });
@@ -80,7 +94,12 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

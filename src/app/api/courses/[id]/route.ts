@@ -1,32 +1,57 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireWriterOrAuthor } from "@/lib/rbac";
+import { canManageCourse } from "@/lib/department-utils";
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuthorOnly(req);
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
     const { title, description } = await req.json();
+
+    // Check if user can manage this course
+    const canManage = await canManageCourse(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to manage this course" },
+        { status: 403 }
+      );
+    }
+
     const updated = await prisma.course.update({
-      where: { id }, // FIXED: AUTHORs can update ANY course, not just their department
+      where: { id },
       data: { title, description },
     });
     return NextResponse.json({ course: updated });
-  } catch {
+  } catch (error) {
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuthorOnly(req);
+    const user = await requireWriterOrAuthor(req);
     const { id } = await params;
+
+    // Check if user can manage this course
+    const canManage = await canManageCourse(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to delete this course" },
+        { status: 403 }
+      );
+    }
 
     // Use a transaction to delete course and all related data
     await prisma.$transaction(async tx => {
@@ -86,13 +111,18 @@ export async function DELETE(
 
       // Finally, delete the course
       await tx.course.delete({
-        where: { id }, // FIXED: AUTHORs can delete ANY course, not just their department
+        where: { id },
       });
     });
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
     console.error("Delete course error:", error);
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json(
       { error: "Failed to delete course" },
       { status: 500 }

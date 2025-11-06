@@ -51,18 +51,6 @@ export default function CoursePage({
     moduleTitle: "",
   });
 
-  // Check if user is AUTHOR and redirect if not
-  useEffect(() => {
-    if (session?.user?.role && session.user.role !== "AUTHOR") {
-      router.push("/courses");
-    }
-  }, [session, router]);
-
-  // Don't render if user is not AUTHOR
-  if (session?.user?.role && session.user.role !== "AUTHOR") {
-    return <div>Redirecting...</div>;
-  }
-
   async function loadModules(courseId: string) {
     const res = await fetch(`/api/courses/${courseId}/modules`, {
       credentials: "include",
@@ -84,12 +72,23 @@ export default function CoursePage({
   }
 
   useEffect(() => {
+    // Check if user is AUTHOR or WRITER and redirect if not
+    if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER") {
+      router.push("/courses");
+      return;
+    }
+    
     const loadData = async () => {
       const { id } = await params;
       await loadModules(id);
     };
     loadData();
-  }, [params]);
+  }, [params, session, router]);
+  
+  // Don't render if user is not AUTHOR or WRITER
+  if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER") {
+    return <div>Redirecting...</div>;
+  }
 
   async function createModule() {
     if (!moduleTitle.trim()) return;

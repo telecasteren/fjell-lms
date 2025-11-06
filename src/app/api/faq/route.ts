@@ -90,6 +90,33 @@ export async function GET(req: NextRequest) {
           title: "User Management",
         },
       ],
+      WRITER: [
+        {
+          id: "getting-started",
+          file: "getting-started.md",
+          title: "Getting Started",
+        },
+        {
+          id: "course-content",
+          file: "course-content.md",
+          title: "Course Content",
+        },
+        {
+          id: "progress-tracking",
+          file: "progress-tracking.md",
+          title: "Progress Tracking",
+        },
+        {
+          id: "technical-support",
+          file: "technical-support.md",
+          title: "Technical Support",
+        },
+        {
+          id: "course-management",
+          file: "course-management.md",
+          title: "Course Management",
+        },
+      ],
     };
 
     const sections = faqSections[user.role] || faqSections.BASIC;

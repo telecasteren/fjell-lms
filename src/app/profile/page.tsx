@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
-import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
 
 interface ProfileData {
   user: {
@@ -47,7 +46,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
-  const { refreshDashboard } = useDashboardRefresh();
 
   const profileForm = useForm({
     defaultValues: { name: "" },
@@ -205,7 +203,7 @@ export default function ProfilePage() {
         const error = await res.json();
         toast.error(error.error || "Failed to update theme");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to update theme");
     } finally {
       setSettingsLoading(false);

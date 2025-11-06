@@ -1,17 +1,32 @@
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import * as bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
   debug: false,
   logger: {
-    error(code, metadata: any) {
+    error(code, metadata: unknown) {
       // Suppress JWT_SESSION_ERROR when it's a decryption error
-      if (code === 'JWT_SESSION_ERROR' && typeof metadata === 'object' && 'message' in metadata && typeof metadata.message === 'string' && metadata.message.includes('decryption')) {
+      if (code === 'JWT_SESSION_ERROR' && 
+          typeof metadata === 'object' && 
+          metadata !== null && 
+          'message' in metadata && 
+          typeof (metadata as { message?: unknown }).message === 'string' && 
+          (metadata as { message: string }).message.includes('decryption')) {
         return; // Don't log JWT decryption errors
       }
+      
+      // Suppress Next.js dynamic server usage warnings (expected for authenticated pages)
+      if (typeof metadata === 'object' && 
+          metadata !== null && 
+          'description' in metadata && 
+          typeof (metadata as { description?: unknown }).description === 'string' && 
+          ((metadata as { description: string }).description.includes('Dynamic server usage') ||
+           (metadata as { description: string }).description.includes('couldn\'t be rendered statically'))) {
+        return; // Don't log expected dynamic rendering warnings
+      }
+      
       console.error('[auth]', code, metadata);
     },
     warn(code) {
@@ -82,19 +97,19 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           departmentId: user.departmentId,
           theme: user.theme || "light"
-        } as any;
+        };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.role = (user as any).role;
-        token.departmentId = (user as any).departmentId;
-        token.theme = (user as any).theme || "light";
+        token.role = user.role;
+        token.departmentId = user.departmentId;
+        token.theme = user.theme || "light";
       }
       
       // Re-fetch theme from database on session update or refresh
@@ -111,13 +126,13 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id;
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        (session.user as any).role = token.role;
-        (session.user as any).departmentId = token.departmentId;
-        (session.user as any).theme = token.theme || "light";
+        session.user.role = token.role;
+        session.user.departmentId = token.departmentId ?? null;
+        session.user.theme = token.theme || "light";
       }
       return session;
     },

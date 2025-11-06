@@ -14,7 +14,9 @@ export function ThemeProvider({ children, defaultTheme = "light" }: ThemeProvide
   const { data: session } = useSession();
   
   // Get theme from session if available
-  const userTheme = (session?.user as any)?.theme || defaultTheme;
+  const userTheme = (session?.user && typeof session.user === 'object' && session.user !== null && 'theme' in session.user 
+    ? (session.user as { theme?: string }).theme 
+    : undefined) || defaultTheme;
   
   // Use user-specific storage key to prevent theme bleeding between users
   const storageKey = session?.user?.id 

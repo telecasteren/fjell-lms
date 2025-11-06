@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useBrandingValue } from "@/components/providers/branding-provider";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ export function Logo({
   textClassName,
 }: LogoProps) {
   const logo = useBrandingValue("logo");
+  const { data: session, status: sessionStatus } = useSession();
   const [departmentBranding, setDepartmentBranding] = useState<{
     logoUrl?: string;
     darkModeLogoUrl?: string;
@@ -41,6 +43,12 @@ export function Logo({
 
   // Fetch department branding on mount
   useEffect(() => {
+    // Only fetch if session is authenticated (not loading, not unauthenticated)
+    if (sessionStatus !== "authenticated" || !session?.user) {
+      setDepartmentBranding(null);
+      return;
+    }
+
     async function fetchDepartmentBranding() {
       try {
         const res = await fetch("/api/departments/current", {
@@ -55,18 +63,23 @@ export function Logo({
               logoText: data.department.logoText,
             });
           }
+        } else {
+          // Handle any non-200 response (401, 403, 500, etc.) - use default branding
+          console.warn("Failed to fetch department branding:", res.status, res.statusText);
+          setDepartmentBranding(null);
         }
       } catch (error) {
         console.error("Failed to fetch department branding:", error);
+        // Use default branding on error
+        setDepartmentBranding(null);
       }
     }
 
     fetchDepartmentBranding();
-  }, []);
+  }, [session, sessionStatus]);
 
   // Determine which logo URL to use
   const logoUrl = departmentBranding?.logoUrl || logo.light;
-  const darkModeLogoUrl = departmentBranding?.darkModeLogoUrl || logo.dark;
   const logoTextDisplay = departmentBranding?.logoText || "FOX-LMS";
 
   return (

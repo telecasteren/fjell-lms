@@ -13,9 +13,15 @@ import {
   Download,
   BarChart3,
   UserCheck,
-  Calendar,
 } from "lucide-react";
-import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DepartmentSearchInput } from "@/components/department-search-input";
 
 type DepartmentReport = {
   departmentId: string;
@@ -26,6 +32,7 @@ type DepartmentReport = {
       BASIC: number;
       ADMIN: number;
       AUTHOR: number;
+      WRITER: number;
     };
     recentUsers: Array<{
       id: string;
@@ -85,10 +92,49 @@ export default function ReportsPage() {
   const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const { refreshDashboard } = useDashboardRefresh();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [exportDepartmentId, setExportDepartmentId] = useState<string>("all");
 
   useEffect(() => {
-    loadReports();
+    let mounted = true;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    async function loadData() {
+      try {
+        const res = await fetch("/api/reports/departments", {
+          credentials: "include",
+        });
+        if (res.ok && mounted) {
+          const reportsData = await res.json();
+          setData(reportsData);
+        } else if (res.status === 429 && mounted) {
+          // Rate limit exceeded - wait and retry once
+          console.warn("Rate limit exceeded. Retrying in 60 seconds...");
+          timeoutId = setTimeout(() => {
+            if (mounted) loadData();
+          }, 60000); // Wait 1 minute before retry
+          return;
+        }
+        if (mounted) setLoading(false);
+
+        // Get user role for UI customization
+        const sessionRes = await fetch("/api/session", { credentials: "include" });
+        if (sessionRes.ok && mounted) {
+          const sessionData = await sessionRes.json();
+          setUserRole(sessionData.user?.role);
+        }
+      } catch (error) {
+        console.error("Error loading reports:", error);
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadData();
+
+    return () => {
+      mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Listen for dashboard refresh events
@@ -102,33 +148,73 @@ export default function ReportsPage() {
   }, []);
 
   async function loadReports() {
-    const res = await fetch("/api/reports/departments", {
-      credentials: "include",
-    });
-    if (res.ok) {
-      const reportsData = await res.json();
-      setData(reportsData);
-    }
-    setLoading(false);
+    try {
+      const res = await fetch("/api/reports/departments", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const reportsData = await res.json();
+        setData(reportsData);
+      } else if (res.status === 429) {
+        // Rate limit exceeded
+        console.warn("Rate limit exceeded. Please wait before refreshing.");
+        return;
+      }
+      setLoading(false);
 
-    // Get user role for UI customization
-    const sessionRes = await fetch("/api/session", { credentials: "include" });
-    if (sessionRes.ok) {
-      const sessionData = await sessionRes.json();
-      setUserRole(sessionData.user?.role);
+      // Get user role for UI customization
+      const sessionRes = await fetch("/api/session", { credentials: "include" });
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json();
+        setUserRole(sessionData.user?.role);
+      }
+    } catch (error) {
+      console.error("Error loading reports:", error);
+      setLoading(false);
     }
   }
 
   function exportToCSV() {
     if (!data) return;
 
-    // Different CSV format based on user role
-    let csvContent: string;
+    // Determine which departments to export based on selection
+    let reportsToExport: DepartmentReport[];
     let filename: string;
+    let selectedDeptName: string | null = null;
 
     if (userRole === "AUTHOR") {
+      // AUTHOR users can select specific department or all
+      if (exportDepartmentId === "all") {
+        // Export all departments (respect search filter if active)
+        reportsToExport =
+          searchQuery.trim()
+            ? data.departmentReports.filter(dept =>
+                dept.departmentName
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase().trim())
+              )
+            : data.departmentReports;
+        filename = "all-departments-report.csv";
+      } else {
+        // Export specific department
+        const selectedDept = data.departmentReports.find(
+          dept => dept.departmentId === exportDepartmentId
+        );
+        if (!selectedDept) {
+          console.error("Selected department not found");
+          return;
+        }
+        reportsToExport = [selectedDept];
+        selectedDeptName = selectedDept.departmentName;
+        // Sanitize filename (remove special characters)
+        const sanitizedName = selectedDeptName
+          .replace(/[^a-z0-9]/gi, "-")
+          .toLowerCase();
+        filename = `${sanitizedName}-report.csv`;
+      }
+
       // AUTHOR gets department-level overview
-      csvContent = [
+      const csvContent = [
         [
           "Department",
           "Users",
@@ -137,7 +223,7 @@ export default function ReportsPage() {
           "Completion Rate",
           "Top Course",
         ],
-        ...data.departmentReports.map(dept => [
+        ...reportsToExport.map(dept => [
           dept.departmentName,
           dept.userStats.total.toString(),
           dept.courseStats.total.toString(),
@@ -148,10 +234,17 @@ export default function ReportsPage() {
       ]
         .map(row => row.join(","))
         .join("\n");
-      filename = "department-reports.csv";
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
     } else {
-      // ADMIN gets user-level activity report
-      csvContent = [
+      // ADMIN/WRITER gets user-level activity report for their department
+      const csvContent = [
         [
           "Name",
           "Email",
@@ -178,15 +271,15 @@ export default function ReportsPage() {
         .map(row => row.join(","))
         .join("\n");
       filename = "user-activity-report.csv";
-    }
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
   }
 
   if (loading) {
@@ -196,6 +289,16 @@ export default function ReportsPage() {
   if (!data) {
     return <div>Error loading reports</div>;
   }
+
+  // Filter departments based on search query (only for AUTHOR users)
+  const filteredDepartmentReports =
+    userRole === "AUTHOR" && searchQuery.trim()
+      ? data.departmentReports.filter(dept =>
+          dept.departmentName
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase().trim())
+        )
+      : data.departmentReports;
 
   return (
     <div className="space-y-6">
@@ -208,10 +311,35 @@ export default function ReportsPage() {
               : "Analytics for your department"}
           </p>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex items-center gap-4">
+          {userRole === "AUTHOR" && (
+            <Select
+              value={exportDepartmentId}
+              onValueChange={setExportDepartmentId}
+            >
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select department to export" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {data.departmentReports.map(dept => (
+                  <SelectItem key={dept.departmentId} value={dept.departmentId}>
+                    {dept.departmentName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+            {userRole === "AUTHOR" && exportDepartmentId !== "all" && (
+              <span className="ml-2 text-xs opacity-70">
+                ({data?.departmentReports.find(d => d.departmentId === exportDepartmentId)?.departmentName || ""})
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Overall Statistics */}
@@ -261,23 +389,34 @@ export default function ReportsPage() {
 
       {/* Department Reports */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="detailed">Detailed Reports</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="detailed">Detailed Reports</TabsTrigger>
+          </TabsList>
+          {userRole === "AUTHOR" && (
+            <DepartmentSearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search departments..."
+            />
+          )}
+        </div>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4">
-            {data.departmentReports.length === 0 ? (
+            {filteredDepartmentReports.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">
-                    No department data available
+                    {searchQuery.trim()
+                      ? `No departments found matching "${searchQuery}"`
+                      : "No department data available"}
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              data.departmentReports.map(dept => (
+              filteredDepartmentReports.map(dept => (
                 <Card key={dept.departmentId}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -339,16 +478,18 @@ export default function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="detailed" className="space-y-4">
-          {data.departmentReports.length === 0 ? (
+          {filteredDepartmentReports.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center">
                 <p className="text-muted-foreground">
-                  No detailed reports available
+                  {searchQuery.trim()
+                    ? `No departments found matching "${searchQuery}"`
+                    : "No detailed reports available"}
                 </p>
               </CardContent>
             </Card>
           ) : (
-            data.departmentReports.map(dept => (
+            filteredDepartmentReports.map(dept => (
               <Card key={dept.departmentId}>
                 <CardHeader>
                   <CardTitle>{dept.departmentName} - Detailed Report</CardTitle>
@@ -360,7 +501,7 @@ export default function ReportsPage() {
                       <Users className="h-5 w-5" />
                       User Statistics
                     </h3>
-                    <div className="mb-4 grid grid-cols-3 gap-4">
+                    <div className="mb-4 grid grid-cols-4 gap-4">
                       <div className="bg-muted rounded p-3 text-center">
                         <div className="text-lg font-bold">
                           {dept.userStats.byRole.BASIC}
@@ -383,6 +524,14 @@ export default function ReportsPage() {
                         </div>
                         <div className="text-muted-foreground text-xs">
                           Authors
+                        </div>
+                      </div>
+                      <div className="bg-muted rounded p-3 text-center">
+                        <div className="text-lg font-bold">
+                          {dept.userStats.byRole.WRITER}
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                          Writers
                         </div>
                       </div>
                     </div>

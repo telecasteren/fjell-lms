@@ -23,6 +23,7 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
 
   useEffect(() => {
     loadQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
 
   async function loadQuiz() {

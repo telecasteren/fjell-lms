@@ -117,7 +117,7 @@ export async function PATCH(
       user: updatedUser,
       message: `User successfully reassigned to ${department.name}`,
     });
-  } catch {
+  } catch (error) {
     console.error("Error reassigning user:", error);
     return NextResponse.json(
       { error: "Failed to reassign user" },

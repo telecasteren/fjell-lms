@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { requireAuthorOnly } from "@/lib/rbac";
@@ -8,11 +8,12 @@ import bcrypt from "bcrypt";
 const createDepartmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),
   orgNr: z.string().optional().nullable(),
+  parentDepartmentId: z.string().optional().nullable(), // Support for sub-departments
   users: z.array(
     z.object({
       name: z.string().min(1, "Name is required"),
       email: z.string().email("Valid email is required"),
-      role: z.enum(["BASIC", "ADMIN"]),
+      role: z.enum(["BASIC", "ADMIN", "WRITER"]),
     })
   ),
   existingUsers: z
@@ -24,7 +25,7 @@ const createDepartmentSchema = z.object({
     .optional(),
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const user = await requireAuthorOnly(req);
     if (!user) {
@@ -39,13 +40,31 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "Validation failed",
-          details: validation.error.errors,
+          details: validation.error.issues,
         },
         { status: 400 }
       );
     }
 
-    const { name, orgNr, users, existingUsers = [] } = validation.data;
+    const { name, orgNr, parentDepartmentId, users, existingUsers = [] } = validation.data;
+
+    // If parentDepartmentId is provided, verify it exists and user has permission
+    if (parentDepartmentId) {
+      const parentDepartment = await prisma.department.findUnique({
+        where: { id: parentDepartmentId },
+      });
+
+      if (!parentDepartment) {
+        return NextResponse.json(
+          { error: "Parent department not found" },
+          { status: 404 }
+        );
+      }
+
+      // AUTHOR can create sub-departments under any department
+      // For now, only AUTHOR can create sub-departments
+      // (This could be extended to allow departments to create their own sub-departments)
+    }
 
     // Check if department name already exists
     const existingDepartment = await prisma.department.findUnique({
@@ -87,6 +106,7 @@ export async function POST(req: Request) {
         data: {
           name,
           orgNr: orgNr || null,
+          parentDepartmentId: parentDepartmentId || null,
         },
       });
 
@@ -133,7 +153,7 @@ export async function POST(req: Request) {
       userCount: result.userCount,
       message: `Department "${name}" created successfully with ${result.userCount} users`,
     });
-  } catch {
+  } catch (error) {
     console.error("Create department error:", error);
     console.error("Error details:", {
       message: error instanceof Error ? error.message : "Unknown error",
@@ -183,7 +203,7 @@ export async function GET() {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
     const currentUser = await requireAuthorOnly(req);
     if (!currentUser) {

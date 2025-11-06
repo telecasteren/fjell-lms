@@ -58,8 +58,8 @@ export function EnrollmentManager() {
       setUsers(usersData.users);
     }
 
-    // Load courses
-    const coursesRes = await fetch("/api/courses");
+    // Load courses - use admin endpoint to get only department and parent department courses
+    const coursesRes = await fetch("/api/admin/courses");
     if (coursesRes.ok) {
       const coursesData = await coursesRes.json();
       setCourses(coursesData.courses);

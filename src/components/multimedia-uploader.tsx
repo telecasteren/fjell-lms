@@ -202,6 +202,7 @@ export function MultimediaUploader({
         toast.success(`${validFiles.length} file(s) added successfully`);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [files, maxFiles, allowedTypes, onFilesChange]
   );
 
@@ -274,7 +275,7 @@ export function MultimediaUploader({
       } else {
         toast.error(result.error || "Upload failed");
       }
-    } catch {
+    } catch (error) {
       toast.error(
         "Upload failed: " +
           (error instanceof Error ? error.message : "Unknown error")

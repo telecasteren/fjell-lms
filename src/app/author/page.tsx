@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Users, Building2, BookOpen, TrendingUp, Trash2 } from "lucide-react";
 import { UserEditModal } from "@/components/user-edit-modal";
+import { DepartmentSearchInput } from "@/components/department-search-input";
 import { UserReassignmentModal } from "@/components/user-reassignment-modal";
 import { DepartmentCreationModal } from "@/components/department-creation-modal";
 import { DepartmentBrandingSettings } from "@/components/department-branding-settings";
@@ -36,6 +37,22 @@ type DepartmentDetails = {
   logoUrl?: string | null;
   darkModeLogoUrl?: string | null;
   logoText?: string | null;
+  parentDepartmentId?: string | null;
+  parentDepartment?: {
+    id: string;
+    name: string;
+  } | null;
+  footerLinkSectionTitle?: string | null;
+  footerLink1Url?: string | null;
+  footerLink1Text?: string | null;
+  footerLink2Url?: string | null;
+  footerLink2Text?: string | null;
+  footerLink3Url?: string | null;
+  footerLink3Text?: string | null;
+  footerContactEmail?: string | null;
+  footerContactPhone?: string | null;
+  footerContactAddress?: string | null;
+  footerContactAddress2?: string | null;
   completionRate: number;
   totalLessons: number;
   completedLessons: number;
@@ -88,6 +105,7 @@ export default function AuthorDashboard() {
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
+  const [departmentSearchQuery, setDepartmentSearchQuery] = useState("");
   const { refreshDashboard } = useDashboardRefresh();
   const { user: currentUser } = useCurrentUser();
 
@@ -117,7 +135,9 @@ export default function AuthorDashboard() {
   }, [selectedDepartment]);
 
   async function loadDashboard() {
-    const res = await fetch("/api/author/dashboard");
+    const res = await fetch("/api/author/dashboard", {
+      credentials: "include",
+    });
     if (res.ok) {
       const dashboardData = await res.json();
       setData(dashboardData);
@@ -126,7 +146,9 @@ export default function AuthorDashboard() {
   }
 
   async function loadEnrolledCourses() {
-    const res = await fetch("/api/enrollments");
+    const res = await fetch("/api/enrollments", {
+      credentials: "include",
+    });
     if (res.ok) {
       const enrollmentData = await res.json();
       setEnrolledCourses(enrollmentData.enrollments);
@@ -138,6 +160,7 @@ export default function AuthorDashboard() {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ courseId }),
+      credentials: "include",
     });
     if (res.ok) {
       await loadEnrolledCourses();
@@ -145,7 +168,9 @@ export default function AuthorDashboard() {
   }
 
   async function loadDepartmentDetails(departmentId: string) {
-    const res = await fetch(`/api/author/departments/${departmentId}`);
+    const res = await fetch(`/api/author/departments/${departmentId}`, {
+      credentials: "include",
+    });
     if (res.ok) {
       const deptData = await res.json();
       setDepartmentDetails(deptData.department);
@@ -270,13 +295,24 @@ export default function AuthorDashboard() {
               <span className="text-sm font-medium">Select Department:</span>
               <Select
                 value={selectedDepartment}
-                onValueChange={setSelectedDepartment}
+                onValueChange={(value) => {
+                  setSelectedDepartment(value);
+                  // Clear search when department is selected
+                  setDepartmentSearchQuery("");
+                }}
               >
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Choose a department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {data.departments.map(dept => (
+                  {(departmentSearchQuery.trim()
+                    ? data.departments.filter(dept =>
+                        dept.name
+                          .toLowerCase()
+                          .includes(departmentSearchQuery.toLowerCase().trim())
+                      )
+                    : data.departments
+                  ).map(dept => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name} ({dept._count.users} users,{" "}
                       {dept._count.courses} courses)
@@ -284,6 +320,24 @@ export default function AuthorDashboard() {
                   ))}
                 </SelectContent>
               </Select>
+              <DepartmentSearchInput
+                value={departmentSearchQuery}
+                onChange={(value) => {
+                  setDepartmentSearchQuery(value);
+                  // If search matches exactly one department, auto-select it
+                  const filtered = data.departments.filter(dept =>
+                    dept.name.toLowerCase().includes(value.toLowerCase().trim())
+                  );
+                  if (filtered.length === 1 && value.trim()) {
+                    setSelectedDepartment(filtered[0].id);
+                  } else if (value.trim() === "") {
+                    // Clear selection and details when search is cleared
+                    setSelectedDepartment("");
+                    setDepartmentDetails(null);
+                  }
+                }}
+                placeholder="Search departments..."
+              />
             </div>
 
             {departmentDetails && (
@@ -432,6 +486,17 @@ export default function AuthorDashboard() {
                             currentLogoUrl={departmentDetails.logoUrl}
                             currentLogoText={departmentDetails.logoText}
                             currentDarkModeLogoUrl={departmentDetails.darkModeLogoUrl}
+                            currentFooterLinkSectionTitle={departmentDetails.footerLinkSectionTitle}
+                            currentFooterLink1Url={departmentDetails.footerLink1Url}
+                            currentFooterLink1Text={departmentDetails.footerLink1Text}
+                            currentFooterLink2Url={departmentDetails.footerLink2Url}
+                            currentFooterLink2Text={departmentDetails.footerLink2Text}
+                            currentFooterLink3Url={departmentDetails.footerLink3Url}
+                            currentFooterLink3Text={departmentDetails.footerLink3Text}
+                            currentFooterContactEmail={departmentDetails.footerContactEmail}
+                            currentFooterContactPhone={departmentDetails.footerContactPhone}
+                            currentFooterContactAddress={departmentDetails.footerContactAddress}
+                            currentFooterContactAddress2={departmentDetails.footerContactAddress2}
                           />
                         )}
                       </div>

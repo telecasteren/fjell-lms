@@ -6,7 +6,7 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
-class SimpleRateLimiter {
+export class SimpleRateLimiter {
   private limits = new Map<string, RateLimitEntry>();
 
   constructor(

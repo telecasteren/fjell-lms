@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       .slice(0, 20); // Limit results to 20
 
     return NextResponse.json({ users });
-  } catch {
+  } catch (error) {
     console.error("User search error:", error);
     return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
