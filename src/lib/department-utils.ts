@@ -13,7 +13,8 @@ export function isMainDepartment(departmentName: string): boolean {
  * Get accessible department IDs for a user based on their role and department hierarchy
  * - AUTHOR: Returns null (can access all departments)
  * - WRITER: Returns array with only their department ID
- * - ADMIN/BASIC: Returns array with only their department ID (child departments can only see their own)
+ * - ADMIN: Returns array with their department ID and all sub-departments (child departments can see their own and sub-departments)
+ * - BASIC: Returns array with only their department ID
  */
 export async function getAccessibleDepartmentIds(
   userId: string
@@ -25,6 +26,7 @@ export async function getAccessibleDepartmentIds(
       departmentId: true,
       department: {
         select: {
+          id: true,
           parentDepartmentId: true,
         },
       },
@@ -43,8 +45,30 @@ export async function getAccessibleDepartmentIds(
     return user.departmentId ? [user.departmentId] : [];
   }
 
-  // ADMIN/BASIC can only access their own department (child departments can only see their own)
-  if (user.role === Role.ADMIN || user.role === Role.BASIC) {
+  // ADMIN can access their own department and all sub-departments
+  if (user.role === Role.ADMIN) {
+    if (!user.departmentId) return [];
+    
+    // Get all sub-departments recursively
+    const departmentIds = [user.departmentId];
+    const getSubDepartments = async (deptId: string) => {
+      const subDepts = await prisma.department.findMany({
+        where: { parentDepartmentId: deptId },
+        select: { id: true },
+      });
+      
+      for (const subDept of subDepts) {
+        departmentIds.push(subDept.id);
+        await getSubDepartments(subDept.id); // Recursively get nested sub-departments
+      }
+    };
+    
+    await getSubDepartments(user.departmentId);
+    return departmentIds;
+  }
+
+  // BASIC can only access their own department
+  if (user.role === Role.BASIC) {
     return user.departmentId ? [user.departmentId] : [];
   }
 
@@ -196,6 +220,7 @@ export async function canAccessCourse(
  * Check if a user can manage a course (create/edit/delete)
  * - AUTHOR: Can manage any course
  * - WRITER: Can only manage courses from their own department
+ * - ADMIN: Can only manage courses from their own department
  */
 export async function canManageCourse(
   userId: string,
@@ -216,8 +241,8 @@ export async function canManageCourse(
     return true;
   }
 
-  // WRITER can only manage courses from their own department
-  if (user.role === Role.WRITER) {
+  // WRITER and ADMIN can only manage courses from their own department
+  if (user.role === Role.WRITER || user.role === Role.ADMIN) {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
       select: { departmentId: true },
@@ -266,5 +291,60 @@ export async function canManageLesson(
   if (!lesson) return false;
 
   return canManageCourse(userId, lesson.module.courseId);
+}
+
+/**
+ * Check if a user's department is a child of FOX-LMS (or is FOX-LMS itself)
+ * Returns true if the user is in FOX-LMS or any child department of FOX-LMS
+ * Traverses up the parent chain to find FOX-LMS
+ */
+export async function isInChildDepartmentOfFoxLms(
+  userId: string
+): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      department: {
+        select: {
+          id: true,
+          name: true,
+          parentDepartmentId: true,
+        },
+      },
+    },
+  });
+
+  if (!user || !user.department) return false;
+
+  // If user is in FOX-LMS itself, return true
+  if (user.department.name === "FOX-LMS") {
+    return true;
+  }
+
+  // Traverse up the parent chain to find FOX-LMS
+  let currentDepartmentId = user.department.parentDepartmentId;
+  
+  while (currentDepartmentId) {
+    const parentDept = await prisma.department.findUnique({
+      where: { id: currentDepartmentId },
+      select: {
+        id: true,
+        name: true,
+        parentDepartmentId: true,
+      },
+    });
+
+    if (!parentDept) break;
+
+    // Found FOX-LMS in the chain
+    if (parentDept.name === "FOX-LMS") {
+      return true;
+    }
+
+    // Move up to next parent
+    currentDepartmentId = parentDept.parentDepartmentId;
+  }
+
+  return false;
 }
 

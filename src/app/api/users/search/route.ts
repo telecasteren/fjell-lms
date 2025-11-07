@@ -1,11 +1,12 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireAdminOrAuthor } from "@/lib/rbac";
+import { getAccessibleDepartmentIds } from "@/lib/department-utils";
 
-// Search all users across all departments (AUTHOR only)
+// Search users - AUTHOR can search all users, ADMIN can search users in their department and sub-departments
 export async function GET(req: NextRequest) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    const user = await requireAdminOrAuthor(req);
 
     const searchParams = req.nextUrl.searchParams;
     const query = searchParams.get("q") || "";
@@ -14,9 +15,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ users: [] });
     }
 
-    // Search users by name or email across all departments
-    // Get all users and filter in memory for case-insensitive search
+    // Get accessible department IDs (includes sub-departments for ADMIN)
+    const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
+    
+    // AUTHOR can see all users, ADMIN can only see users in their department and sub-departments
+    const whereClause = accessibleDepartmentIds === null 
+      ? {} // AUTHOR sees all
+      : { departmentId: { in: accessibleDepartmentIds } };
+
+    // Search users by name or email within accessible departments
     const allUsers = await prisma.user.findMany({
+      where: whereClause,
       select: {
         id: true,
         name: true,
@@ -47,6 +56,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ users });
   } catch (error) {
     console.error("User search error:", error);
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWriterOrAuthor } from "@/lib/rbac";
+import { requireAuth, requireWriterOrAdminOrAuthor } from "@/lib/rbac";
 import { courseCreateSchema, validateRequestBody } from "@/lib/validation";
 import { withRateLimit, rateLimiters } from "@/lib/rate-limit";
 import { getCourseWhereClause } from "@/lib/department-utils";
@@ -21,8 +21,13 @@ export async function GET(req: NextRequest) {
         description: true,
         status: true,
         createdAt: true,
+        departmentId: true,
         department: {
-          select: { name: true },
+          select: { 
+            id: true,
+            name: true,
+            parentDepartmentId: true,
+          },
         },
         enrollments: {
           select: { id: true },
@@ -37,11 +42,20 @@ export async function GET(req: NextRequest) {
       description: string | null;
       status: string;
       createdAt: Date;
+      departmentId: string;
       department: {
+        id: string;
         name: string;
+        parentDepartmentId: string | null;
       } | null;
       enrollments: Array<{ id: string }>;
     };
+
+    // Get FOX-LMS department ID to identify root department courses
+    const foxLmsDepartment = await prisma.department.findUnique({
+      where: { name: "FOX-LMS" },
+      select: { id: true },
+    });
 
     // Transform courses to include enrollment count and department name
     const coursesWithEnrollments = courses.map(
@@ -51,7 +65,9 @@ export async function GET(req: NextRequest) {
         description: course.description,
         status: course.status,
         createdAt: course.createdAt,
+        departmentId: course.departmentId,
         departmentName: course.department?.name,
+        isFoxLmsCourse: foxLmsDepartment ? course.departmentId === foxLmsDepartment.id : false,
         enrollmentCount: course.enrollments.length,
       })
     );
@@ -81,8 +97,8 @@ export async function POST(req: NextRequest) {
       return rateLimitResult.error;
     }
 
-    // Allow AUTHOR and WRITER roles to create courses
-    const user = await requireWriterOrAuthor(req);
+    // Allow AUTHOR, WRITER, and ADMIN roles to create courses
+    const user = await requireWriterOrAdminOrAuthor(req);
     const body = await req.json();
     const validation = validateRequestBody(courseCreateSchema, body);
     if (!validation.success) {

@@ -12,6 +12,7 @@ interface DepartmentCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDepartmentCreated: () => void;
+  defaultParentDepartmentId?: string;
 }
 
 interface NewUser {
@@ -39,6 +40,7 @@ export function DepartmentCreationModal({
   isOpen,
   onClose,
   onDepartmentCreated,
+  defaultParentDepartmentId,
 }: DepartmentCreationModalProps) {
   const [loading, setLoading] = useState(false);
   const [departmentName, setDepartmentName] = useState("");
@@ -213,6 +215,7 @@ export function DepartmentCreationModal({
         body: JSON.stringify({
           name: departmentName.trim(),
           orgNr: orgNr.trim() || null,
+          parentDepartmentId: defaultParentDepartmentId || null,
           users: newUsers,
           existingUsers: existingUsers.map(u => ({ userId: u.userId })),
         }),

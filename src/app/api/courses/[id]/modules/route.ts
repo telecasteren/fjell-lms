@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireWriterOrAuthor } from "@/lib/rbac";
+import { requireAuth, requireWriterOrAdminOrAuthor } from "@/lib/rbac";
 import { canAccessCourse, canManageCourse } from "@/lib/department-utils";
 
 export async function GET(
@@ -41,7 +41,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireWriterOrAuthor(req);
+    const user = await requireWriterOrAdminOrAuthor(req);
     const { title } = await req.json();
     if (!title)
       return NextResponse.json({ error: "Title required" }, { status: 400 });

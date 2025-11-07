@@ -11,8 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, ArrowLeft } from "lucide-react";
 import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
+import { useRouter } from "next/navigation";
 
 type Quiz = {
   id: string;
@@ -62,6 +63,7 @@ export default function LearnPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = use(params);
+  const router = useRouter();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [progress, setProgress] = useState<CourseProgress | null>(null);
   const [loading, setLoading] = useState(false);
@@ -186,7 +188,17 @@ export default function LearnPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Learning Progress</h1>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/courses")}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-semibold">Learning Progress</h1>
+        </div>
         <div className="text-right">
           <div className="text-2xl font-bold">{progress.percentage}%</div>
           <div className="text-muted-foreground text-sm">

@@ -1,15 +1,26 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireAuthorOnly, requireAdminOrAuthor } from "@/lib/rbac";
 import { calculateOverallProgress } from "@/lib/progress-utils";
+import { getAccessibleDepartmentIds } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    // Allow AUTHOR and ADMIN users
+    const user = await requireAdminOrAuthor(req);
     const { id } = await params;
+
+    // Check if user has access to this department
+    const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
+    if (accessibleDepartmentIds !== null && !accessibleDepartmentIds.includes(id)) {
+      return NextResponse.json(
+        { error: "You don't have permission to access this department" },
+        { status: 403 }
+      );
+    }
 
     // Get department details with hierarchy
     const department = await prisma.department.findUnique({

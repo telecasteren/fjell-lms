@@ -183,6 +183,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: message }, { status });
     }
     console.error("Author dashboard error:", error);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Author dashboard error details:", { errorMessage, errorStack });
+    return NextResponse.json(
+      { error: "Internal server error", details: errorMessage },
+      { status: 500 }
+    );
   }
 }

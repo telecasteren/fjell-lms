@@ -19,6 +19,8 @@ type Course = {
   description?: string;
   status?: string;
   departmentName?: string;
+  departmentId?: string;
+  isFoxLmsCourse?: boolean;
   enrollmentCount: number;
 };
 type Enrollment = {
@@ -163,6 +165,16 @@ export default function CoursesPage() {
     return user?.role === "AUTHOR";
   }
 
+  function canCreateCourse() {
+    return user?.role === "AUTHOR" || user?.role === "WRITER" || user?.role === "ADMIN";
+  }
+
+  // Check if user can view Get Started section (same roles as canCreateCourse)
+  // This mirrors requireWriterOrAdminOrAuthor but for client-side UI checks
+  function canViewGetStarted() {
+    return canCreateCourse();
+  }
+
   function canDeleteCourse(course: Course) {
     return isAuthor() && course.enrollmentCount === 0;
   }
@@ -179,12 +191,23 @@ export default function CoursesPage() {
     return courses.filter(course => course.status === "PUBLISHED");
   }
 
+  function getFoxLmsCourses() {
+    return courses.filter(course => course.isFoxLmsCourse && course.status === "PUBLISHED");
+  }
+
+  function getNonFoxLmsCourses() {
+    return getFilteredCourses().filter(course => !course.isFoxLmsCourse);
+  }
+
+  const foxLmsCourses = getFoxLmsCourses();
+  const hasFoxLmsCourses = foxLmsCourses.length > 0;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Courses</h1>
 
-      {/* Create course section - only for Authors */}
-      {isAuthor() && (
+      {/* Create course section - for Authors, Writers, and Admins */}
+      {canCreateCourse() && (
         <Card>
           <CardHeader>
             <CardTitle>Create course</CardTitle>
@@ -207,8 +230,28 @@ export default function CoursesPage() {
         </Card>
       )}
 
+      {/* Get Started section for FOX-LMS courses - only visible to WRITER, ADMIN, or AUTHOR */}
+      {hasFoxLmsCourses && canViewGetStarted() && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardHeader>
+            <CardTitle>Get Started</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">
+              Explore our foundational courses to get started with your learning journey.
+            </p>
+            <Button
+              variant="default"
+              onClick={() => (window.location.href = "/courses/get-started")}
+            >
+              View All
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-3">
-        {getFilteredCourses().map(c => (
+        {getNonFoxLmsCourses().map(c => (
           <Card
             key={c.id}
             className={

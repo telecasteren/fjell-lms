@@ -14,9 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Building2, BookOpen, TrendingUp, Trash2 } from "lucide-react";
 import { UserEditModal } from "@/components/user-edit-modal";
 import { DepartmentSearchInput } from "@/components/department-search-input";
+import { UserSearchInput } from "@/components/user-search-input";
 import { UserReassignmentModal } from "@/components/user-reassignment-modal";
 import { DepartmentCreationModal } from "@/components/department-creation-modal";
 import { DepartmentBrandingSettings } from "@/components/department-branding-settings";
+import { DepartmentTree, type DepartmentTreeNode } from "@/components/department-tree";
 import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -25,9 +27,19 @@ import toast from "react-hot-toast";
 type Department = {
   id: string;
   name: string;
+  parentDepartmentId?: string | null;
+  parentDepartment?: {
+    id: string;
+    name: string;
+  } | null;
   _count: {
     users: number;
     courses: number;
+  };
+  progress?: {
+    totalLessons: number;
+    completedLessons: number;
+    completionRate: number;
   };
 };
 
@@ -106,6 +118,8 @@ export default function AuthorDashboard() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
   const [departmentSearchQuery, setDepartmentSearchQuery] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "tree">("list");
   const { refreshDashboard } = useDashboardRefresh();
   const { user: currentUser } = useCurrentUser();
 
@@ -284,61 +298,92 @@ export default function AuthorDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Department Management</CardTitle>
-            <Button onClick={() => setShowCreateDepartment(true)}>
-              Add new
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-md border p-1">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="h-8"
+                >
+                  List
+                </Button>
+                <Button
+                  variant={viewMode === "tree" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("tree")}
+                  className="h-8"
+                >
+                  Tree
+                </Button>
+              </div>
+              <Button onClick={() => setShowCreateDepartment(true)}>
+                Add new
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium">Select Department:</span>
-              <Select
-                value={selectedDepartment}
-                onValueChange={(value) => {
-                  setSelectedDepartment(value);
-                  // Clear search when department is selected
-                  setDepartmentSearchQuery("");
+            {viewMode === "tree" ? (
+              <DepartmentTree
+                departments={data.departments as DepartmentTreeNode[]}
+                onDepartmentSelect={(departmentId) => {
+                  setSelectedDepartment(departmentId);
+                  loadDepartmentDetails(departmentId);
                 }}
-              >
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Choose a department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(departmentSearchQuery.trim()
-                    ? data.departments.filter(dept =>
-                        dept.name
-                          .toLowerCase()
-                          .includes(departmentSearchQuery.toLowerCase().trim())
-                      )
-                    : data.departments
-                  ).map(dept => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name} ({dept._count.users} users,{" "}
-                      {dept._count.courses} courses)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <DepartmentSearchInput
-                value={departmentSearchQuery}
-                onChange={(value) => {
-                  setDepartmentSearchQuery(value);
-                  // If search matches exactly one department, auto-select it
-                  const filtered = data.departments.filter(dept =>
-                    dept.name.toLowerCase().includes(value.toLowerCase().trim())
-                  );
-                  if (filtered.length === 1 && value.trim()) {
-                    setSelectedDepartment(filtered[0].id);
-                  } else if (value.trim() === "") {
-                    // Clear selection and details when search is cleared
-                    setSelectedDepartment("");
-                    setDepartmentDetails(null);
-                  }
-                }}
-                placeholder="Search departments..."
+                selectedDepartmentId={selectedDepartment}
               />
-            </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">Select Department:</span>
+                <Select
+                  value={selectedDepartment}
+                  onValueChange={(value) => {
+                    setSelectedDepartment(value);
+                    // Clear search when department is selected
+                    setDepartmentSearchQuery("");
+                  }}
+                >
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Choose a department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(departmentSearchQuery.trim()
+                      ? data.departments.filter(dept =>
+                          dept.name
+                            .toLowerCase()
+                            .includes(departmentSearchQuery.toLowerCase().trim())
+                        )
+                      : data.departments
+                    ).map(dept => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name} ({dept._count.users} users,{" "}
+                        {dept._count.courses} courses)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <DepartmentSearchInput
+                  value={departmentSearchQuery}
+                  onChange={(value) => {
+                    setDepartmentSearchQuery(value);
+                    // If search matches exactly one department, auto-select it
+                    const filtered = data.departments.filter(dept =>
+                      dept.name.toLowerCase().includes(value.toLowerCase().trim())
+                    );
+                    if (filtered.length === 1 && value.trim()) {
+                      setSelectedDepartment(filtered[0].id);
+                    } else if (value.trim() === "") {
+                      // Clear selection and details when search is cleared
+                      setSelectedDepartment("");
+                      setDepartmentDetails(null);
+                    }
+                  }}
+                  placeholder="Search departments..."
+                />
+              </div>
+            )}
 
             {departmentDetails && (
               <div className="space-y-4">
@@ -424,8 +469,24 @@ export default function AuthorDashboard() {
                           <h3 className="mb-3 text-lg font-semibold">
                             User List
                           </h3>
+                          <div className="mb-3">
+                            <UserSearchInput
+                              value={userSearchQuery}
+                              onChange={setUserSearchQuery}
+                              placeholder="Search users by name or email..."
+                            />
+                          </div>
                           <div className="space-y-2">
-                            {departmentDetails.users.map(user => (
+                            {departmentDetails.users
+                              .filter(user => {
+                                if (!userSearchQuery.trim()) return true;
+                                const query = userSearchQuery.toLowerCase();
+                                return (
+                                  (user.name && user.name.toLowerCase().includes(query)) ||
+                                  (user.email && user.email.toLowerCase().includes(query))
+                                );
+                              })
+                              .map(user => (
                               <div
                                 key={user.id}
                                 className="flex items-center justify-between rounded border p-3"

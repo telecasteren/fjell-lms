@@ -1,7 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireAuthorOnly, requireAdminOrAuthor } from "@/lib/rbac";
+import { isInChildDepartmentOfFoxLms, getDepartmentWhereClause } from "@/lib/department-utils";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -27,7 +28,8 @@ const createDepartmentSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuthorOnly(req);
+    // Allow AUTHOR and ADMIN users to create departments
+    const user = await requireAdminOrAuthor(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -48,6 +50,28 @@ export async function POST(req: NextRequest) {
 
     const { name, orgNr, parentDepartmentId, users, existingUsers = [] } = validation.data;
 
+    // AUTHOR can create departments anywhere
+    // ADMIN can only create sub-departments under their own department (if they're in a child department of FOX-LMS)
+    if (user.role === "ADMIN") {
+      // Check if ADMIN is in a child department of FOX-LMS
+      const isChildDept = await isInChildDepartmentOfFoxLms(user.id);
+      
+      if (!isChildDept) {
+        return NextResponse.json(
+          { error: "ADMIN users can only create sub-departments if they are in a child department of FOX-LMS" },
+          { status: 403 }
+        );
+      }
+
+      // ADMIN must create sub-departments under their own department
+      if (!parentDepartmentId || parentDepartmentId !== user.departmentId) {
+        return NextResponse.json(
+          { error: "ADMIN users can only create sub-departments under their own department" },
+          { status: 403 }
+        );
+      }
+    }
+
     // If parentDepartmentId is provided, verify it exists and user has permission
     if (parentDepartmentId) {
       const parentDepartment = await prisma.department.findUnique({
@@ -62,8 +86,7 @@ export async function POST(req: NextRequest) {
       }
 
       // AUTHOR can create sub-departments under any department
-      // For now, only AUTHOR can create sub-departments
-      // (This could be extended to allow departments to create their own sub-departments)
+      // ADMIN can only create sub-departments under their own department (already checked above)
     }
 
     // Check if department name already exists
@@ -170,14 +193,18 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req?: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get department where clause based on user role and hierarchy
+    const whereClause = await getDepartmentWhereClause(user.id);
+
     const departments = await prisma.department.findMany({
+      where: whereClause,
       include: {
         _count: {
           select: {

@@ -8,7 +8,7 @@ import { LessonEditor } from "@/components/lesson-editor";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, ArrowLeft } from "lucide-react";
 
 type Module = { id: string; title: string; order: number };
 type Lesson = { id: string; title: string; content?: string; order: number };
@@ -72,8 +72,8 @@ export default function CoursePage({
   }
 
   useEffect(() => {
-    // Check if user is AUTHOR or WRITER and redirect if not
-    if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER") {
+    // Check if user is AUTHOR, WRITER, or ADMIN and redirect if not
+    if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER" && session.user.role !== "ADMIN") {
       router.push("/courses");
       return;
     }
@@ -85,8 +85,8 @@ export default function CoursePage({
     loadData();
   }, [params, session, router]);
   
-  // Don't render if user is not AUTHOR or WRITER
-  if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER") {
+  // Don't render if user is not AUTHOR, WRITER, or ADMIN
+  if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER" && session.user.role !== "ADMIN") {
     return <div>Redirecting...</div>;
   }
 
@@ -269,7 +269,17 @@ export default function CoursePage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Course Modules</h1>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/courses")}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-semibold">Course Modules</h1>
+      </div>
 
       <Card>
         <CardHeader>

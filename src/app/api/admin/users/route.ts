@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminOrAuthor } from "@/lib/rbac";
+import { getAccessibleDepartmentIds } from "@/lib/department-utils";
 import { userUpdateSchema, validateRequestBody } from "@/lib/validation";
 import { withRateLimit, rateLimiters } from "@/lib/rate-limit";
 import bcrypt from "bcrypt";
@@ -9,13 +10,22 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireAdminOrAuthor(req);
 
+    // Get accessible department IDs (includes sub-departments for ADMIN)
+    const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
+    
+    // AUTHOR can see all users, ADMIN can only see users in their department and sub-departments
+    const whereClause = accessibleDepartmentIds === null 
+      ? {} // AUTHOR sees all
+      : { departmentId: { in: accessibleDepartmentIds } };
+
     const users = await prisma.user.findMany({
-      where: { departmentId: user.departmentId },
+      where: whereClause,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        departmentId: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },

@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireWriterOrAuthor } from "@/lib/rbac";
+import { requireWriterOrAdminOrAuthor } from "@/lib/rbac";
 import { validateRequestBody } from "@/lib/validation";
 import { lessonUpdateSchema } from "@/lib/validation";
 import { storageManager } from "@/lib/storage";
@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireWriterOrAuthor(req);
+    const user = await requireWriterOrAdminOrAuthor(req);
     const { id } = await params;
 
     // Check if user can manage this lesson
@@ -61,7 +61,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireWriterOrAuthor(req);
+    const user = await requireWriterOrAdminOrAuthor(req);
     const { id } = await params;
     const body = await req.json();
 
@@ -106,7 +106,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireWriterOrAuthor(req);
+    const user = await requireWriterOrAdminOrAuthor(req);
     const { id } = await params;
 
     // Check if user can manage this lesson

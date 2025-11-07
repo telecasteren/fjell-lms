@@ -242,8 +242,61 @@ export default function ReportsPage() {
       a.download = filename;
       a.click();
       window.URL.revokeObjectURL(url);
+    } else if (userRole === "ADMIN") {
+      // ADMIN users can select specific department or export all their accessible departments
+      if (exportDepartmentId === "all") {
+        // Export all accessible departments
+        reportsToExport = data.departmentReports;
+        filename = "all-departments-report.csv";
+      } else {
+        // Export specific department
+        const selectedDept = data.departmentReports.find(
+          dept => dept.departmentId === exportDepartmentId
+        );
+        if (!selectedDept) {
+          console.error("Selected department not found");
+          return;
+        }
+        reportsToExport = [selectedDept];
+        selectedDeptName = selectedDept.departmentName;
+        // Sanitize filename (remove special characters)
+        const sanitizedName = selectedDeptName
+          .replace(/[^a-z0-9]/gi, "-")
+          .toLowerCase();
+        filename = `${sanitizedName}-report.csv`;
+      }
+
+      // ADMIN gets department-level overview (same format as AUTHOR)
+      const csvContent = [
+        [
+          "Department",
+          "Users",
+          "Courses",
+          "Enrollments",
+          "Completion Rate",
+          "Top Course",
+        ],
+        ...reportsToExport.map(dept => [
+          dept.departmentName,
+          dept.userStats.total.toString(),
+          dept.courseStats.total.toString(),
+          dept.courseStats.totalEnrollments.toString(),
+          `${dept.progressStats.overallCompletionRate}%`,
+          dept.coursePerformance[0]?.courseTitle || "N/A",
+        ]),
+      ]
+        .map(row => row.join(","))
+        .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
     } else {
-      // ADMIN/WRITER gets user-level activity report for their department
+      // WRITER/BASIC gets user-level activity report for their department
       const csvContent = [
         [
           "Name",
@@ -290,9 +343,9 @@ export default function ReportsPage() {
     return <div>Error loading reports</div>;
   }
 
-  // Filter departments based on search query (only for AUTHOR users)
+  // Filter departments based on search query (for AUTHOR and ADMIN users)
   const filteredDepartmentReports =
-    userRole === "AUTHOR" && searchQuery.trim()
+    (userRole === "AUTHOR" || userRole === "ADMIN") && searchQuery.trim()
       ? data.departmentReports.filter(dept =>
           dept.departmentName
             .toLowerCase()
@@ -308,11 +361,13 @@ export default function ReportsPage() {
           <p className="text-muted-foreground text-sm">
             {userRole === "AUTHOR"
               ? "Comprehensive analytics across all departments"
+              : userRole === "ADMIN"
+              ? "Analytics for your department and sub-departments"
               : "Analytics for your department"}
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {userRole === "AUTHOR" && (
+          {(userRole === "AUTHOR" || userRole === "ADMIN") && (
             <Select
               value={exportDepartmentId}
               onValueChange={setExportDepartmentId}
@@ -333,7 +388,7 @@ export default function ReportsPage() {
           <Button onClick={exportToCSV} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export CSV
-            {userRole === "AUTHOR" && exportDepartmentId !== "all" && (
+            {(userRole === "AUTHOR" || userRole === "ADMIN") && exportDepartmentId !== "all" && (
               <span className="ml-2 text-xs opacity-70">
                 ({data?.departmentReports.find(d => d.departmentId === exportDepartmentId)?.departmentName || ""})
               </span>
@@ -348,6 +403,8 @@ export default function ReportsPage() {
           <CardTitle>
             {userRole === "AUTHOR"
               ? "Platform Overview"
+              : userRole === "ADMIN"
+              ? "Department Overview"
               : "Department Overview"}
           </CardTitle>
         </CardHeader>
@@ -394,7 +451,7 @@ export default function ReportsPage() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="detailed">Detailed Reports</TabsTrigger>
           </TabsList>
-          {userRole === "AUTHOR" && (
+          {(userRole === "AUTHOR" || userRole === "ADMIN") && (
             <DepartmentSearchInput
               value={searchQuery}
               onChange={setSearchQuery}

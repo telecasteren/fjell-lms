@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireWriterOrAuthor } from "@/lib/rbac";
+import { requireWriterOrAdminOrAuthor } from "@/lib/rbac";
 import { canManageCourse } from "@/lib/department-utils";
 import { CourseStatus } from "@prisma/client";
 
@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireWriterOrAuthor(req);
+    const user = await requireWriterOrAdminOrAuthor(req);
     const { id } = await params;
     const { status } = await req.json();
 
