@@ -50,12 +50,12 @@ export interface BrandingConfig {
   // Links and URLs
   links: {
     homepage: string;
-    contact: string;
-    terms: string;
-    cubit: string;
-    koti: string;
-    sanako: string;
-    faq: string;
+    contact?: string;
+    link1: string;
+    link2: string;
+    link3: string;
+    terms?: string;
+    faq?: string;
   };
 
   // Features
@@ -120,11 +120,10 @@ export const defaultBranding: BrandingConfig = {
   },
 
   links: {
-    homepage: "https://telecasternilsen.com",
-    contact: "https://telecasternilsen.com/#contact",
-    cubit: "https://tilsyn.cubit.no",
-    koti: "https://www.koti.no",
-    sanako: "https://www.sanako.no",
+    homepage: "",
+    link1: "https://example.com/link1",
+    link2: "https://example.com/link2",
+    link3: "https://example.com/link3",
     terms: "",
     faq: "/faq",
   },

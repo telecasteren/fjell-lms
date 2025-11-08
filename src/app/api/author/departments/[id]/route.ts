@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly, requireAdminOrAuthor } from "@/lib/rbac";
+import { requireAdminOrAuthor } from "@/lib/rbac";
 import { calculateOverallProgress } from "@/lib/progress-utils";
 import { getAccessibleDepartmentIds } from "@/lib/department-utils";
 
@@ -32,6 +32,7 @@ export async function GET(
         logoUrl: true,
         darkModeLogoUrl: true,
         logoText: true,
+        appDescription: true,
         parentDepartmentId: true,
         parentDepartment: {
           select: {

@@ -38,10 +38,14 @@ export async function GET(
         id: true,
         title: true,
         content: true,
+        contentType: true,
+        multimediaFiles: true,
         order: true,
         quiz: {
           select: {
             id: true,
+            mandatory: true,
+            questions: true, // Include questions to check if quiz has any
             completions: {
               where: { userId: user.id },
               select: { passed: true, attempts: true },
@@ -59,22 +63,50 @@ export async function GET(
       order: number;
       quiz: {
         id: string;
+        mandatory?: boolean;
+        questions?: unknown; // Questions array (we check if it exists and has length)
         completions: Array<{ passed: boolean; attempts: number }>;
       } | null;
     };
 
     // Transform lessons to include quiz completion data
-    const transformedLessons = lessons.map((lesson: LessonWithQuiz) => ({
-      ...lesson,
-      quizCompletion: lesson.quiz?.completions[0] || null,
-    }));
+    // Only include quiz if it has questions
+    const transformedLessons = lessons.map((lesson: LessonWithQuiz) => {
+      const hasQuestions = lesson.quiz && Array.isArray(lesson.quiz.questions) && lesson.quiz.questions.length > 0;
+      return {
+        ...lesson,
+        // Only include quiz if it has questions, otherwise set to null
+        quiz: hasQuestions && lesson.quiz ? {
+          id: lesson.quiz.id,
+          mandatory: lesson.quiz.mandatory,
+        } : null,
+        quizCompletion: lesson.quiz?.completions[0] || null,
+      };
+    });
     return NextResponse.json({ lessons: transformedLessons });
   } catch (error) {
     console.error("Lessons API error:", error);
-    const status = (error as { status?: number })?.status || 401;
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack");
+    // If it's an AuthError, use its status, otherwise check if it's a known error
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      const errorMessage = error instanceof Error ? error.message : "Unauthorized";
+      return NextResponse.json(
+        { error: errorMessage },
+        { status }
+      );
+    }
+    // For other errors, log them and return 500 with detailed error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorDetails = error instanceof Error ? error.stack : "No stack trace";
+    console.error("Unexpected error in lessons API:", errorMessage);
+    console.error("Error details:", errorDetails);
     return NextResponse.json(
-      { error: (error as Error).message || "Unauthorized" },
-      { status }
+      { 
+        error: errorMessage || "Internal server error",
+        details: process.env.NODE_ENV === "development" ? errorDetails : undefined
+      },
+      { status: 500 }
     );
   }
 }

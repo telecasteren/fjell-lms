@@ -9,6 +9,7 @@
 - **TypeScript** - Type-safe JavaScript
 - **Tailwind CSS** - Utility-first CSS framework
 - **shadcn/ui** - Pre-built accessible UI components (built on Radix UI)
+- **Tiptap** - Rich text WYSIWYG editor for lesson content
 
 ### **2. Backend Layer**
 
@@ -60,11 +61,12 @@ Enrollments, Progress, QuizCompletions (Junction Tables)
 **Key Relationships:**
 
 - **Multi-tenancy**: Data scoped by `departmentId`
-- **RBAC**: Users have roles (AUTHOR, ADMIN, BASIC)
+- **Department Hierarchy**: Departments can have parent-child relationships (FOX-LMS as root)
+- **RBAC**: Users have roles (AUTHOR, ADMIN, BASIC, WRITER)
 - **Course Structure**: Hierarchical (Course → Module → Lesson → Quiz)
 - **Content Types**: Lessons support multiple content formats (Text, SCORM, Multimedia)
 - **Progress Tracking**: Junction tables for enrollments and completions
-- **Department Branding**: Custom logos and text per department (optional)
+- **Department Branding**: Custom logos (light/dark mode), text, footer links, and contact info per department
 
 ### **API Request Flow**
 
@@ -78,7 +80,7 @@ Client Request → Rate Limiting → Authentication → RBAC → Business Logic 
 - **Registration**: 3/hour
 - **Admin operations**: 10/hour
 - **Course operations**: 20/minute
-- **Reports**: 5/minute
+- **Reports**: 10/minute
 
 ---
 
@@ -103,7 +105,10 @@ Request → getCurrentUser() → requireRole() → Business Logic
 - `requireAuth()` - Any authenticated user
 - `requireAuthor()` - AUTHOR role only
 - `requireAdminOrAuthor()` - ADMIN or AUTHOR
-- `requireBasicOrAbove()` - All roles
+- `requireWriter()` - WRITER role only
+- `requireWriterOrAuthor()` - WRITER or AUTHOR
+- `requireWriterOrAdminOrAuthor()` - WRITER, ADMIN, or AUTHOR
+- `requireBasicOrAbove()` - All roles (BASIC, ADMIN, AUTHOR, WRITER)
 
 ---
 
@@ -119,12 +124,13 @@ Request → getCurrentUser() → requireRole() → Business Logic
 ### **Database Schema Highlights**
 
 - **Multi-tenancy**: All data scoped by department
+- **Department Hierarchy**: Parent-child relationships with cascade deletes
 - **Audit Trail**: `createdAt`, `updatedAt` timestamps
 - **Soft Relationships**: Cascade deletes for data integrity
 - **JSON Storage**: Quiz questions stored as JSON for flexibility
 - **Content Flexibility**: Lesson content supports multiple formats (Text, SCORM, Multimedia)
-- **Extensible Design**: Content type system ready for future content formats
-- **Department Branding**: Optional custom logos and text per department
+- **Multimedia Storage**: Files stored in Bunny Storage with CDN delivery
+- **Department Branding**: Custom logos (light/dark mode), logo text, app description, footer links, and contact information per department
 
 ---
 
@@ -180,6 +186,16 @@ Vercel/Netlify → Neon PostgreSQL → Upstash Redis → Bunny Storage/CDN
 - **Design System**: Consistent component styling
 - **Accessibility**: Built-in ARIA attributes
 - **Theming**: Dark/light mode support
+
+### **Tiptap ↔ Rich Text Editor**
+
+- **Component Location**: `src/components/ui/rich-text-editor.tsx`
+- **Usage**: Lesson content editing in `src/components/lesson-editor.tsx`
+- **Features**: WYSIWYG editor with formatting toolbar (bold, italic, underline, headings, lists, links)
+- **Styling**: Centralized styling matching application design system
+- **SSR Compatibility**: Configured with `immediatelyRender: false` for Next.js compatibility
+- **Extensions**: StarterKit, Link, Underline, Placeholder
+- **Storage**: Content stored as HTML in database
 
 ### **Bunny Storage ↔ File Management**
 

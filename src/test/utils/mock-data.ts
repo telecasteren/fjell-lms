@@ -2,7 +2,7 @@
 export const mockDepartments = [
   {
     id: '1',
-    name: 'Cubit',
+    name: 'Department 1',
     createdAt: '2024-01-01T00:00:00Z',
     _count: {
       users: 5,
@@ -228,7 +228,7 @@ export const mockAuthorDashboardData = {
 export const mockDepartmentReports = [
   {
     id: '1',
-    name: 'Cubit',
+    name: 'Department 1',
     userCount: 5,
     courseCount: 3,
     totalLessons: 15,

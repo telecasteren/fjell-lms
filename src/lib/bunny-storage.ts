@@ -13,11 +13,21 @@ export class BunnyStorageProvider implements StorageProvider {
   private baseUrl: string;
 
   constructor(apiKey: string, region: string, bucket: string) {
-    this.apiKey = apiKey;
-    this.region = region.toLowerCase(); // Normalize region to lowercase
-    this.bucket = bucket;
+    // Trim whitespace from API key (common issue)
+    this.apiKey = apiKey.trim();
+    this.region = region.toLowerCase().trim(); // Normalize region to lowercase
+    this.bucket = bucket.trim();
     // Use global storage endpoint without region
-    this.baseUrl = `https://storage.bunnycdn.com/${bucket}`;
+    this.baseUrl = `https://storage.bunnycdn.com/${this.bucket}`;
+    
+    // Log configuration (without exposing full key)
+    console.log("BunnyStorageProvider initialized:", {
+      bucket: this.bucket,
+      region: this.region,
+      hasApiKey: !!this.apiKey,
+      apiKeyLength: this.apiKey.length,
+      baseUrl: this.baseUrl,
+    });
   }
 
   async uploadFile(
@@ -41,10 +51,18 @@ export class BunnyStorageProvider implements StorageProvider {
             : 0;
 
       // Create the full path for Bunny Storage
-      const fullPath = `${path}/${fileName}`;
+      // Remove leading/trailing slashes and normalize path
+      const normalizedPath = path.replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+      const normalizedFileName = fileName.replace(/^\/+|\/+$/g, '');
+      const fullPath = normalizedPath ? `${normalizedPath}/${normalizedFileName}` : normalizedFileName;
       const uploadUrl = `${this.baseUrl}/${fullPath}`;
 
-      console.log("Uploading to Bunny Storage:", uploadUrl);
+      console.log("Uploading to Bunny Storage:", {
+        uploadUrl,
+        fullPath,
+        bucket: this.bucket,
+        fileName: normalizedFileName,
+      });
 
       // Convert file to ArrayBuffer for upload
       let fileBuffer: ArrayBuffer | ArrayBufferLike;
@@ -76,15 +94,24 @@ export class BunnyStorageProvider implements StorageProvider {
         );
         console.error("Request details:", {
           uploadUrl,
+          bucket: this.bucket,
+          region: this.region,
           headers: {
             AccessKey: this.apiKey
               ? `${this.apiKey.substring(0, 5)}...`
               : "MISSING",
           },
         });
-        throw new Error(
-          `Upload failed: ${response.status} ${response.statusText} - ${errorText}`
-        );
+        
+        // Provide more helpful error messages
+        let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        if (response.status === 401 || response.status === 403) {
+          errorMessage = "Forbidden - Check your Bunny Storage API key. It may be invalid, expired, or lack write permissions.";
+        } else if (errorText) {
+          errorMessage += ` - ${errorText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Generate public URL using CDN Pull Zone

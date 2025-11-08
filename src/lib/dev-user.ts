@@ -6,7 +6,7 @@ export async function createDevUser() {
   try {
     // Check if dev user already exists
     const existing = await prisma.user.findUnique({
-      where: { email: "fox-author-dev@cubit.no" },
+      where: { email: "fox-author-dev@example.com" },
     });
 
     if (existing) {
@@ -26,7 +26,7 @@ export async function createDevUser() {
     const devUser = await prisma.user.create({
       data: {
         name: "Fox Author Dev",
-        email: "fox-author-dev@cubit.no",
+        email: "fox-author-dev@example.com",
         passwordHash: passwordHash,
         role: Role.AUTHOR,
         departmentId: department.id,

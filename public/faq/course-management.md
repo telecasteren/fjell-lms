@@ -12,9 +12,44 @@ After creating a course, click "Manage" to access the course management interfac
 
 In the course management interface, expand a module and click "Add Lesson" to create new lessons. You can also edit existing lessons by clicking "Edit".
 
+### Creating Lesson Content
+
+When creating or editing a lesson, you'll see two tabs:
+
+1. **Content Tab**: 
+   - Enter the lesson title
+   - Select the content type (Text Editor, SCORM, or Multimedia)
+   - For **Text Editor** content:
+     - Use the rich text editor toolbar to format your content
+     - Click formatting buttons (Bold, Italic, Underline, Headings, Lists, Links)
+     - Type directly in the editor - formatting is applied in real-time
+     - Content is automatically saved as HTML when you save the lesson
+   - For **Multimedia** content:
+     - Upload video, audio, or interactive files
+     - Files are stored securely and delivered via CDN
+
+2. **Quiz Tab**:
+   - Add quiz questions with multiple answer options
+   - Choose question types: Single Choice (Radio), Multiple Choice (Checkbox), or Short Text Answer
+   - Mark correct answers for each question
+
 ## How do I add quizzes to lessons?
 
-When editing a lesson, switch to the "Quiz" tab to add questions and answer options. You can create multiple choice questions with correct answers.
+When editing a lesson, switch to the "Quiz" tab to add questions and answer options. 
+
+### Quiz Question Types
+
+You can create three types of questions:
+
+1. **Single Choice (Radio)**: Students select one correct answer from multiple options
+2. **Multiple Choice (Checkbox)**: Students can select multiple correct answers
+3. **Short Text Answer**: Students type their answer in a text field (case-insensitive matching)
+
+For each question:
+- Enter the question text
+- Add answer options (for radio/checkbox questions)
+- Mark which answers are correct
+- Students need 70% correct to pass the quiz
 
 ## Can I delete courses?
 

@@ -4,10 +4,21 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type QuestionType = "radio" | "checkbox" | "text";
 
 type Question = {
   id: string;
   text: string;
+  type: QuestionType;
   options: string[];
   correctAnswers: number[];
 };
@@ -19,6 +30,7 @@ type QuizEditorProps = {
 
 export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [mandatory, setMandatory] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,7 +43,13 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
     if (res.ok) {
       const data = await res.json();
       if (data.quiz) {
-        setQuestions(data.quiz.questions || []);
+        // Ensure all questions have a type field (default to "checkbox" for backward compatibility)
+        const questions = (data.quiz.questions || []).map((q: Question) => ({
+          ...q,
+          type: q.type || "checkbox",
+        }));
+        setQuestions(questions);
+        setMandatory(data.quiz.mandatory ?? false);
       }
     }
   }
@@ -41,7 +59,7 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
     const res = await fetch(`/api/lessons/${lessonId}/quiz`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questions }),
+      body: JSON.stringify({ questions, mandatory }),
     });
     setLoading(false);
     if (res.ok) {
@@ -53,6 +71,7 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
     const newQuestion: Question = {
       id: Date.now().toString(),
       text: "",
+      type: "checkbox",
       options: ["", ""],
       correctAnswers: [],
     };
@@ -82,10 +101,48 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
 
   function toggleCorrectAnswer(questionId: string, optionIndex: number) {
     const question = questions.find(q => q.id === questionId)!;
-    const newCorrectAnswers = question.correctAnswers.includes(optionIndex)
-      ? question.correctAnswers.filter(i => i !== optionIndex)
-      : [...question.correctAnswers, optionIndex];
-    updateQuestion(questionId, { correctAnswers: newCorrectAnswers });
+    
+    // For radio questions, only one answer can be correct
+    if (question.type === "radio") {
+      updateQuestion(questionId, { correctAnswers: [optionIndex] });
+    } else {
+      // For checkbox questions, multiple answers can be correct
+      const newCorrectAnswers = question.correctAnswers.includes(optionIndex)
+        ? question.correctAnswers.filter(i => i !== optionIndex)
+        : [...question.correctAnswers, optionIndex];
+      updateQuestion(questionId, { correctAnswers: newCorrectAnswers });
+    }
+  }
+
+  function handleQuestionTypeChange(questionId: string, newType: QuestionType) {
+    const question = questions.find(q => q.id === questionId)!;
+    
+    // When switching to radio, ensure only one correct answer
+    if (newType === "radio" && question.correctAnswers.length > 1) {
+      updateQuestion(questionId, {
+        type: newType,
+        correctAnswers: [question.correctAnswers[0]],
+      });
+    } else if (newType === "text") {
+      // For text questions, clear options and correctAnswers
+      // The correct answer will be stored in correctAnswers as text
+      updateQuestion(questionId, {
+        type: newType,
+        options: [],
+        correctAnswers: [],
+      });
+    } else {
+      updateQuestion(questionId, { type: newType });
+    }
+  }
+
+  function updateTextCorrectAnswer(questionId: string, value: string) {
+    // For text questions, store the expected answer(s) in correctAnswers
+    // We'll store it as a string in the first index
+    updateQuestion(questionId, {
+      correctAnswers: value ? [0] : [],
+      options: value ? [value] : [],
+    });
   }
 
   return (
@@ -94,6 +151,16 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
         <CardTitle>Quiz Editor</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex items-center gap-2 p-4 border rounded-md bg-muted/50">
+          <Checkbox
+            id="mandatory"
+            checked={mandatory}
+            onCheckedChange={(checked) => setMandatory(checked === true)}
+          />
+          <Label htmlFor="mandatory" className="cursor-pointer">
+            Quiz is mandatory to complete the lesson
+          </Label>
+        </div>
         <div className="flex justify-between">
           <Button onClick={addQuestion}>Add Question</Button>
           <div className="flex gap-2">
@@ -124,26 +191,62 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Options (check correct answers)</Label>
-                {question.options.map((option, oIndex) => (
-                  <div key={oIndex} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={question.correctAnswers.includes(oIndex)}
-                      onChange={() => toggleCorrectAnswer(question.id, oIndex)}
-                    />
-                    <input
-                      placeholder={`Option ${oIndex + 1}`}
-                      value={option}
-                      onChange={(e) => updateOption(question.id, oIndex, e.target.value)}
-                      className="flex-1 rounded-md border px-3 py-2 bg-background"
-                    />
-                  </div>
-                ))}
-                <Button variant="outline" onClick={() => addOption(question.id)}>
-                  Add Option
-                </Button>
+                <Label>Question Type</Label>
+                <Select
+                  value={question.type}
+                  onValueChange={(value) => handleQuestionTypeChange(question.id, value as QuestionType)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="radio">Single Choice (Radio)</SelectItem>
+                    <SelectItem value="checkbox">Multiple Choice (Checkbox)</SelectItem>
+                    <SelectItem value="text">Short Text Answer</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {question.type === "text" ? (
+                <div className="space-y-2">
+                  <Label>Expected Answer</Label>
+                  <input
+                    type="text"
+                    placeholder="Enter the expected answer..."
+                    value={question.options[0] || ""}
+                    onChange={(e) => updateTextCorrectAnswer(question.id, e.target.value)}
+                    className="w-full rounded-md border px-3 py-2 bg-background"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Students will type their answer in a text field. This is the expected correct answer.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>
+                    {question.type === "radio" ? "Options (select one correct answer)" : "Options (check correct answers)"}
+                  </Label>
+                  {question.options.map((option, oIndex) => (
+                    <div key={oIndex} className="flex items-center gap-2">
+                      <input
+                        type={question.type === "radio" ? "radio" : "checkbox"}
+                        name={question.type === "radio" ? `question-${question.id}` : undefined}
+                        checked={question.correctAnswers.includes(oIndex)}
+                        onChange={() => toggleCorrectAnswer(question.id, oIndex)}
+                      />
+                      <input
+                        placeholder={`Option ${oIndex + 1}`}
+                        value={option}
+                        onChange={(e) => updateOption(question.id, oIndex, e.target.value)}
+                        className="flex-1 rounded-md border px-3 py-2 bg-background"
+                      />
+                    </div>
+                  ))}
+                  <Button variant="outline" onClick={() => addOption(question.id)}>
+                    Add Option
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

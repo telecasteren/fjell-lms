@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,65 +7,52 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-enum Role {
-  AUTHOR
-  ADMIN
-  BASIC
-  WRITER
-}
-
-enum CourseStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
-
 model Department {
-  id                String       @id @default(cuid())
-  name              String       @unique
-  orgNr             String?
-  logoUrl           String?      // Custom logo URL for the department (light theme)
-  darkModeLogoUrl   String?      // Custom logo URL for the department (dark theme)
-  logoText          String?      // Custom logo text for the department (default: FOX-LMS) - used in both navbar and footer
-  parentDepartmentId String?     // Parent department ID for hierarchy (null for root departments like FOX-LMS)
-  parentDepartment  Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id], onDelete: Cascade)
-  subDepartments    Department[] @relation("DepartmentHierarchy")
-  // Footer branding fields
-  footerLinkSectionTitle String? // Title for the footer links section (default: "Products")
-  footerLink1Url     String?     // First footer link URL
-  footerLink1Text    String?     // First footer link text
-  footerLink2Url     String?     // Second footer link URL
-  footerLink2Text    String?     // Second footer link text
-  footerLink3Url     String?     // Third footer link URL
-  footerLink3Text    String?     // Third footer link text
-  footerContactEmail String?     // Contact email (only visible to first-level children of FOX-LMS)
-  footerContactPhone String?     // Contact phone (only visible to first-level children of FOX-LMS)
-  footerContactAddress String?   // Contact address line 1 (only visible to first-level children of FOX-LMS)
-  footerContactAddress2 String?  // Contact address line 2 (only visible to first-level children of FOX-LMS)
-  users             User[]
-  courses           Course[]
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id                     String       @id @default(cuid())
+  name                   String       @unique
+  orgNr                  String?
+  logoUrl                String?
+  darkModeLogoUrl        String?
+  logoText               String?
+  parentDepartmentId     String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  footerContactAddress   String?
+  footerContactEmail     String?
+  footerContactPhone     String?
+  footerLink1Text        String?
+  footerLink1Url         String?
+  footerLink2Text        String?
+  footerLink2Url         String?
+  footerLink3Text        String?
+  footerLink3Url         String?
+  footerLinkSectionTitle String?
+  footerContactAddress2  String?
+  appDescription         String?
+  courses                Course[]
+  parentDepartment       Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id], onDelete: Cascade)
+  subDepartments         Department[] @relation("DepartmentHierarchy")
+  users                  User[]
 }
 
 model User {
-  id           String      @id @default(cuid())
-  email        String      @unique
-  name         String?
-  image        String?
-  emailVerified DateTime?
-  passwordHash String
-  role         Role        @default(BASIC)
-  departmentId String
-  theme        String?     @default("light") // User theme preference: 'light' or 'dark'
-  department   Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  enrollments  Enrollment[]
-  progresses   Progress[]
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  image           String?
+  emailVerified   DateTime?
+  passwordHash    String
+  role            Role             @default(BASIC)
+  departmentId    String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  theme           String?          @default("light")
+  accounts        Account[]
+  enrollments     Enrollment[]
+  progresses      Progress[]
   quizCompletions QuizCompletion[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  accounts     Account[]
-  sessions     Session[]
+  sessions        Session[]
+  department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 }
 
 model Course {
@@ -80,84 +61,83 @@ model Course {
   description  String?
   status       CourseStatus @default(DRAFT)
   departmentId String
-  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  modules      Module[]
-  enrollments  Enrollment[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  enrollments  Enrollment[]
+  modules      Module[]
 
   @@index([departmentId])
 }
 
 model Module {
-  id        String   @id @default(cuid())
-  title     String
-  order     Int
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons   Lesson[]
+  id       String   @id @default(cuid())
+  title    String
+  order    Int
+  courseId String
+  lessons  Lesson[]
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model Lesson {
-  id        String  @id @default(cuid())
-  title     String
-  content   String?
-  multimediaFiles Json? // Store multimedia file metadata as JSON
-  contentType String? // Store content type: 'text', 'scorm', 'multimedia'
-  order     Int
-  moduleId  String
-  module    Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  quiz      Quiz?
-  progress  Progress[]
+  id              String     @id @default(cuid())
+  title           String
+  content         String?
+  multimediaFiles Json?
+  contentType     String?
+  order           Int
+  moduleId        String
+  module          Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress        Progress[]
+  quiz            Quiz?
 }
 
 model Quiz {
-  id        String  @id @default(cuid())
-  lessonId  String  @unique
-  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  // JSON blob for multiselect questions for iteration 1
-  questions Json
+  id          String           @id @default(cuid())
+  lessonId    String           @unique
+  questions   Json
+  mandatory   Boolean          @default(false)
+  lesson      Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   completions QuizCompletion[]
 }
 
 model QuizCompletion {
-  id        String  @id @default(cuid())
-  userId    String
-  quizId    String
-  passed    Boolean
-  score     Int     // Percentage score
-  attempts  Int     @default(1)
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  passed      Boolean
+  score       Int
+  attempts    Int      @default(1)
   completedAt DateTime @default(now())
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quiz      Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, quizId])
 }
 
 model Enrollment {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   courseId  String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
 
 model Progress {
-  id         String   @id @default(cuid())
-  userId     String
-  lessonId   String
-  completed  Boolean  @default(false)
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
   completedAt DateTime?
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
 }
 
-// NextAuth adapter models
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -171,7 +151,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -190,4 +170,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum Role {
+  AUTHOR
+  ADMIN
+  BASIC
+  WRITER
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }

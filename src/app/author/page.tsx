@@ -49,6 +49,7 @@ type DepartmentDetails = {
   logoUrl?: string | null;
   darkModeLogoUrl?: string | null;
   logoText?: string | null;
+  appDescription?: string | null;
   parentDepartmentId?: string | null;
   parentDepartment?: {
     id: string;
@@ -546,6 +547,7 @@ export default function AuthorDashboard() {
                             departmentName={departmentDetails.name}
                             currentLogoUrl={departmentDetails.logoUrl}
                             currentLogoText={departmentDetails.logoText}
+                            currentAppDescription={departmentDetails.appDescription}
                             currentDarkModeLogoUrl={departmentDetails.darkModeLogoUrl}
                             currentFooterLinkSectionTitle={departmentDetails.footerLinkSectionTitle}
                             currentFooterLink1Url={departmentDetails.footerLink1Url}

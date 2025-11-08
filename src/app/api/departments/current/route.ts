@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
           logoUrl: true,
           darkModeLogoUrl: true,
           logoText: true,
+          appDescription: true,
           parentDepartmentId: true,
           parentDepartment: {
             select: {

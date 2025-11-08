@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, requireAuthorOnly } from "@/lib/rbac";
+import { requireAuth, requireWriterOrAdminOrAuthor } from "@/lib/rbac";
+import { canManageLesson, canAccessCourse } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
@@ -26,7 +27,14 @@ export async function GET(
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
 
-    // Check if user is enrolled in the course or is an AUTHOR with access to the course
+    // Check if user can access this course (for viewing quiz)
+    // This allows enrolled users, AUTHOR/WRITER/ADMIN who can manage the course
+    const canAccess = await canAccessCourse(user.id, lesson.module.courseId);
+    
+    // Also check if user can manage the lesson (for AUTHOR/WRITER/ADMIN editing)
+    const canManage = await canManageLesson(user.id, id);
+    
+    // Check if user is enrolled in the course
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
@@ -36,27 +44,17 @@ export async function GET(
       },
     });
 
-    // For AUTHOR users, check if they have access to the course
-    const courseAccess =
-      user.role === "AUTHOR"
-        ? await prisma.course.findFirst({
-            where: {
-              id: lesson.module.courseId,
-              departmentId: user.departmentId,
-            },
-          })
-        : null;
-
-    if (!enrollment && !courseAccess) {
+    // Allow access if: enrolled, can access course, or can manage lesson
+    if (!enrollment && !canAccess && !canManage) {
       return NextResponse.json(
-        { error: "Not enrolled in this course" },
+        { error: "You don't have access to this quiz" },
         { status: 403 }
       );
     }
 
     const quiz = await prisma.quiz.findUnique({
       where: { lessonId: id },
-      select: { id: true, questions: true },
+      select: { id: true, questions: true, mandatory: true },
     });
     return NextResponse.json({ quiz });
   } catch {
@@ -69,21 +67,36 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
-    const { questions } = await req.json();
+    const user = await requireWriterOrAdminOrAuthor(req);
+    const { questions, mandatory } = await req.json();
     if (!questions)
       return NextResponse.json(
         { error: "Questions required" },
         { status: 400 }
       );
     const { id } = await params;
+
+    // Check if user can manage this lesson
+    const canManage = await canManageLesson(user.id, id);
+    if (!canManage) {
+      return NextResponse.json(
+        { error: "You don't have permission to manage this lesson" },
+        { status: 403 }
+      );
+    }
+
     const quiz = await prisma.quiz.upsert({
       where: { lessonId: id },
-      update: { questions },
-      create: { lessonId: id, questions },
+      update: { questions, mandatory: mandatory ?? false },
+      create: { lessonId: id, questions, mandatory: mandatory ?? false },
     });
     return NextResponse.json({ quiz });
-  } catch {
+  } catch (error) {
+    // Handle custom AuthError with status
+    if (error && typeof error === "object" && "status" in error) {
+      const status = (error as { status: number }).status;
+      return NextResponse.json({ error: "Unauthorized" }, { status });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

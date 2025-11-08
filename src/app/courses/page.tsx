@@ -176,7 +176,29 @@ export default function CoursesPage() {
   }
 
   function canDeleteCourse(course: Course) {
-    return isAuthor() && course.enrollmentCount === 0;
+    if (course.enrollmentCount > 0) return false;
+    
+    // AUTHOR can delete any course
+    if (isAuthor()) return true;
+    
+    // WRITER and ADMIN can delete courses from their own department
+    if (user?.role === "WRITER" || user?.role === "ADMIN") {
+      return course.departmentId === user.departmentId;
+    }
+    
+    return false;
+  }
+
+  function canManageCourseStatus(course: Course) {
+    // AUTHOR can manage status of any course
+    if (isAuthor()) return true;
+    
+    // WRITER and ADMIN can manage status of courses from their own department
+    if (user?.role === "WRITER" || user?.role === "ADMIN") {
+      return course.departmentId === user.departmentId;
+    }
+    
+    return false;
   }
 
   function getFilteredCourses() {
@@ -187,7 +209,20 @@ export default function CoursesPage() {
       return courses;
     }
 
-    // BASIC and ADMIN only see published courses
+    // ADMIN and WRITER see all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
+    // but only published courses from other departments
+    if (user.role === "ADMIN" || user.role === "WRITER") {
+      return courses.filter(course => {
+        // Show all courses from their own department regardless of status
+        if (course.departmentId === user.departmentId) {
+          return true;
+        }
+        // For other departments, only show published courses
+        return course.status === "PUBLISHED";
+      });
+    }
+
+    // BASIC only see published courses
     return courses.filter(course => course.status === "PUBLISHED");
   }
 
@@ -251,24 +286,28 @@ export default function CoursesPage() {
       )}
 
       <div className="grid gap-3">
-        {getNonFoxLmsCourses().map(c => (
+        {getNonFoxLmsCourses().map(c => {
+          const canManage = canManageCourseStatus(c);
+          const isArchived = c.status === "ARCHIVED";
+          
+          return (
           <Card
             key={c.id}
             className={
-              c.status === "ARCHIVED" && isAuthor() ? "opacity-60" : ""
+              isArchived && canManage ? "opacity-60" : ""
             }
           >
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle
                   className={
-                    c.status === "ARCHIVED" && isAuthor()
+                    isArchived && canManage
                       ? "text-muted-foreground"
                       : ""
                   }
                 >
                   {c.title}
-                  {c.status === "ARCHIVED" && isAuthor() && (
+                  {isArchived && canManage && (
                     <span className="text-muted-foreground ml-2 text-xs">
                       (Archived)
                     </span>
@@ -291,8 +330,8 @@ export default function CoursesPage() {
                   </div>
                 )}
 
-              {/* Status Management for Authors */}
-              {isAuthor() && (
+              {/* Status Management for Authors, Writers, and Admins */}
+              {canManageCourseStatus(c) && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Status:</span>
                   <Select
@@ -312,8 +351,8 @@ export default function CoursesPage() {
               )}
 
               <div className="flex gap-2">
-                {/* Manage button only for AUTHOR users */}
-                {isAuthor() && (
+                {/* Manage button for users who can manage the course */}
+                {canManageCourseStatus(c) && (
                   <Button
                     variant="outline"
                     onClick={() => (window.location.href = `/courses/${c.id}`)}
@@ -346,7 +385,7 @@ export default function CoursesPage() {
                     Enroll
                   </Button>
                 )}
-                {isAuthor() && (
+                {(isAuthor() || user?.role === "WRITER" || user?.role === "ADMIN") && (
                   <Button
                     variant="destructive"
                     disabled={!canDeleteCourse(c)}
@@ -358,7 +397,7 @@ export default function CoursesPage() {
               </div>
 
               {/* Warning message for courses with enrollments */}
-              {isAuthor() && c.enrollmentCount > 0 && (
+              {(isAuthor() || user?.role === "WRITER" || user?.role === "ADMIN") && c.enrollmentCount > 0 && (
                 <div className="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-3">
                   <p className="text-sm text-yellow-800">
                     This course has active enrollments and cannot be deleted.
@@ -368,7 +407,8 @@ export default function CoursesPage() {
               )}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       <ConfirmationDialog

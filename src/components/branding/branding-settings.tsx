@@ -196,9 +196,9 @@ export function BrandingSettings() {
       links: {
         homepage: prev.links?.homepage || "https://www.telecasternilsen.com",
         contact: prev.links?.contact || "https://www.telecasternilsen.com/#contact",
-        cubit: prev.links?.cubit || "https://tilsyn.cubit.no",
-        koti: prev.links?.koti || "https://www.koti.no",
-        sanako: prev.links?.sanako || "https://www.sanako.no",
+        link1: prev.links?.link1 || "https://example.com/link1",
+        link2: prev.links?.link2 || "https://example.com/link2",
+        link3: prev.links?.link3 || "https://example.com/link3",
         terms: prev.links?.terms || "",
         faq: prev.links?.faq || "/faq",
         [linkKey]: value,

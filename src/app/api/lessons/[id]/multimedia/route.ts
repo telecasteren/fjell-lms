@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { requireAuthorOnly } from "@/lib/rbac";
+import { requireWriterOrAdminOrAuthor } from "@/lib/rbac";
 import { storageManager } from "@/lib/storage";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -10,8 +10,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuthorOnly(req); // Authorization check only
+    const user = await requireWriterOrAdminOrAuthor(req); // Allow WRITER, ADMIN, or AUTHOR
     const { id } = await params;
+    
+    console.log("Multimedia upload request received for lesson:", id);
 
     // Verify lesson exists and user has access
     const lesson = await prisma.lesson.findFirst({
@@ -30,11 +32,37 @@ export async function POST(
     }
 
     // Parse form data
-    const formData = await req.formData();
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch (error) {
+      console.error("FormData parsing error:", error);
+      return NextResponse.json(
+        { error: "Failed to parse form data" },
+        { status: 400 }
+      );
+    }
+
     const files = formData.getAll("files") as File[];
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
+    }
+
+    // Validate files
+    for (const file of files) {
+      if (!(file instanceof File)) {
+        return NextResponse.json(
+          { error: "Invalid file format" },
+          { status: 400 }
+        );
+      }
+      if (file.size === 0) {
+        return NextResponse.json(
+          { error: `File ${file.name} is empty` },
+          { status: 400 }
+        );
+      }
     }
 
     const uploadedFiles = [];
@@ -42,6 +70,41 @@ export async function POST(
 
     console.log("Starting multimedia upload for lesson:", id);
     console.log("Files to upload:", files.length);
+    
+    // Check storage configuration
+    const apiKey = process.env.BUNNY_STORAGE_API_KEY;
+    const bucket = process.env.BUNNY_STORAGE_BUCKET;
+    const region = process.env.BUNNY_STORAGE_REGION;
+    
+    console.log("Storage configuration check:", {
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+      apiKeyPrefix: apiKey ? `${apiKey.substring(0, 5)}...` : "MISSING",
+      bucket: bucket || "MISSING",
+      region: region || "MISSING",
+    });
+    
+    if (!apiKey) {
+      console.error("BUNNY_STORAGE_API_KEY is not configured");
+      return NextResponse.json(
+        { 
+          error: "Storage not configured",
+          details: process.env.NODE_ENV === "development" ? "BUNNY_STORAGE_API_KEY environment variable is missing" : undefined
+        },
+        { status: 500 }
+      );
+    }
+    
+    if (!bucket) {
+      console.error("BUNNY_STORAGE_BUCKET is not configured");
+      return NextResponse.json(
+        { 
+          error: "Storage not configured",
+          details: process.env.NODE_ENV === "development" ? "BUNNY_STORAGE_BUCKET environment variable is missing" : undefined
+        },
+        { status: 500 }
+      );
+    }
 
     // Upload each file
     for (const file of files) {
@@ -52,13 +115,21 @@ export async function POST(
         const path = `lessons/${id}/multimedia`;
 
         // Upload to storage
-        const result = await storageManager.uploadFile(file, path, {
-          fileName: file.name,
-          contentType: file.type,
-          lessonId: id,
-          uploadedBy: user.id,
-          uploadedAt: new Date().toISOString(),
-        });
+        let result;
+        try {
+          result = await storageManager.uploadFile(file, path, {
+            fileName: file.name,
+            contentType: file.type,
+            lessonId: id,
+            uploadedBy: user.id,
+            uploadedAt: new Date().toISOString(),
+          });
+        } catch (uploadError) {
+          console.error("Storage manager upload error:", uploadError);
+          const errorMsg = uploadError instanceof Error ? uploadError.message : "Unknown upload error";
+          errors.push(`${file.name}: ${errorMsg}`);
+          continue;
+        }
 
         if (result.success && result.file) {
           console.log("File uploaded successfully:", result.file.url);
@@ -91,27 +162,52 @@ export async function POST(
 
     // Update lesson with multimedia files
     if (uploadedFiles.length > 0) {
-      const existingFiles = (lesson.multimediaFiles || []) as MultimediaFile[];
-      const updatedFiles = [...existingFiles, ...uploadedFiles];
+      try {
+        const existingFiles = (lesson.multimediaFiles || []) as MultimediaFile[];
+        const updatedFiles = [...existingFiles, ...uploadedFiles];
 
-      await prisma.lesson.update({
-        where: { id },
-        data: {
-          multimediaFiles: updatedFiles as Prisma.InputJsonValue,
-          contentType: "multimedia",
-        },
-      });
+        await prisma.lesson.update({
+          where: { id },
+          data: {
+            multimediaFiles: updatedFiles as Prisma.InputJsonValue,
+            contentType: "multimedia",
+          },
+        });
+      } catch (dbError) {
+        console.error("Database update error:", dbError);
+        // Even if DB update fails, we still have the files uploaded to storage
+        // So we return success but log the error
+        errors.push("Files uploaded but failed to save to database");
+      }
+    }
+
+    // Return error if no files were uploaded successfully
+    if (uploadedFiles.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: errors.length > 0 ? errors.join("; ") : "No files were uploaded",
+        errors: errors.length > 0 ? errors : undefined,
+      }, { status: 400 });
     }
 
     return NextResponse.json({
-      success: uploadedFiles.length > 0,
+      success: true,
       uploadedFiles,
       errors: errors.length > 0 ? errors : undefined,
       message: `${uploadedFiles.length} file(s) uploaded successfully`,
     });
   } catch (error) {
     console.error("Multimedia upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error details:", { errorMessage, errorStack });
+    return NextResponse.json(
+      { 
+        error: "Upload failed",
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -121,7 +217,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    await requireWriterOrAdminOrAuthor(req); // Allow WRITER, ADMIN, or AUTHOR
     const { id } = await params;
 
     // Get lesson with multimedia files
@@ -159,7 +255,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuthorOnly(req); // Authorization check only
+    await requireWriterOrAdminOrAuthor(req); // Allow WRITER, ADMIN, or AUTHOR
     const { id } = await params;
     const { fileId } = await req.json();
 

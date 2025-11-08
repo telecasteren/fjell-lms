@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
         name: user.name,
         role: user.role,
         departmentId: user.departmentId,
+        image: user.image,
       },
     });
   } catch (error) {

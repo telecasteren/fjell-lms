@@ -15,6 +15,7 @@ interface DepartmentBrandingSettingsProps {
   departmentName: string;
   currentLogoUrl?: string | null;
   currentLogoText?: string | null;
+  currentAppDescription?: string | null;
   currentDarkModeLogoUrl?: string | null;
   currentFooterLinkSectionTitle?: string | null;
   currentFooterLink1Url?: string | null;
@@ -33,6 +34,7 @@ export function DepartmentBrandingSettings({
   departmentId,
   currentLogoUrl,
   currentLogoText,
+  currentAppDescription,
   currentDarkModeLogoUrl,
   currentFooterLinkSectionTitle,
   currentFooterLink1Url,
@@ -47,6 +49,7 @@ export function DepartmentBrandingSettings({
   currentFooterContactAddress2,
 }: DepartmentBrandingSettingsProps) {
   const [logoText, setLogoText] = useState(currentLogoText || "FOX-LMS");
+  const [appDescription, setAppDescription] = useState(currentAppDescription || "");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(
     currentLogoUrl || null
@@ -60,7 +63,7 @@ export function DepartmentBrandingSettings({
   );
   // Footer fields
   const [footerLinkSectionTitle, setFooterLinkSectionTitle] = useState(
-    currentFooterLinkSectionTitle || "Products"
+    currentFooterLinkSectionTitle || ""
   );
   const [footerLink1Url, setFooterLink1Url] = useState(currentFooterLink1Url || "");
   const [footerLink1Text, setFooterLink1Text] = useState(currentFooterLink1Text || "");
@@ -76,10 +79,11 @@ export function DepartmentBrandingSettings({
 
   useEffect(() => {
     setLogoText(currentLogoText || "FOX-LMS");
+    setAppDescription(currentAppDescription || "");
     setLogoPreview(currentLogoUrl || null);
     setDarkModeLogoPreview(currentDarkModeLogoUrl || null);
     setUseSameLogoForDarkMode(!currentDarkModeLogoUrl);
-    setFooterLinkSectionTitle(currentFooterLinkSectionTitle || "Products");
+    setFooterLinkSectionTitle(currentFooterLinkSectionTitle || "");
     setFooterLink1Url(currentFooterLink1Url || "");
     setFooterLink1Text(currentFooterLink1Text || "");
     setFooterLink2Url(currentFooterLink2Url || "");
@@ -92,6 +96,7 @@ export function DepartmentBrandingSettings({
     setFooterContactAddress2(currentFooterContactAddress2 || "");
   }, [
     currentLogoText,
+    currentAppDescription,
     currentLogoUrl,
     currentDarkModeLogoUrl,
     currentFooterLinkSectionTitle,
@@ -176,6 +181,7 @@ export function DepartmentBrandingSettings({
       const formData = new FormData();
       formData.append("departmentId", departmentId);
       formData.append("logoText", logoText);
+      formData.append("appDescription", appDescription);
       formData.append(
         "useSameLogoForDarkMode",
         useSameLogoForDarkMode.toString()
@@ -232,162 +238,188 @@ export function DepartmentBrandingSettings({
         <CardTitle>Department Branding</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Logo Upload */}
+        {/* Logo Section - All logo-related items together */}
         <div className="space-y-4">
-          <Label>Logo Images</Label>
+          <Label>Logo Settings</Label>
 
-          {/* Light Mode Logo */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4" />
-              <Label className="text-sm font-medium">Light Theme Logo</Label>
-            </div>
-            {logoPreview ? (
-              <div className="relative inline-block h-32 w-32 rounded border">
-                <Image
-                  src={logoPreview}
-                  alt="Light mode logo preview"
-                  fill
-                  className="rounded object-contain"
-                  unoptimized
+          {/* Main Logo Layout: Text/Toggle on left, Logos on right */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Left Side: Logo Text and Toggle */}
+            <div className="space-y-4">
+              {/* Logo Text */}
+              <div className="space-y-2">
+                <Label htmlFor="logo-text">Logo Text</Label>
+                <Input
+                  id="logo-text"
+                  value={logoText}
+                  onChange={(e) => setLogoText(e.target.value)}
+                  placeholder="FOX-LMS"
                 />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={handleRemoveLogo}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="rounded-lg border-2 border-dashed p-6 text-center">
-                <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-                <p className="text-muted-foreground mb-2 text-sm">
-                  No light theme logo uploaded (using default)
+                <p className="text-muted-foreground text-xs">
+                  This text will appear next to your logo in the navbar and footer
                 </p>
               </div>
-            )}
 
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                id="logo-upload"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById("logo-upload")?.click()}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {logoPreview ? "Change Light Logo" : "Upload Light Logo"}
-              </Button>
-            </div>
-          </div>
-
-          {/* Dark Mode Toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-1">
-              <Label className="text-sm font-medium">
-                Use same logo for dark theme
-              </Label>
-              <p className="text-muted-foreground text-xs">
-                When enabled, the light theme logo will be used for dark theme
-                as well
-              </p>
-            </div>
-            <Switch
-              checked={useSameLogoForDarkMode}
-              onCheckedChange={(checked) => {
-                setUseSameLogoForDarkMode(checked);
-                if (checked) {
-                  // Clear dark mode logo when toggling to use same logo
-                  setDarkModeLogoFile(null);
-                  setDarkModeLogoPreview(null);
-                }
-              }}
-            />
-          </div>
-
-          {/* Dark Mode Logo - Only show if not using same logo */}
-          {!useSameLogoForDarkMode && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Moon className="h-4 w-4" />
-                <Label className="text-sm font-medium">Dark Theme Logo</Label>
+              {/* Subtitle */}
+              <div className="space-y-2">
+                <Label htmlFor="app-description">Subtitle</Label>
+                <Input
+                  id="app-description"
+                  value={appDescription}
+                  onChange={(e) => setAppDescription(e.target.value)}
+                  placeholder="Enter app description or subtitle"
+                />
+                <p className="text-muted-foreground text-xs">
+                  A brief description or subtitle for your department
+                </p>
               </div>
-              {darkModeLogoPreview ? (
-                <div className="relative inline-block h-32 w-32 rounded border">
-                  <Image
-                    src={darkModeLogoPreview}
-                    alt="Dark mode logo preview"
-                    fill
-                    className="rounded object-contain"
-                    unoptimized
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={handleRemoveDarkModeLogo}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="rounded-lg border-2 border-dashed p-6 text-center">
-                  <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-                  <p className="text-muted-foreground mb-2 text-sm">
-                    No dark theme logo uploaded
+
+              {/* Dark Mode Toggle */}
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">
+                    Use same logo for dark theme
+                  </Label>
+                  <p className="text-muted-foreground text-xs">
+                    When enabled, the light theme logo will be used for dark theme
+                    as well
                   </p>
                 </div>
-              )}
-
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleDarkModeFileChange}
-                  className="hidden"
-                  id="dark-logo-upload"
+                <Switch
+                  checked={useSameLogoForDarkMode}
+                  onCheckedChange={(checked) => {
+                    setUseSameLogoForDarkMode(checked);
+                    if (checked) {
+                      // Clear dark mode logo when toggling to use same logo
+                      setDarkModeLogoFile(null);
+                      setDarkModeLogoPreview(null);
+                    }
+                  }}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    document.getElementById("dark-logo-upload")?.click()
-                  }
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {darkModeLogoPreview
-                    ? "Change Dark Logo"
-                    : "Upload Dark Logo"}
-                </Button>
               </div>
             </div>
-          )}
+
+            {/* Right Side: Logo Uploads */}
+            <div className="space-y-4">
+              {/* Logo Uploads Side by Side */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Light Mode Logo */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4" />
+                    <Label className="text-sm font-medium">Light Theme Logo</Label>
+                  </div>
+                  {logoPreview ? (
+                    <div className="relative inline-block h-32 w-32 rounded border">
+                      <Image
+                        src={logoPreview}
+                        alt="Light mode logo preview"
+                        fill
+                        className="rounded object-contain"
+                        unoptimized
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={handleRemoveLogo}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border-2 border-dashed p-6 text-center">
+                      <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                      <p className="text-muted-foreground mb-2 text-sm">
+                        No light theme logo uploaded (using default)
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById("logo-upload")?.click()}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {logoPreview ? "Change Light Logo" : "Upload Light Logo"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Dark Mode Logo - Only show if not using same logo */}
+                {!useSameLogoForDarkMode && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-4 w-4" />
+                      <Label className="text-sm font-medium">Dark Theme Logo</Label>
+                    </div>
+                    {darkModeLogoPreview ? (
+                      <div className="relative inline-block h-32 w-32 rounded border">
+                        <Image
+                          src={darkModeLogoPreview}
+                          alt="Dark mode logo preview"
+                          fill
+                          className="rounded object-contain"
+                          unoptimized
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={handleRemoveDarkModeLogo}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border-2 border-dashed p-6 text-center">
+                        <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                        <p className="text-muted-foreground mb-2 text-sm">
+                          No dark theme logo uploaded
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleDarkModeFileChange}
+                        className="hidden"
+                        id="dark-logo-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          document.getElementById("dark-logo-upload")?.click()
+                        }
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {darkModeLogoPreview
+                          ? "Change Dark Logo"
+                          : "Upload Dark Logo"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           <p className="text-muted-foreground text-xs">
             Supported formats: PNG, JPG, SVG. Max size: 5MB
-          </p>
-        </div>
-
-        {/* Logo Text */}
-        <div className="space-y-2">
-          <Label htmlFor="logo-text">Logo Text</Label>
-          <Input
-            id="logo-text"
-            value={logoText}
-            onChange={(e) => setLogoText(e.target.value)}
-            placeholder="FOX-LMS"
-          />
-          <p className="text-muted-foreground text-xs">
-            This text will appear next to your logo in the navbar and footer
           </p>
         </div>
 
@@ -402,7 +434,7 @@ export function DepartmentBrandingSettings({
               id="footer-link-section-title"
               value={footerLinkSectionTitle}
               onChange={(e) => setFooterLinkSectionTitle(e.target.value)}
-              placeholder="Products"
+              placeholder="Title"
             />
             <p className="text-muted-foreground text-xs">
               Title for the footer links section

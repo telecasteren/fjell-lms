@@ -48,7 +48,10 @@ Course (1) → (N) Module (1) → (N) Lesson (1) → (0..1) Quiz
 
 - **Purpose**: Individual learning units within modules
 - **Content Types**: Multiple content formats supported
-  - **Text Editor**: Rich text content with textarea input
+  - **Text Editor**: Rich text WYSIWYG editor (Tiptap) with formatting toolbar
+    - **Component**: `src/components/ui/rich-text-editor.tsx`
+    - **Features**: Bold, italic, underline, headings (H1-H3), bullet/numbered lists, links, undo/redo
+    - **Storage**: Content stored as HTML in database
   - **SCORM**: SCORM package support (coming soon)
   - **Multimedia**: Video, audio, images, and interactive content with Bunny Storage integration
 - **Content Selection**: Authors can choose content type via dropdown interface
@@ -156,7 +159,10 @@ QuizCompletion {
 Authors can choose from multiple content types when creating or editing lessons:
 
 1. **Text Editor** (Default)
-   - Rich text content using textarea input
+   - Rich text WYSIWYG editor (Tiptap) with formatting toolbar
+   - **Component Location**: `src/components/ui/rich-text-editor.tsx`
+   - **Features**: Bold, italic, underline, headings (H1-H3), bullet/numbered lists, links, undo/redo
+   - **Styling**: Centralized styling matching application design system
    - Supports markdown-style formatting
    - Immediate editing and preview
 
@@ -165,10 +171,11 @@ Authors can choose from multiple content types when creating or editing lessons:
    - Standardized e-learning content
    - Progress tracking integration
 
-3. **Multimedia** (Coming Soon)
-   - Video, audio, and interactive content
-   - File upload and streaming support
-   - Interactive elements and assessments
+3. **Multimedia** (Implemented)
+   - Video, audio, images, and interactive content
+   - File upload to Bunny Storage with CDN delivery
+   - File preview before saving lessons
+   - Automatic file cleanup when lessons are deleted
 
 ### Content Type Interface
 
@@ -346,11 +353,18 @@ const useDashboardRefresh = () => {
 
 ### For Authors (AUTHOR)
 
-1. **Create Courses**: Build course structure with modules/lessons
+1. **Create Courses**: Build course structure with modules/lessons across all departments
 2. **Add Content**: Write lesson content and create quizzes
 3. **Manage**: Edit, delete, and maintain courses
 4. **Monitor**: Track department progress and user engagement
 5. **Report**: Generate progress reports for departments
+
+### For Writers (WRITER)
+
+1. **Create Courses**: Build course structure with modules/lessons within own department only
+2. **Add Content**: Write lesson content and create quizzes
+3. **Manage**: Edit, delete, and maintain courses in own department
+4. **Limited Access**: Cannot access other departments' courses or manage users
 
 ## 📊 Progress Calculation Examples
 

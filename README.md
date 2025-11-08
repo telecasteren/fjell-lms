@@ -16,6 +16,7 @@ A comprehensive Learning Management System built with Next.js 15, featuring mult
 - **shadcn/ui** - Pre-built component library
 - **Tomatogrotesk** - Primary font family
 - **React Hot Toast** - Notifications
+- **Tiptap** - Rich text WYSIWYG editor for lesson content
 
 ### Database & ORM
 
@@ -117,7 +118,10 @@ A comprehensive Learning Management System built with Next.js 15, featuring mult
 ### Content Management
 
 - **Multiple Content Types**: Support for different lesson content formats
-  - **Text Editor**: Rich text content with textarea input
+  - **Text Editor**: Rich text WYSIWYG editor (Tiptap) with formatting toolbar
+    - **Location**: `src/components/ui/rich-text-editor.tsx`
+    - **Features**: Bold, italic, underline, headings (H1-H3), bullet/numbered lists, links, undo/redo
+    - **Styling**: Centralized styling matching application design system
   - **SCORM**: SCORM package support (coming soon)
   - **Multimedia**: Video, audio, and interactive content (coming soon)
 - **Content Type Selection**: Dropdown interface for authors to choose content type
@@ -195,6 +199,7 @@ src/
 │   └── globals.css        # Global styles
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components
+│   │   └── rich-text-editor.tsx  # Tiptap WYSIWYG editor
 │   ├── branding/         # Branding components
 │   └── providers/        # Context providers
 ├── lib/                  # Utility libraries
@@ -228,7 +233,7 @@ npm install
 npx prisma migrate dev
 
 # Create dev user
-node scripts/create-dev-user.js
+node scripts/create-dev-user.mjs
 
 # Start development server
 npm run dev
@@ -236,7 +241,7 @@ npm run dev
 
 ### Test Credentials
 
-- **Email**: `fox-author-dev@cubit.no`
+- **Email**: `fox-author-dev@example.com`
 - **Password**: `dev123`
 - **Role**: Author
 

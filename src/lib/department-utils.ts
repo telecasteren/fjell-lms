@@ -128,10 +128,21 @@ export async function getCourseWhereClause(
     // AUTHOR sees ALL courses (platform-wide)
     whereClause = {};
   } else if (user.role === Role.WRITER) {
-    // WRITER sees only courses from their own department
+    // WRITER sees courses from their own department and parent department (for viewing FOX-LMS courses)
+    const departmentIds = user.departmentId ? [user.departmentId] : [];
+    if (user.department?.parentDepartmentId) {
+      departmentIds.push(user.department.parentDepartmentId);
+    }
+    
     whereClause = {
-      departmentId: user.departmentId,
+      departmentId: {
+        in: departmentIds,
+      },
     };
+    
+    if (includeStatusFilter) {
+      whereClause.status = "PUBLISHED";
+    }
   } else if (user.role === Role.ADMIN || user.role === Role.BASIC) {
     // ADMIN/BASIC see published courses from their department and parent department
     const departmentIds = user.departmentId ? [user.departmentId] : [];
@@ -159,8 +170,9 @@ export async function getCourseWhereClause(
 /**
  * Check if a user can access a course based on their role and department
  * - AUTHOR: Can access any course
- * - WRITER: Can only access courses from their own department
- * - ADMIN/BASIC: Can access published courses from their department and parent department
+ * - WRITER: Can access all courses from their own department, published courses from parent department
+ * - ADMIN: Can access all courses from their own department, published courses from parent department
+ * - BASIC: Can access published courses from their department and parent department
  */
 export async function canAccessCourse(
   userId: string,
@@ -196,13 +208,42 @@ export async function canAccessCourse(
     return true;
   }
 
-  // WRITER can only access courses from their own department
+  // WRITER can access all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
+  // but only published courses from parent department
   if (user.role === Role.WRITER) {
-    return course.departmentId === user.departmentId;
+    const departmentIds = [user.departmentId];
+    if (user.department?.parentDepartmentId) {
+      departmentIds.push(user.department.parentDepartmentId);
+    }
+    
+    // If course is from their own department, allow access regardless of status
+    if (course.departmentId === user.departmentId) {
+      return true;
+    }
+    
+    // For other departments (e.g., parent), only allow published courses
+    return departmentIds.includes(course.departmentId) && course.status === "PUBLISHED";
   }
 
-  // ADMIN/BASIC can access published courses from their department and parent department
-  if (user.role === Role.ADMIN || user.role === Role.BASIC) {
+  // ADMIN can access all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
+  // but only published courses from parent department
+  if (user.role === Role.ADMIN) {
+    const departmentIds = [user.departmentId];
+    if (user.department?.parentDepartmentId) {
+      departmentIds.push(user.department.parentDepartmentId);
+    }
+    
+    // If course is from their own department, allow access regardless of status
+    if (course.departmentId === user.departmentId) {
+      return true;
+    }
+    
+    // For other departments (e.g., parent), only allow published courses
+    return departmentIds.includes(course.departmentId) && course.status === "PUBLISHED";
+  }
+
+  // BASIC can only access published courses from their department and parent department
+  if (user.role === Role.BASIC) {
     if (course.status !== "PUBLISHED") return false;
     
     const departmentIds = [user.departmentId];

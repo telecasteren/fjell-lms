@@ -130,3 +130,63 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const user = await requireAuth(req);
+    const { searchParams } = new URL(req.url);
+    const quizId = searchParams.get("quizId");
+
+    if (!quizId) {
+      return NextResponse.json({ error: "Quiz ID required" }, { status: 400 });
+    }
+
+    // Check if quiz completion exists and belongs to the user
+    const quizCompletion = await prisma.quizCompletion.findUnique({
+      where: { userId_quizId: { userId: user.id, quizId } },
+      include: {
+        quiz: {
+          include: {
+            lesson: true,
+          },
+        },
+      },
+    });
+
+    if (!quizCompletion) {
+      return NextResponse.json(
+        { error: "Quiz completion not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the quiz completion
+    await prisma.quizCompletion.delete({
+      where: { userId_quizId: { userId: user.id, quizId } },
+    });
+
+    // If the quiz was mandatory and the lesson was auto-completed, uncomplete the lesson
+    const quiz = quizCompletion.quiz;
+    if (quiz.mandatory && quizCompletion.passed) {
+      await prisma.progress.updateMany({
+        where: {
+          userId: user.id,
+          lessonId: quiz.lessonId,
+          completed: true,
+        },
+        data: {
+          completed: false,
+          completedAt: null,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Quiz completion delete error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete quiz completion" },
+      { status: 500 }
+    );
+  }
+}

@@ -9,6 +9,7 @@ interface CurrentUser {
   email: string;
   role: string;
   departmentId: string;
+  image?: string | null;
 }
 
 export function useCurrentUser() {

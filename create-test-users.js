@@ -7,21 +7,21 @@ async function createTestUsers() {
   try {
     console.log("Creating test users...");
 
-    // First, ensure the Cubit department exists
-    let cubitDepartment = await prisma.department.findUnique({
-      where: { name: "Cubit" },
+    // First, ensure FOX-LMS department exists (root department)
+    let testDepartment = await prisma.department.findUnique({
+      where: { name: "FOX-LMS" },
     });
 
-    if (!cubitDepartment) {
-      cubitDepartment = await prisma.department.create({
+    if (!testDepartment) {
+      testDepartment = await prisma.department.create({
         data: {
-          name: "Cubit",
+          name: "FOX-LMS",
           orgNr: "123456789",
         },
       });
-      console.log("Created Cubit department");
+      console.log("Created FOX-LMS department");
     } else {
-      console.log("Cubit department already exists");
+      console.log("FOX-LMS department already exists");
     }
 
     // Hash the password
@@ -30,19 +30,19 @@ async function createTestUsers() {
     // Create test users
     const testUsers = [
       {
-        email: "author@cubit.no",
+        email: "author@example.com",
         name: "Test Author",
         role: "AUTHOR",
         passwordHash,
       },
       {
-        email: "admin@cubit.no",
+        email: "admin@example.com",
         name: "Test Admin",
         role: "ADMIN",
         passwordHash,
       },
       {
-        email: "basic@cubit.no",
+        email: "basic@example.com",
         name: "Test Basic",
         role: "BASIC",
         passwordHash,
@@ -63,7 +63,7 @@ async function createTestUsers() {
             name: userData.name,
             role: userData.role,
             passwordHash: userData.passwordHash,
-            departmentId: cubitDepartment.id,
+            departmentId: testDepartment.id,
           },
         });
       } else {
@@ -71,7 +71,7 @@ async function createTestUsers() {
         await prisma.user.create({
           data: {
             ...userData,
-            departmentId: cubitDepartment.id,
+            departmentId: testDepartment.id,
           },
         });
       }
@@ -79,9 +79,9 @@ async function createTestUsers() {
 
     console.log("✅ Test users created successfully!");
     console.log("Users:");
-    console.log("- author@cubit.no (AUTHOR)");
-    console.log("- admin@cubit.no (ADMIN)");
-    console.log("- basic@cubit.no (BASIC)");
+    console.log("- author@example.com (AUTHOR)");
+    console.log("- admin@example.com (ADMIN)");
+    console.log("- basic@example.com (BASIC)");
     console.log("Password for all: test321");
   } catch (error) {
     console.error("Error creating test users:", error);

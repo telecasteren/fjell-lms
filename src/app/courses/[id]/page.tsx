@@ -424,11 +424,6 @@ export default function CoursePage({
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-medium">{lesson.title}</h4>
-                          {lesson.content && (
-                            <p className="text-muted-foreground text-sm">
-                              {lesson.content}
-                            </p>
-                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button

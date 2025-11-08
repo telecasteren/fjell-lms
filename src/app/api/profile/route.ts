@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
         email: user.email,
         role: user.role,
         departmentId: user.departmentId,
+        image: user.image,
         createdAt: user.createdAt.toISOString(),
       },
       department,

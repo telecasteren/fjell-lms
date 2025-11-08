@@ -12,7 +12,6 @@ import { DepartmentBrandingSettings } from "@/components/department-branding-set
 import { DepartmentCreationModal } from "@/components/department-creation-modal";
 import { DepartmentSearchInput } from "@/components/department-search-input";
 import { UserSearchInput } from "@/components/user-search-input";
-import { UserEditModal } from "@/components/user-edit-modal";
 import {
   Select,
   SelectContent,
@@ -47,6 +46,7 @@ type DepartmentDetails = {
   logoUrl?: string | null;
   darkModeLogoUrl?: string | null;
   logoText?: string | null;
+  appDescription?: string | null;
   parentDepartmentId?: string | null;
   parentDepartment?: {
     id: string;
@@ -92,6 +92,7 @@ type DepartmentStats = {
     logoUrl?: string | null;
     darkModeLogoUrl?: string | null;
     logoText?: string | null;
+    appDescription?: string | null;
     parentDepartmentId?: string | null;
     parentDepartment?: {
       id: string;
@@ -156,6 +157,7 @@ export default function AdminPage() {
     loadDepartmentStats();
     loadCurrentUserRole();
     loadDepartments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -499,6 +501,7 @@ export default function AdminPage() {
                               departmentName={departmentDetails.name}
                               currentLogoUrl={departmentDetails.logoUrl}
                               currentLogoText={departmentDetails.logoText}
+                              currentAppDescription={departmentDetails.appDescription}
                               currentDarkModeLogoUrl={departmentDetails.darkModeLogoUrl}
                               currentFooterLinkSectionTitle={departmentDetails.footerLinkSectionTitle}
                               currentFooterLink1Url={departmentDetails.footerLink1Url}

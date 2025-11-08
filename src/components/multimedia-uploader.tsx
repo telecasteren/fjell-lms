@@ -264,6 +264,13 @@ export function MultimediaUploader({
         credentials: "include",
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Upload error response:", errorData);
+        toast.error(errorData.details || errorData.error || `Upload failed: ${response.status}`);
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {

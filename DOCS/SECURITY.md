@@ -14,7 +14,7 @@ This LMS application implements comprehensive security measures to protect again
   - Registration: 3 registrations per hour per IP
   - Admin operations: 10 operations per hour per user
   - Course operations: 20 requests per minute per user
-  - Reports: 5 requests per minute per user
+  - Reports: 10 requests per minute per user
 
 ### 2. CSRF Protection
 - **Purpose**: Prevent Cross-Site Request Forgery attacks
@@ -124,15 +124,17 @@ The application enforces strict password requirements:
 ## Role-Based Access Control (RBAC)
 
 ### Roles
-- **BASIC**: Can view and enroll in courses
-- **ADMIN**: Can manage users and enrollments
-- **AUTHOR**: Can create/edit courses and manage all users
+- **BASIC**: Can view and enroll in published courses from their department and parent department
+- **ADMIN**: Can manage users and enrollments in their department and sub-departments
+- **WRITER**: Can create/edit courses and content within their own department only
+- **AUTHOR**: Can create/edit courses and manage all users across all departments
 
 ### Permissions
-- Course creation: AUTHOR only
+- Course creation: AUTHOR and WRITER (WRITER limited to own department)
 - User management: ADMIN and AUTHOR
 - Course enrollment: ADMIN and self-enrollment
 - Reports: ADMIN and AUTHOR
+- Department hierarchy: ADMIN can access sub-departments, AUTHOR can access all departments
 
 ## Security Best Practices
 
@@ -185,7 +187,7 @@ curl -X POST http://localhost:3000/api/courses \
 for i in {1..10}; do
   curl -X POST http://localhost:3000/api/auth/signin/credentials \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "email=admin@cubit.no&password=wrongpassword&csrfToken=test"
+    -d "email=admin@example.com&password=wrongpassword&csrfToken=test"
 done
 ```
 

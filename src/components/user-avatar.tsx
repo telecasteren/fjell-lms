@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,13 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatarProps) {
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state when user image changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user.image]);
+
   const sizeClasses = {
     sm: "h-8 w-8",
     md: "h-10 w-10",
@@ -66,9 +74,19 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
     }
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   const avatarElement = (
     <Avatar className={sizeClasses[size]}>
-      <AvatarImage src={user.image || undefined} alt={user.name || user.email || "User"} />
+      {!imageError && user.image ? (
+        <AvatarImage 
+          src={user.image} 
+          alt={user.name || user.email || "User"}
+          onError={handleImageError}
+        />
+      ) : null}
       <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
         {getInitials()}
       </AvatarFallback>
@@ -91,7 +109,13 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
           {/* User Info Header */}
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={user.image || undefined} alt={user.name || user.email || "User"} />
+              {!imageError && user.image ? (
+                <AvatarImage 
+                  src={user.image} 
+                  alt={user.name || user.email || "User"}
+                  onError={handleImageError}
+                />
+              ) : null}
               <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-lg">
                 {getInitials()}
               </AvatarFallback>

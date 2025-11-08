@@ -105,7 +105,7 @@ export const mockSessions = {
     user: {
       id: "2",
       name: "Admin User",
-      email: "admin@cubit.no",
+      email: "admin@example.com",
       role: "ADMIN",
     },
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -114,7 +114,7 @@ export const mockSessions = {
     user: {
       id: "3",
       name: "Author User",
-      email: "author@cubit.no",
+      email: "author@example.com",
       role: "AUTHOR",
     },
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -126,7 +126,7 @@ export const mockApiResponses = {
   departments: {
     success: {
       departments: [
-        { id: "1", name: "Cubit" },
+        { id: "1", name: "Department 1" },
         { id: "2", name: "Engineering" },
         { id: "3", name: "Marketing" },
       ],

@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const departmentId = formData.get("departmentId") as string;
     const logoText = formData.get("logoText") as string;
+    const appDescription = formData.get("appDescription") as string;
     const file = formData.get("file") as File;
     const darkModeFile = formData.get("darkModeFile") as File;
     const useSameLogoForDarkMode = formData.get("useSameLogoForDarkMode") === "true";
@@ -157,6 +158,7 @@ export async function POST(req: NextRequest) {
       logoUrl?: string;
       darkModeLogoUrl?: string | null;
       logoText?: string;
+      appDescription?: string | null;
       footerLinkSectionTitle?: string | null;
       footerLink1Url?: string | null;
       footerLink1Text?: string | null;
@@ -173,6 +175,8 @@ export async function POST(req: NextRequest) {
     if (darkModeLogoUrl !== undefined) updateData.darkModeLogoUrl = darkModeLogoUrl;
     if (logoText !== null && logoText !== undefined)
       updateData.logoText = logoText;
+    if (appDescription !== null && appDescription !== undefined)
+      updateData.appDescription = appDescription || null;
     // Footer fields - allow empty strings to clear values
     if (footerLinkSectionTitle !== null && footerLinkSectionTitle !== undefined)
       updateData.footerLinkSectionTitle = footerLinkSectionTitle || null;

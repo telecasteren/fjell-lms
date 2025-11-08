@@ -10,7 +10,7 @@ export class TestAuthHelper {
     // Reduced wait time for better performance
     await this.page.waitForTimeout(200);
 
-    await this.page.getByLabel("Email").fill("author@cubit.no");
+    await this.page.getByLabel("Email").fill("author@example.com");
     await this.page.getByLabel("Password").fill("test321");
     await this.page.getByRole("button", { name: "Sign in" }).click();
 
@@ -27,7 +27,7 @@ export class TestAuthHelper {
     await this.page.goto("/sign-in");
     await this.page.waitForLoadState("domcontentloaded");
 
-    await this.page.getByLabel("Email").fill("admin@cubit.no");
+    await this.page.getByLabel("Email").fill("admin@example.com");
     await this.page.getByLabel("Password").fill("test321");
     await this.page.getByRole("button", { name: "Sign in" }).click();
 
@@ -41,7 +41,7 @@ export class TestAuthHelper {
     await this.page.goto("/sign-in");
     await this.page.waitForLoadState("domcontentloaded");
 
-    await this.page.getByLabel("Email").fill("basic@cubit.no");
+    await this.page.getByLabel("Email").fill("basic@example.com");
     await this.page.getByLabel("Password").fill("test321");
     await this.page.getByRole("button", { name: "Sign in" }).click();
 

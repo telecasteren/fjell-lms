@@ -32,6 +32,25 @@ export function Footer() {
   const appDescription = useBrandingValue('appDescription');
   const links = useBrandingValue('links');
 
+  // Helper function to check if department has any footer content configured
+  function hasFooterContent(dept: DepartmentFooterData | null): boolean {
+    if (!dept) return false;
+    return !!(
+      dept.logoText ||
+      dept.footerLinkSectionTitle ||
+      dept.footerLink1Url ||
+      dept.footerLink1Text ||
+      dept.footerLink2Url ||
+      dept.footerLink2Text ||
+      dept.footerLink3Url ||
+      dept.footerLink3Text ||
+      dept.footerContactEmail ||
+      dept.footerContactPhone ||
+      dept.footerContactAddress ||
+      dept.footerContactAddress2
+    );
+  }
+
   // Fetch department footer data
   useEffect(() => {
     // Only fetch if session is authenticated (not loading, not unauthenticated)
@@ -42,26 +61,70 @@ export function Footer() {
 
     async function fetchDepartmentFooterData() {
       try {
+        // First, fetch current department
         const res = await fetch("/api/departments/current", {
           credentials: "include",
         });
         if (res.ok) {
           const data = await res.json();
           if (data.department) {
-            setDepartmentFooterData({
-              logoText: data.department.logoText,
-              footerLinkSectionTitle: data.department.footerLinkSectionTitle,
-              footerLink1Url: data.department.footerLink1Url,
-              footerLink1Text: data.department.footerLink1Text,
-              footerLink2Url: data.department.footerLink2Url,
-              footerLink2Text: data.department.footerLink2Text,
-              footerLink3Url: data.department.footerLink3Url,
-              footerLink3Text: data.department.footerLink3Text,
-              footerContactEmail: data.department.footerContactEmail,
-              footerContactPhone: data.department.footerContactPhone,
-              footerContactAddress: data.department.footerContactAddress,
-              footerContactAddress2: data.department.footerContactAddress2,
-            });
+            const currentDept = data.department;
+            
+            // Check if current department has any footer content
+            if (hasFooterContent(currentDept)) {
+              // Use current department's footer data
+              setDepartmentFooterData({
+                logoText: currentDept.logoText,
+                footerLinkSectionTitle: currentDept.footerLinkSectionTitle,
+                footerLink1Url: currentDept.footerLink1Url,
+                footerLink1Text: currentDept.footerLink1Text,
+                footerLink2Url: currentDept.footerLink2Url,
+                footerLink2Text: currentDept.footerLink2Text,
+                footerLink3Url: currentDept.footerLink3Url,
+                footerLink3Text: currentDept.footerLink3Text,
+                footerContactEmail: currentDept.footerContactEmail,
+                footerContactPhone: currentDept.footerContactPhone,
+                footerContactAddress: currentDept.footerContactAddress,
+                footerContactAddress2: currentDept.footerContactAddress2,
+              });
+            } else {
+              // Current department has no footer content, fetch FOX-LMS as fallback
+              try {
+                const foxLmsRes = await fetch("/api/departments/fox-lms-footer", {
+                  credentials: "include",
+                });
+                if (foxLmsRes.ok) {
+                  const foxLmsData = await foxLmsRes.json();
+                  const foxLmsDept = foxLmsData.department;
+                  
+                  if (foxLmsDept && hasFooterContent(foxLmsDept)) {
+                    // Use FOX-LMS footer data
+                    setDepartmentFooterData({
+                      logoText: foxLmsDept.logoText,
+                      footerLinkSectionTitle: foxLmsDept.footerLinkSectionTitle,
+                      footerLink1Url: foxLmsDept.footerLink1Url,
+                      footerLink1Text: foxLmsDept.footerLink1Text,
+                      footerLink2Url: foxLmsDept.footerLink2Url,
+                      footerLink2Text: foxLmsDept.footerLink2Text,
+                      footerLink3Url: foxLmsDept.footerLink3Url,
+                      footerLink3Text: foxLmsDept.footerLink3Text,
+                      footerContactEmail: foxLmsDept.footerContactEmail,
+                      footerContactPhone: foxLmsDept.footerContactPhone,
+                      footerContactAddress: foxLmsDept.footerContactAddress,
+                      footerContactAddress2: foxLmsDept.footerContactAddress2,
+                    });
+                  } else {
+                    // FOX-LMS also has no footer content, use null
+                    setDepartmentFooterData(null);
+                  }
+                } else {
+                  setDepartmentFooterData(null);
+                }
+              } catch (foxLmsError) {
+                console.error("Failed to fetch FOX-LMS footer data:", foxLmsError);
+                setDepartmentFooterData(null);
+              }
+            }
           }
         } else {
           // Handle any non-200 response (401, 403, 500, etc.) - use default branding
@@ -81,8 +144,8 @@ export function Footer() {
   // Get logo text (use department-specific or default)
   const logoText = departmentFooterData?.logoText || appName;
   
-  // Get link section title (use department-specific or default)
-  const linkSectionTitle = departmentFooterData?.footerLinkSectionTitle || "Products";
+  // Get link section title (only if department has configured it)
+  const linkSectionTitle = departmentFooterData?.footerLinkSectionTitle;
   
   // Build footer links array from department data
   const footerLinks = [];
@@ -96,14 +159,16 @@ export function Footer() {
     footerLinks.push({ url: departmentFooterData.footerLink3Url, text: departmentFooterData.footerLink3Text });
   }
 
-  // Use default links if no department-specific links are set
-  const displayLinks = footerLinks.length > 0 
-    ? footerLinks 
-    : [
-        { url: links.cubit, text: "Cubit" },
-        { url: links.koti, text: "Koti" },
-        { url: links.sanako, text: "Sanako" },
-      ];
+  // Only show links section if there are links and a section title
+  const hasLinksSection = footerLinks.length > 0 && linkSectionTitle;
+
+  // Check if contact section has any content
+  const hasContactContent = !!(
+    departmentFooterData?.footerContactEmail ||
+    departmentFooterData?.footerContactPhone ||
+    departmentFooterData?.footerContactAddress ||
+    departmentFooterData?.footerContactAddress2
+  );
 
   return (
     <footer className="border-t bg-muted/50">
@@ -130,7 +195,13 @@ export function Footer() {
       {/* Footer Content */}
       {isExpanded && (
         <div className="container mx-auto px-4 pb-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className={`grid grid-cols-1 gap-4 ${
+            hasLinksSection && hasContactContent 
+              ? 'md:grid-cols-3' 
+              : (hasLinksSection || hasContactContent) 
+                ? 'md:grid-cols-2' 
+                : ''
+          }`}>
             {/* Company Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">    
@@ -139,73 +210,66 @@ export function Footer() {
               </div>
               <div className="text-xs text-muted-foreground">
                 <p>{appDescription}</p>
-                <p>Website: <a href={"https://" + links.homepage} className="hover:text-foreground transition-colors">{links.homepage}</a></p>
+                {links.homepage && links.homepage.trim() && (
+                  <p>Website: <a href={"https://" + links.homepage} className="hover:text-foreground transition-colors">{links.homepage}</a></p>
+                )}
               </div>
             </div>
 
-            {/* Links Section */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm text-foreground">{linkSectionTitle}</h3>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                {displayLinks.map((link, index) => (
-                  <li key={index}>
-                    <Link href={link.url} className="hover:text-foreground transition-colors">
-                      {link.text}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Links Section - Only show if there are links and a section title */}
+            {hasLinksSection && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm text-foreground">{linkSectionTitle}</h3>
+                <ul className="space-y-2 text-xs text-muted-foreground">
+                  {footerLinks.map((link, index) => (
+                    <li key={index}>
+                      <Link href={link.url} className="hover:text-foreground transition-colors">
+                        {link.text}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            {/* Contact Section */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm text-foreground">Contact</h3>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                {departmentFooterData?.footerContactEmail && (
-                  <li>
-                    <a 
-                      href={`mailto:${departmentFooterData.footerContactEmail}`}
-                      className="hover:text-foreground transition-colors"
-                    >
-                      {departmentFooterData.footerContactEmail}
-                    </a>
-                  </li>
-                )}
-                {departmentFooterData?.footerContactPhone && (
-                  <li>
-                    <a 
-                      href={`tel:${departmentFooterData.footerContactPhone}`}
-                      className="hover:text-foreground transition-colors"
-                    >
-                      {departmentFooterData.footerContactPhone}
-                    </a>
-                  </li>
-                )}
-                {departmentFooterData?.footerContactAddress && (
-                  <li className="text-muted-foreground">
-                    {departmentFooterData.footerContactAddress}
-                  </li>
-                )}
-                {departmentFooterData?.footerContactAddress2 && (
-                  <li className="text-muted-foreground">
-                    {departmentFooterData.footerContactAddress2}
-                  </li>
-                )}
-                {!departmentFooterData?.footerContactEmail && 
-                 !departmentFooterData?.footerContactPhone && 
-                 !departmentFooterData?.footerContactAddress &&
-                 !departmentFooterData?.footerContactAddress2 && (
-                  <li>
-                    <a 
-                      href={links.faq}
-                      className="hover:text-foreground transition-colors"
-                    >
-                      FAQ
-                    </a>
-                  </li>
-                )}
-              </ul>
-            </div>
+            {/* Contact Section - Only show if there's contact content */}
+            {hasContactContent && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-sm text-foreground">Contact</h3>
+                <ul className="space-y-2 text-xs text-muted-foreground">
+                  {departmentFooterData?.footerContactEmail && (
+                    <li>
+                      <a 
+                        href={`mailto:${departmentFooterData.footerContactEmail}`}
+                        className="hover:text-foreground transition-colors"
+                      >
+                        {departmentFooterData.footerContactEmail}
+                      </a>
+                    </li>
+                  )}
+                  {departmentFooterData?.footerContactPhone && (
+                    <li>
+                      <a 
+                        href={`tel:${departmentFooterData.footerContactPhone}`}
+                        className="hover:text-foreground transition-colors"
+                      >
+                        {departmentFooterData.footerContactPhone}
+                      </a>
+                    </li>
+                  )}
+                  {departmentFooterData?.footerContactAddress && (
+                    <li className="text-muted-foreground">
+                      {departmentFooterData.footerContactAddress}
+                    </li>
+                  )}
+                  {departmentFooterData?.footerContactAddress2 && (
+                    <li className="text-muted-foreground">
+                      {departmentFooterData.footerContactAddress2}
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Bottom Bar */}

@@ -9,8 +9,12 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth(req);
 
-    // Use reusable utility to get course where clause based on role and hierarchy
-    const whereClause = await getCourseWhereClause(user.id, true);
+    // For ADMIN and WRITER, we want to show all courses from their own department
+    // (DRAFT, PUBLISHED, ARCHIVED) but only published from other departments
+    // So we don't apply status filter at the database level - we'll filter in frontend
+    // For BASIC users, we still filter by status at database level for performance
+    const includeStatusFilter = user.role === "BASIC";
+    const whereClause = await getCourseWhereClause(user.id, includeStatusFilter);
 
     // Get courses with enrollment counts
     const courses = await prisma.course.findMany({

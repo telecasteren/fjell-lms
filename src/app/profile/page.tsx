@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { useTheme } from "next-themes";
 import toast from "react-hot-toast";
+import { Pencil, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ interface ProfileData {
     email: string;
     role: string;
     departmentId: string;
+    image?: string | null;
     createdAt: string;
   };
   department: {
@@ -46,6 +48,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarImage, setAvatarImage] = useState<string | null | undefined>(null);
+  const [avatarImageError, setAvatarImageError] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const profileForm = useForm({
     defaultValues: { name: "" },
@@ -81,6 +88,8 @@ export default function ProfilePage() {
     if (profileData?.user) {
       profileForm.setValue("name", profileData.user.name || "");
       emailForm.setValue("email", profileData.user.email || "");
+      setAvatarImage(profileData.user.image || null);
+      setAvatarImageError(false); // Reset error when user data changes
     }
   }, [profileData, profileForm, emailForm]);
 
@@ -177,6 +186,11 @@ export default function ProfilePage() {
   };
 
   const handleThemeChange = async (newTheme: string) => {
+    // Prevent duplicate calls if theme hasn't changed
+    if (newTheme === theme || settingsLoading) {
+      return;
+    }
+
     setSettingsLoading(true);
     try {
       const res = await fetch("/api/settings/theme", {
@@ -242,6 +256,75 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAvatarImage(data.image);
+        setAvatarImageError(false); // Reset error state on successful upload
+        
+        // Update session with new image
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            image: data.image,
+          },
+        });
+
+        // Reload profile data to get updated avatar
+        await loadProfileData();
+
+        toast.success("Avatar updated successfully");
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to upload avatar");
+      }
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      toast.error("Failed to upload avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleEditAvatarClick = () => {
+    if (!isUploadingAvatar) {
+      fileInputRef.current?.click();
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -252,16 +335,71 @@ export default function ProfilePage() {
 
   const { user, department, stats, recentActivity } = profileData;
 
+  // Generate initials from name or email
+  const getInitials = () => {
+    if (user.name) {
+      return user.name
+        .split(" ")
+        .map(n => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    return "U";
+  };
+
   return (
     <div className="space-y-6">
       {/* Profile Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Avatar className="h-20 w-20">
-            <AvatarFallback className="text-lg">
-              {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-            </AvatarFallback>
-          </Avatar>
+          <div
+            className="relative inline-block"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <Avatar className="h-20 w-20">
+              {!avatarImageError && avatarImage ? (
+                <AvatarImage 
+                  src={avatarImage} 
+                  alt={user.name || user.email || "User"}
+                  onError={() => setAvatarImageError(true)}
+                />
+              ) : null}
+              <AvatarFallback className="text-lg bg-primary text-primary-foreground font-semibold">
+                {getInitials()}
+              </AvatarFallback>
+            </Avatar>
+            
+            {/* Edit icon overlay */}
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={handleEditAvatarClick}
+                disabled={isUploadingAvatar}
+                className={`absolute inset-0 flex items-center justify-center rounded-full bg-black/50 transition-opacity ${
+                  isHovered ? "opacity-100" : "opacity-0"
+                } ${isUploadingAvatar ? "cursor-wait" : "cursor-pointer"}`}
+                aria-label="Edit avatar"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                ) : (
+                  <Pencil className="h-6 w-6 text-white" />
+                )}
+              </button>
+            </>
+          </div>
           <div>
             <h1 className="text-2xl font-bold">{user.name || "User"}</h1>
             <p className="text-muted-foreground">{user.email}</p>

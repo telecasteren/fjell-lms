@@ -34,7 +34,7 @@ export default async function middleware(req: NextRequest) {
   let token = null;
   try {
     token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  } catch (error) {
+  } catch {
     // JWT decryption failed - likely old cookies with different secret
     // Clear cookies by redirecting to sign-in
     const signInUrl = new URL("/sign-in", nextUrl.origin);
