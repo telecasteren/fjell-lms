@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req?: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
     if (!user) {
