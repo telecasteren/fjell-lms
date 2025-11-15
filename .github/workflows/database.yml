@@ -322,14 +322,14 @@ jobs:
         run: |
           # Create PostgreSQL backup
           pg_dump $DATABASE_URL > backup.sql
-          
+
           echo "✅ Database backup created"
 
       - name: Test backup restoration
         run: |
           # Drop and recreate database (simulate restoration scenario)
           psql $DATABASE_URL -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-          
+
           # Restore from backup
           psql $DATABASE_URL < backup.sql
 

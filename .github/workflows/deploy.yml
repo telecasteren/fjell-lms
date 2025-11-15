@@ -257,8 +257,8 @@ jobs:
 
           for i in {1..30}; do
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" || echo "000")
-            if [ "$HTTP_STATUS" -eq 200 ]; then
-              echo "✅ Deployment is ready!"
+            if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 401 ] || [ "$HTTP_STATUS" -eq 302 ]; then
+              echo "✅ Deployment is ready! (HTTP $HTTP_STATUS)"
               break
             else
               echo "⏳ Waiting for deployment... (attempt $i/30) - HTTP $HTTP_STATUS"
@@ -277,10 +277,15 @@ jobs:
 
           echo "🔍 Running health checks against: $DEPLOYMENT_URL"
 
-          # Test main page
+          # Test main page (accept auth redirects as valid responses)
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" || echo "000")
-          if [ "$HTTP_STATUS" -eq 200 ]; then
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 401 ] || [ "$HTTP_STATUS" -eq 302 ]; then
             echo "✅ Main page health check passed (HTTP $HTTP_STATUS)"
+            if [ "$HTTP_STATUS" -eq 401 ]; then
+              echo "   Authentication required - this is expected for a protected LMS"
+            elif [ "$HTTP_STATUS" -eq 302 ]; then
+              echo "   Redirect response - likely to authentication page"
+            fi
           else
             echo "❌ Main page health check failed (HTTP $HTTP_STATUS)"
             echo "🔍 Let's check what we got:"
