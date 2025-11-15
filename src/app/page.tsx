@@ -31,23 +31,29 @@ type DashboardData = {
 };
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If authentication is still loading, wait
+    if (status === "loading") return;
+
+    // If no session, redirect to login
+    if (status === "unauthenticated") {
+      router.push("/sign-in");
+      return;
+    }
+
     // Redirect AUTHOR users to author dashboard
-    // if (session?.user && (session.user as any).role === "AUTHOR") {
-    //   router.push("/author");
-    //   return;
-    // }
     if (session?.user && session.user.role === Role.AUTHOR) {
       router.push("/author");
       return;
     }
+
     loadDashboard();
-  }, [session, router]);
+  }, [session, status, router]);
 
   // Listen for dashboard refresh events
   useEffect(() => {
@@ -66,6 +72,16 @@ export default function Home() {
       setData(dashboardData);
     }
     setLoading(false);
+  }
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  // Don't render anything if redirecting to login
+  if (status === "unauthenticated") {
+    return null;
   }
 
   if (loading) {
@@ -225,7 +241,7 @@ export default function Home() {
               </p>
             ) : (
               <div className="space-y-3">
-                {data.ongoingCourses.map(course => (
+                {data.ongoingCourses.map((course) => (
                   <div key={course.id} className="space-y-3 rounded border p-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -271,7 +287,7 @@ export default function Home() {
               </p>
             ) : (
               <div className="space-y-3">
-                {data.completedCourses.map(course => (
+                {data.completedCourses.map((course) => (
                   <div
                     key={course.id}
                     className="flex items-center justify-between rounded border bg-green-50 p-3 dark:bg-green-950"
@@ -308,7 +324,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {data.notStartedCourses.map(course => (
+              {data.notStartedCourses.map((course) => (
                 <div
                   key={course.id}
                   className="flex items-center justify-between rounded border p-3"
