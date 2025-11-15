@@ -1,0 +1,350 @@
+name: Emergency Hotfix
+
+on:
+  workflow_dispatch:
+    inputs:
+      hotfix_branch:
+        description: "Hotfix branch name (e.g., hotfix/critical-security-fix)"
+        required: true
+        type: string
+      description:
+        description: "Brief description of the hotfix"
+        required: true
+        type: string
+      skip_tests:
+        description: "Skip tests (only for critical emergencies)"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: emergency-hotfix
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  validate-hotfix:
+    name: Validate Hotfix Branch
+    runs-on: ubuntu-latest
+    outputs:
+      hotfix-version: ${{ steps.version.outputs.version }}
+      base-branch: ${{ steps.branch.outputs.base }}
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.hotfix_branch }}
+          fetch-depth: 0
+
+      - name: Validate branch exists
+        run: |
+          if ! git show-ref --verify --quiet refs/remotes/origin/${{ inputs.hotfix_branch }}; then
+            echo "❌ Hotfix branch '${{ inputs.hotfix_branch }}' does not exist"
+            exit 1
+          fi
+          echo "✅ Hotfix branch validated"
+
+      - name: Determine base branch
+        id: branch
+        run: |
+          # Check if hotfix is based on main or a release branch
+          if git merge-base --is-ancestor origin/main origin/${{ inputs.hotfix_branch }}; then
+            echo "base=main" >> $GITHUB_OUTPUT
+            echo "Hotfix based on main branch"
+          else
+            # Look for release branches
+            RELEASE_BRANCH=$(git branch -r | grep -E 'origin/release/|origin/v[0-9]+\.[0-9]+' | head -1 | sed 's/origin\///' | xargs)
+            if [ -n "$RELEASE_BRANCH" ]; then
+              echo "base=$RELEASE_BRANCH" >> $GITHUB_OUTPUT
+              echo "Hotfix based on release branch: $RELEASE_BRANCH"
+            else
+              echo "base=main" >> $GITHUB_OUTPUT
+              echo "Defaulting to main branch"
+            fi
+          fi
+
+      - name: Generate hotfix version
+        id: version
+        run: |
+          # Get current version and increment patch
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Increment patch version for hotfix
+          HOTFIX_VERSION=$(npm version patch --no-git-tag-version --preid=hotfix)
+          git checkout -- package.json  # Reset changes
+
+          echo "version=$HOTFIX_VERSION" >> $GITHUB_OUTPUT
+          echo "Hotfix version: $HOTFIX_VERSION"
+
+  emergency-tests:
+    name: Emergency Tests
+    runs-on: ubuntu-latest
+    needs: [validate-hotfix]
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.hotfix_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Critical tests only
+        env:
+          DATABASE_URL: file:./hotfix-test.db
+          NEXTAUTH_SECRET: hotfix-test-secret
+          NEXTAUTH_URL: http://localhost:3000
+        run: |
+          echo "🚨 Running critical tests for hotfix..."
+
+          # TypeScript compilation
+          npx tsc --noEmit
+          echo "✅ TypeScript compilation passed"
+
+          # Critical unit tests only
+          npm run test -- --run --reporter=basic
+          echo "✅ Critical tests passed"
+
+          # Build verification
+          npx prisma generate
+          npm run build
+          echo "✅ Build verification passed"
+
+  create-hotfix-release:
+    name: Create Hotfix Release
+    runs-on: ubuntu-latest
+    needs: [validate-hotfix, emergency-tests]
+    if: always() && needs.validate-hotfix.result == 'success' && (needs.emergency-tests.result == 'success' || inputs.skip_tests)
+    environment: production
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.hotfix_branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Update version
+        run: |
+          npm version ${{ needs.validate-hotfix.outputs.hotfix-version }} --no-git-tag-version
+          git add package.json
+          git commit -m "chore: bump version to ${{ needs.validate-hotfix.outputs.hotfix-version }}"
+
+      - name: Create hotfix tag
+        run: |
+          git tag -a "${{ needs.validate-hotfix.outputs.hotfix-version }}" -m "Hotfix: ${{ inputs.description }}"
+          git push origin "${{ needs.validate-hotfix.outputs.hotfix-version }}"
+
+      - name: Merge hotfix to main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge --no-ff ${{ inputs.hotfix_branch }} -m "Merge hotfix: ${{ inputs.description }}"
+          git push origin main
+
+      - name: Create GitHub release
+        id: create-release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: '${{ needs.validate-hotfix.outputs.hotfix-version }}',
+              target_commitish: 'main',
+              name: '🚨 Hotfix Release ${{ needs.validate-hotfix.outputs.hotfix-version }}',
+              body: `## Emergency Hotfix Release
+              
+              **Description:** ${{ inputs.description }}
+              
+              **Hotfix Branch:** \`${{ inputs.hotfix_branch }}\`
+              **Base Branch:** \`${{ needs.validate-hotfix.outputs.base-branch }}\`
+              **Tests Skipped:** ${{ inputs.skip_tests && 'Yes ⚠️' || 'No ✅' }}
+              
+              ---
+              
+              This is an emergency hotfix release that bypasses the normal release process.
+              
+              **⚠️ Post-Release Actions Required:**
+              - [ ] Verify deployment is successful
+              - [ ] Monitor application for issues
+              - [ ] Update any affected documentation
+              - [ ] Conduct post-incident review
+              `,
+              draft: false,
+              prerelease: false
+            });
+
+            return {
+              id: release.id,
+              html_url: release.html_url,
+              tag_name: release.tag_name
+            };
+
+      - name: Emergency deployment
+        run: |
+          echo "🚀 Triggering emergency deployment..."
+
+          # Trigger deployment workflow
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/deploy.yml/dispatches \
+            -d '{"ref":"${{ needs.validate-hotfix.outputs.hotfix-version }}","inputs":{"environment":"production","skip_tests":"${{ inputs.skip_tests }}"}}'
+
+          echo "✅ Emergency deployment initiated"
+
+  post-hotfix-actions:
+    name: Post-Hotfix Actions
+    runs-on: ubuntu-latest
+    needs: [validate-hotfix, create-hotfix-release]
+    if: needs.create-hotfix-release.result == 'success'
+    steps:
+      - name: Create incident issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Post-Incident Review: ${{ inputs.description }}`,
+              body: `## Post-Incident Review Required
+              
+              **Hotfix Release:** ${{ needs.validate-hotfix.outputs.hotfix-version }}
+              **Description:** ${{ inputs.description }}
+              **Emergency Deployment:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              
+              ## Action Items
+              
+              - [ ] **Immediate**: Verify hotfix deployment is successful
+              - [ ] **24 hours**: Monitor application stability and performance
+              - [ ] **1 week**: Conduct post-incident review meeting
+              - [ ] **1 week**: Update documentation and runbooks
+              - [ ] **1 week**: Identify process improvements to prevent similar incidents
+              
+              ## Incident Timeline
+              
+              - **Hotfix Created:** $(date -u)
+              - **Tests Skipped:** ${{ inputs.skip_tests && 'Yes' || 'No' }}
+              - **Release Created:** $(date -u)
+              - **Deployment Initiated:** $(date -u)
+              
+              ## Next Steps
+              
+              1. Monitor deployment success
+              2. Validate fix resolves the original issue
+              3. Watch for any regression issues
+              4. Schedule post-incident review
+              
+              /label incident hotfix high-priority
+              /assign @${{ github.actor }}
+              `,
+              labels: ['incident', 'hotfix', 'high-priority'],
+              assignees: ['${{ github.actor }}']
+            });
+
+            console.log(`Created post-incident issue: ${issue.html_url}`);
+
+      - name: Notify team
+        run: |
+          echo "🚨 Emergency hotfix deployment summary:"
+          echo "- Version: ${{ needs.validate-hotfix.outputs.hotfix-version }}"
+          echo "- Description: ${{ inputs.description }}"
+          echo "- Tests skipped: ${{ inputs.skip_tests }}"
+          echo "- Post-incident issue created for follow-up"
+
+  hotfix-summary:
+    name: Hotfix Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        validate-hotfix,
+        emergency-tests,
+        create-hotfix-release,
+        post-hotfix-actions,
+      ]
+    if: always()
+    steps:
+      - name: Generate hotfix summary
+        run: |
+          echo "## 🚨 Emergency Hotfix Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Hotfix Branch:** \`${{ inputs.hotfix_branch }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Description:** ${{ inputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.validate-hotfix.outputs.hotfix-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tests Skipped:** ${{ inputs.skip_tests && '⚠️ Yes' || '✅ No' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Stage | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.validate-hotfix.result }}" == "success" ]; then
+            echo "| Validation | ✅ Passed | Branch validated and version determined |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Validation | ❌ Failed | Branch validation failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ inputs.skip_tests }}" == "true" ]; then
+            echo "| Emergency Tests | ⏭️ Skipped | Tests bypassed for emergency |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.emergency-tests.result }}" == "success" ]; then
+            echo "| Emergency Tests | ✅ Passed | Critical tests completed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Emergency Tests | ❌ Failed | Critical tests failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.create-hotfix-release.result }}" == "success" ]; then
+            echo "| Release Creation | ✅ Success | Hotfix release created and deployed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Release Creation | ❌ Failed | Release creation failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.post-hotfix-actions.result }}" == "success" ]; then
+            echo "| Post-Hotfix Actions | ✅ Complete | Incident tracking and notifications sent |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Post-Hotfix Actions | ❌ Failed | Post-hotfix actions failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.create-hotfix-release.result }}" == "success" ]; then
+            echo "### ✅ Hotfix Deployed Successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Immediate Actions Required:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. 🔍 Monitor application for stability" >> $GITHUB_STEP_SUMMARY
+            echo "2. ✅ Verify the fix resolves the original issue" >> $GITHUB_STEP_SUMMARY
+            echo "3. 📊 Check performance and error metrics" >> $GITHUB_STEP_SUMMARY
+            echo "4. 📝 Complete post-incident review (issue created)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Hotfix Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Immediate Actions Required:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. 🔍 Review failed job logs" >> $GITHUB_STEP_SUMMARY
+            echo "2. 🛠️ Fix issues and retry deployment" >> $GITHUB_STEP_SUMMARY
+            echo "3. 🚨 Consider alternative emergency measures" >> $GITHUB_STEP_SUMMARY
+            echo "4. 📞 Escalate to senior team members if needed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY

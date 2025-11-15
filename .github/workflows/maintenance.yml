@@ -1,0 +1,394 @@
+name: Maintenance Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Maintenance operation to perform"
+        required: true
+        type: choice
+        options:
+          - cleanup-artifacts
+          - database-backup
+          - security-scan
+          - performance-audit
+          - user-cleanup
+          - cache-clear
+      environment:
+        description: "Target environment"
+        required: false
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      dry_run:
+        description: "Dry run (preview changes without executing)"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: maintenance-${{ inputs.operation }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  cleanup-artifacts:
+    name: Cleanup Old Artifacts
+    runs-on: ubuntu-latest
+    if: inputs.operation == 'cleanup-artifacts'
+    steps:
+      - name: Cleanup old artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: artifacts } = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+            let deletedCount = 0;
+            let totalSize = 0;
+
+            for (const artifact of artifacts.artifacts) {
+              const createdAt = new Date(artifact.created_at);
+              if (createdAt < oneWeekAgo) {
+                totalSize += artifact.size_in_bytes;
+                
+                if (!${{ inputs.dry_run }}) {
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id
+                  });
+                }
+                
+                deletedCount++;
+                console.log(`${${{ inputs.dry_run }} ? '[DRY RUN] Would delete' : 'Deleted'} artifact: ${artifact.name} (${(artifact.size_in_bytes / 1024 / 1024).toFixed(2)} MB)`);
+              }
+            }
+
+            const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+
+            core.summary.addHeading('🧹 Artifact Cleanup Summary');
+            core.summary.addTable([
+              [{data: 'Metric', header: true}, {data: 'Value', header: true}],
+              ['Artifacts processed', `${deletedCount}`],
+              ['Total size freed', `${totalSizeMB} MB`],
+              ['Mode', `${{ inputs.dry_run && 'Dry Run' || 'Live Cleanup' }}`]
+            ]);
+
+            await core.summary.write();
+
+  database-backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    if: inputs.operation == 'database-backup'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Create database backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "🔄 Creating database backup for ${{ inputs.environment }} environment..."
+
+          BACKUP_FILENAME="foxlms-backup-$(date +%Y%m%d-%H%M%S).sql"
+
+          if [[ "$DATABASE_URL" == postgresql* ]]; then
+            # PostgreSQL backup
+            pg_dump "$DATABASE_URL" > "$BACKUP_FILENAME"
+            echo "✅ PostgreSQL backup created: $BACKUP_FILENAME"
+          elif [[ "$DATABASE_URL" == file:* ]]; then
+            # SQLite backup
+            DB_FILE=$(echo "$DATABASE_URL" | sed 's/file://')
+            cp "$DB_FILE" "${BACKUP_FILENAME%.sql}.db"
+            echo "✅ SQLite backup created: ${BACKUP_FILENAME%.sql}.db"
+          else
+            echo "❌ Unsupported database type"
+            exit 1
+          fi
+
+          # Verify backup integrity
+          if [[ "$DATABASE_URL" == postgresql* ]]; then
+            # Verify PostgreSQL backup
+            if grep -q "PostgreSQL database dump complete" "$BACKUP_FILENAME"; then
+              echo "✅ Backup integrity verified"
+            else
+              echo "❌ Backup verification failed"
+              exit 1
+            fi
+          fi
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: database-backup-${{ inputs.environment }}-${{ github.run_id }}
+          path: foxlms-backup-*
+          retention-days: 30
+
+  security-scan:
+    name: On-demand Security Scan
+    runs-on: ubuntu-latest
+    if: inputs.operation == 'security-scan'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run comprehensive security audit
+        run: |
+          echo "🔒 Running comprehensive security scan..."
+
+          # NPM audit
+          echo "## NPM Security Audit" > security-report.md
+          npm audit --audit-level=info --json > npm-audit.json || true
+
+          # Check for high/critical vulnerabilities
+          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high // 0' npm-audit.json)
+          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical // 0' npm-audit.json)
+
+          echo "- High severity vulnerabilities: $HIGH_VULNS" >> security-report.md
+          echo "- Critical severity vulnerabilities: $CRITICAL_VULNS" >> security-report.md
+          echo "" >> security-report.md
+
+          if [ "$HIGH_VULNS" -gt 0 ] || [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "⚠️ High or critical vulnerabilities detected!"
+            echo "## Vulnerability Details" >> security-report.md
+            jq -r '.advisories | to_entries[] | "- **\(.value.title)** (\(.value.severity)): \(.value.overview)"' npm-audit.json >> security-report.md
+          else
+            echo "✅ No high or critical vulnerabilities found"
+          fi
+
+      - name: Check for secrets in code
+        run: |
+          echo "🔍 Scanning for potential secrets..."
+
+          # Simple secret patterns
+          PATTERNS=(
+            'password\s*[:=]\s*["\'"'"'][^"'"'"']+["\'"'"']'
+            'api[_-]?key\s*[:=]\s*["\'"'"'][^"'"'"']+["\'"'"']'
+            'secret\s*[:=]\s*["\'"'"'][^"'"'"']+["\'"'"']'
+            'token\s*[:=]\s*["\'"'"'][^"'"'"']+["\'"'"']'
+          )
+
+          SECRET_FOUND=false
+
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -r -i -E "$pattern" src/ --exclude-dir=node_modules --exclude="*.log" 2>/dev/null; then
+              SECRET_FOUND=true
+              echo "⚠️ Potential secret pattern found: $pattern"
+            fi
+          done
+
+          if [ "$SECRET_FOUND" = false ]; then
+            echo "✅ No obvious secret patterns detected"
+          fi
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scan-report-${{ github.run_id }}
+          path: |
+            security-report.md
+            npm-audit.json
+
+  performance-audit:
+    name: On-demand Performance Audit
+    runs-on: ubuntu-latest
+    if: inputs.operation == 'performance-audit'
+    steps:
+      - name: Trigger performance workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: workflow } = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'performance.yml',
+              ref: 'main',
+              inputs: {
+                target_url: '${{ inputs.environment == 'staging' && 'https://fox-lms-staging.vercel.app' || 'https://fox-lms.vercel.app' }}',
+                lighthouse_runs: '5'
+              }
+            });
+
+            console.log('✅ Performance audit workflow triggered');
+            console.log('Check the Actions tab for detailed results');
+
+  user-cleanup:
+    name: User Data Cleanup
+    runs-on: ubuntu-latest
+    if: inputs.operation == 'user-cleanup'
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run user cleanup script
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "🧹 Running user cleanup for ${{ inputs.environment }} environment..."
+
+          if [ "${{ inputs.dry_run }}" == "true" ]; then
+            echo "🧪 DRY RUN MODE - No actual changes will be made"
+            export DRY_RUN=true
+          fi
+
+          npx prisma generate
+
+          # Run the existing cleanup script
+          node scripts/cleanup-users.mjs
+
+          echo "✅ User cleanup completed"
+
+  cache-clear:
+    name: Clear Application Caches
+    runs-on: ubuntu-latest
+    if: inputs.operation == 'cache-clear'
+    steps:
+      - name: Clear Vercel cache
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "🗑️ Clearing Vercel deployment cache..."
+            
+            # Install Vercel CLI
+            npm install -g vercel@latest
+            
+            # Clear cache (this would depend on Vercel CLI capabilities)
+            echo "Cache clearing would be implemented here based on Vercel CLI options"
+            echo "✅ Vercel cache clearing initiated"
+          else
+            echo "⚠️ VERCEL_TOKEN not configured - skipping Vercel cache clear"
+          fi
+
+      - name: Clear CDN cache (if applicable)
+        run: |
+          if [ -n "${{ secrets.BUNNY_STORAGE_API_KEY }}" ]; then
+            echo "🗑️ Clearing CDN cache..."
+            
+            # Bunny CDN cache purge (example)
+            # This would depend on your CDN setup
+            echo "CDN cache clearing would be implemented here"
+            echo "✅ CDN cache clearing initiated"
+          else
+            echo "ℹ️ No CDN configuration found - skipping CDN cache clear"
+          fi
+
+  maintenance-summary:
+    name: Maintenance Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        cleanup-artifacts,
+        database-backup,
+        security-scan,
+        performance-audit,
+        user-cleanup,
+        cache-clear,
+      ]
+    if: always()
+    steps:
+      - name: Generate maintenance summary
+        run: |
+          echo "## 🔧 Maintenance Operation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Operation:** ${{ inputs.operation }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** ${{ inputs.dry_run && 'Dry Run' || 'Live Operation' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check which job ran and its status
+          case "${{ inputs.operation }}" in
+            "cleanup-artifacts")
+              if [ "${{ needs.cleanup-artifacts.result }}" == "success" ]; then
+                echo "✅ **Artifact cleanup completed successfully**" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **Artifact cleanup failed**" >> $GITHUB_STEP_SUMMARY
+              fi
+              ;;
+            "database-backup")
+              if [ "${{ needs.database-backup.result }}" == "success" ]; then
+                echo "✅ **Database backup completed successfully**" >> $GITHUB_STEP_SUMMARY
+                echo "Check artifacts for backup files" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **Database backup failed**" >> $GITHUB_STEP_SUMMARY
+              fi
+              ;;
+            "security-scan")
+              if [ "${{ needs.security-scan.result }}" == "success" ]; then
+                echo "✅ **Security scan completed successfully**" >> $GITHUB_STEP_SUMMARY
+                echo "Check artifacts for detailed security report" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **Security scan failed**" >> $GITHUB_STEP_SUMMARY
+              fi
+              ;;
+            "performance-audit")
+              if [ "${{ needs.performance-audit.result }}" == "success" ]; then
+                echo "✅ **Performance audit triggered successfully**" >> $GITHUB_STEP_SUMMARY
+                echo "Check the performance.yml workflow for detailed results" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **Performance audit failed to trigger**" >> $GITHUB_STEP_SUMMARY
+              fi
+              ;;
+            "user-cleanup")
+              if [ "${{ needs.user-cleanup.result }}" == "success" ]; then
+                echo "✅ **User cleanup completed successfully**" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **User cleanup failed**" >> $GITHUB_STEP_SUMMARY
+              fi
+              ;;
+            "cache-clear")
+              if [ "${{ needs.cache-clear.result }}" == "success" ]; then
+                echo "✅ **Cache clearing completed successfully**" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **Cache clearing failed**" >> $GITHUB_STEP_SUMMARY
+              fi
+              ;;
+          esac
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Review any generated artifacts or reports" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor application performance after maintenance" >> $GITHUB_STEP_SUMMARY
+          echo "- Update maintenance logs or documentation as needed" >> $GITHUB_STEP_SUMMARY

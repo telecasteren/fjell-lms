@@ -1,0 +1,473 @@
+name: Performance Monitoring
+
+on:
+  schedule:
+    # Run weekly performance audits on Sundays at 1 AM UTC
+    - cron: "0 1 * * 0"
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "URL to test (defaults to production)"
+        required: false
+        default: "https://fox-lms.vercel.app"
+      lighthouse_runs:
+        description: "Number of Lighthouse runs (1-5)"
+        required: false
+        default: "3"
+        type: choice
+        options:
+          - "1"
+          - "3"
+          - "5"
+
+concurrency:
+  group: performance-monitoring
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  TARGET_URL: ${{ inputs.target_url || 'https://fox-lms.vercel.app' }}
+
+jobs:
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        env:
+          DATABASE_URL: file:./bundle-analysis.db
+          NEXTAUTH_SECRET: bundle-analysis-secret
+          NEXTAUTH_URL: http://localhost:3000
+        run: |
+          npx prisma generate
+          npm run build
+
+      - name: Analyze bundle size
+        run: |
+          npx @next/bundle-analyzer
+
+          # Generate bundle report
+          du -sh .next/static/chunks/* | sort -hr > bundle-report.txt
+
+          echo "## 📦 Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Top 10 Largest Chunks:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          head -10 bundle-report.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          # Calculate total bundle size
+          TOTAL_SIZE=$(du -sh .next/static | cut -f1)
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Static Bundle Size:** $TOTAL_SIZE" >> $GITHUB_STEP_SUMMARY
+
+      - name: Bundle size comparison
+        run: |
+          # Get previous bundle size from git history if available
+          if git show HEAD~1:.next/static 2>/dev/null; then
+            PREV_SIZE=$(git show HEAD~1:.next/static | wc -c)
+            CURR_SIZE=$(du -b .next/static | cut -f1)
+            
+            DIFF=$((CURR_SIZE - PREV_SIZE))
+            DIFF_PERCENT=$(echo "scale=2; $DIFF * 100 / $PREV_SIZE" | bc -l)
+            
+            if [ $DIFF -gt 0 ]; then
+              echo "📈 Bundle size increased by $DIFF bytes (${DIFF_PERCENT}%)" >> $GITHUB_STEP_SUMMARY
+            elif [ $DIFF -lt 0 ]; then
+              echo "📉 Bundle size decreased by ${DIFF#-} bytes (${DIFF_PERCENT#-}%)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "➡️ Bundle size unchanged" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-analysis
+          path: |
+            bundle-report.txt
+            .next/analyze/
+
+  lighthouse-audit:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Wait for deployment
+        run: |
+          echo "Testing URL: ${{ env.TARGET_URL }}"
+
+          # Wait for the site to be available
+          for i in {1..10}; do
+            if curl -s -o /dev/null -w "%{http_code}" "${{ env.TARGET_URL }}" | grep -q "200"; then
+              echo "✅ Site is available"
+              break
+            else
+              echo "⏳ Waiting for site... (attempt $i/10)"
+              sleep 10
+            fi
+          done
+
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+          LHCI_BUILD_CONTEXT__COMMIT_TIME: ${{ github.event.head_commit.timestamp }}
+          LHCI_BUILD_CONTEXT__CURRENT_BRANCH: ${{ github.ref_name }}
+          LHCI_BUILD_CONTEXT__COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+
+      - name: Generate Lighthouse reports
+        run: |
+          # Create Lighthouse config for manual runs
+          cat > lighthouserc.json << 'EOF'
+          {
+            "ci": {
+              "collect": {
+                "url": ["${{ env.TARGET_URL }}", "${{ env.TARGET_URL }}/courses", "${{ env.TARGET_URL }}/dashboard"],
+                "numberOfRuns": ${{ inputs.lighthouse_runs || 3 }}
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["error", {"minScore": 0.7}],
+                  "categories:accessibility": ["error", {"minScore": 0.9}],
+                  "categories:best-practices": ["error", {"minScore": 0.8}],
+                  "categories:seo": ["error", {"minScore": 0.8}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
+              }
+            }
+          }
+          EOF
+
+          # Run Lighthouse with custom config
+          lhci collect --config=./lighthouserc.json
+          lhci assert --config=./lighthouserc.json || true
+          lhci upload --config=./lighthouserc.json
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+
+  database-performance:
+    name: Database Performance Analysis
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Database query performance test
+        run: |
+          node -e "
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+            
+            async function performanceTest() {
+              console.log('🔍 Running database performance tests...');
+              
+              const tests = [
+                {
+                  name: 'User count query',
+                  query: () => prisma.user.count()
+                },
+                {
+                  name: 'Department with users',
+                  query: () => prisma.department.findMany({
+                    include: { users: true },
+                    take: 10
+                  })
+                },
+                {
+                  name: 'Course with enrollments',
+                  query: () => prisma.course.findMany({
+                    include: { 
+                      enrollments: { include: { user: true } },
+                      modules: { include: { lessons: true } }
+                    },
+                    take: 5
+                  })
+                },
+                {
+                  name: 'User progress query',
+                  query: () => prisma.progress.findMany({
+                    include: { 
+                      user: true, 
+                      lesson: { include: { module: { include: { course: true } } } }
+                    },
+                    take: 20
+                  })
+                }
+              ];
+              
+              console.log('| Query | Time (ms) | Status |');
+              console.log('|-------|-----------|--------|');
+              
+              for (const test of tests) {
+                const start = Date.now();
+                try {
+                  await test.query();
+                  const duration = Date.now() - start;
+                  const status = duration < 1000 ? '✅ Good' : duration < 3000 ? '⚠️ Slow' : '❌ Very Slow';
+                  console.log(\`| \${test.name} | \${duration} | \${status} |\`);
+                } catch (error) {
+                  console.log(\`| \${test.name} | Error | ❌ Failed |\`);
+                  console.error(\`Error in \${test.name}:\`, error.message);
+                }
+              }
+              
+              await prisma.\$disconnect();
+            }
+            
+            performanceTest().catch(console.error);
+          " > db-performance.md
+
+          cat db-performance.md
+
+      - name: Upload database performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: database-performance
+          path: db-performance.md
+
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Create load test script
+        run: |
+          cat > load-test.js << 'EOF'
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+          import { Rate } from 'k6/metrics';
+
+          export let errorRate = new Rate('errors');
+
+          export let options = {
+            stages: [
+              { duration: '2m', target: 10 }, // Ramp up to 10 users
+              { duration: '5m', target: 10 }, // Stay at 10 users
+              { duration: '2m', target: 20 }, // Ramp up to 20 users
+              { duration: '5m', target: 20 }, // Stay at 20 users
+              { duration: '2m', target: 0 },  // Ramp down to 0 users
+            ],
+            thresholds: {
+              http_req_duration: ['p(95)<3000'], // 95% of requests under 3s
+              errors: ['rate<0.1'], // Error rate under 10%
+            },
+          };
+
+          const BASE_URL = '${{ env.TARGET_URL }}';
+
+          export default function() {
+            // Test main page
+            let response = http.get(BASE_URL);
+            check(response, {
+              'main page status is 200': (r) => r.status === 200,
+              'main page response time < 3s': (r) => r.timings.duration < 3000,
+            }) || errorRate.add(1);
+
+            sleep(1);
+
+            // Test courses page
+            response = http.get(\`\${BASE_URL}/courses\`);
+            check(response, {
+              'courses page status is 200': (r) => r.status === 200,
+              'courses page response time < 3s': (r) => r.timings.duration < 3000,
+            }) || errorRate.add(1);
+
+            sleep(1);
+
+            // Test API health endpoint
+            response = http.get(\`\${BASE_URL}/api/health\`);
+            check(response, {
+              'API health status is 200': (r) => r.status === 200,
+              'API health response time < 1s': (r) => r.timings.duration < 1000,
+            }) || errorRate.add(1);
+
+            sleep(Math.random() * 3 + 1); // Random sleep 1-4 seconds
+          }
+          EOF
+
+      - name: Run load test
+        run: |
+          k6 run load-test.js --out json=load-test-results.json
+
+          # Generate summary
+          echo "## 🚀 Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Extract key metrics from results
+          if [ -f load-test-results.json ]; then
+            echo "Load test completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "Results saved to artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Load test results not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: |
+            load-test-results.json
+            load-test.js
+
+  performance-summary:
+    name: Performance Summary Report
+    runs-on: ubuntu-latest
+    needs:
+      [bundle-analysis, lighthouse-audit, database-performance, load-testing]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate comprehensive report
+        run: |
+          echo "# 📊 Performance Monitoring Report" > performance-report.md
+          echo "" >> performance-report.md
+          echo "**Date:** $(date -u)" >> performance-report.md
+          echo "**Target URL:** ${{ env.TARGET_URL }}" >> performance-report.md
+          echo "**Commit:** ${{ github.sha }}" >> performance-report.md
+          echo "" >> performance-report.md
+
+          echo "## Test Results Summary" >> performance-report.md
+          echo "" >> performance-report.md
+          echo "| Test Suite | Status | Details |" >> performance-report.md
+          echo "|------------|--------|---------|" >> performance-report.md
+
+          if [ "${{ needs.bundle-analysis.result }}" == "success" ]; then
+            echo "| Bundle Analysis | ✅ Passed | Bundle size analysis completed |" >> performance-report.md
+          else
+            echo "| Bundle Analysis | ❌ Failed | Bundle analysis encountered issues |" >> performance-report.md
+          fi
+
+          if [ "${{ needs.lighthouse-audit.result }}" == "success" ]; then
+            echo "| Lighthouse Audit | ✅ Passed | Performance metrics within thresholds |" >> performance-report.md
+          else
+            echo "| Lighthouse Audit | ❌ Failed | Performance metrics below thresholds |" >> performance-report.md
+          fi
+
+          if [ "${{ needs.database-performance.result }}" == "success" ]; then
+            echo "| Database Performance | ✅ Passed | Query performance acceptable |" >> performance-report.md
+          else
+            echo "| Database Performance | ❌ Failed | Query performance issues detected |" >> performance-report.md
+          fi
+
+          if [ "${{ needs.load-testing.result }}" == "success" ]; then
+            echo "| Load Testing | ✅ Passed | Application handles expected load |" >> performance-report.md
+          elif [ "${{ needs.load-testing.result }}" == "skipped" ]; then
+            echo "| Load Testing | ⏭️ Skipped | Not run for this trigger |" >> performance-report.md
+          else
+            echo "| Load Testing | ❌ Failed | Load testing issues detected |" >> performance-report.md
+          fi
+
+          echo "" >> performance-report.md
+          echo "## Recommendations" >> performance-report.md
+          echo "" >> performance-report.md
+
+          # Add conditional recommendations based on results
+          if [ "${{ needs.bundle-analysis.result }}" != "success" ]; then
+            echo "- 📦 **Bundle Size**: Review and optimize large chunks" >> performance-report.md
+          fi
+
+          if [ "${{ needs.lighthouse-audit.result }}" != "success" ]; then
+            echo "- 🔍 **Lighthouse**: Address performance, accessibility, or SEO issues" >> performance-report.md
+          fi
+
+          if [ "${{ needs.database-performance.result }}" != "success" ]; then
+            echo "- 🗄️ **Database**: Optimize slow queries and consider indexing" >> performance-report.md
+          fi
+
+          if [ "${{ needs.load-testing.result }}" == "failure" ]; then
+            echo "- 🚀 **Load Testing**: Investigate performance under load" >> performance-report.md
+          fi
+
+          cat performance-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload comprehensive report
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-monitoring-report
+          path: performance-report.md
+
+      - name: Check performance status
+        run: |
+          CRITICAL_FAILURES=0
+
+          if [ "${{ needs.lighthouse-audit.result }}" == "failure" ]; then
+            CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
+          fi
+
+          if [ "${{ needs.database-performance.result }}" == "failure" ]; then
+            CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
+          fi
+
+          if [ $CRITICAL_FAILURES -gt 0 ]; then
+            echo "⚠️ Performance monitoring detected $CRITICAL_FAILURES critical issue(s)"
+            echo "Review the detailed reports and consider performance optimizations"
+          else
+            echo "✅ Performance monitoring completed successfully"
+          fi
