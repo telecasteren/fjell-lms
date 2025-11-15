@@ -27,10 +27,10 @@ export const authOptions: NextAuthOptions = {
         typeof (metadata as { description?: unknown }).description ===
           "string" &&
         ((metadata as { description: string }).description.includes(
-          "Dynamic server usage",
+          "Dynamic server usage"
         ) ||
           (metadata as { description: string }).description.includes(
-            "couldn't be rendered statically",
+            "couldn't be rendered statically"
           ))
       ) {
         return; // Don't log expected dynamic rendering warnings
@@ -91,25 +91,62 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          include: { department: true },
-        });
-        if (!user?.passwordHash) return null;
-        const valid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash,
-        );
-        if (!valid) return null;
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          departmentId: user.departmentId,
-          theme: user.theme || "light",
-        };
+        try {
+          console.log("[AUTH] Login attempt for:", credentials?.email);
+
+          if (!credentials?.email || !credentials?.password) {
+            console.log("[AUTH] Missing email or password");
+            return null;
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            include: { department: true },
+          });
+
+          if (!user) {
+            console.log("[AUTH] User not found:", credentials.email);
+            return null;
+          }
+
+          if (!user.passwordHash) {
+            console.log("[AUTH] User has no password hash:", credentials.email);
+            return null;
+          }
+
+          console.log("[AUTH] User found, checking password for:", user.email);
+
+          const valid = await bcrypt.compare(
+            credentials.password,
+            user.passwordHash
+          );
+
+          console.log(
+            "[AUTH] Password check result:",
+            valid ? "SUCCESS" : "FAILED"
+          );
+
+          if (!valid) return null;
+
+          console.log(
+            "[AUTH] Login successful for:",
+            user.email,
+            "Role:",
+            user.role
+          );
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            departmentId: user.departmentId,
+            theme: user.theme || "light",
+          };
+        } catch (error) {
+          console.error("[AUTH] Error during authentication:", error);
+          return null;
+        }
       },
     }),
   ],
