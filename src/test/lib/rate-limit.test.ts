@@ -90,7 +90,7 @@ describe("Rate Limiting", () => {
         request,
         null,
         undefined,
-        simpleRateLimiters.auth
+        simpleRateLimiters.auth,
       );
 
       expect(result.success).toBe(true);
@@ -115,7 +115,7 @@ describe("Rate Limiting", () => {
         request,
         null,
         undefined,
-        simpleRateLimiters.auth
+        simpleRateLimiters.auth,
       );
 
       expect(result.success).toBe(false);
@@ -145,7 +145,7 @@ describe("Rate Limiting", () => {
         request,
         null,
         undefined,
-        simpleRateLimiters.general
+        simpleRateLimiters.general,
       );
 
       expect(result.success).toBe(true);
