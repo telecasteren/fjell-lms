@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { calculateOverallProgress } from "@/lib/progress-utils";
+import {
+  calculateOverallProgress,
+  calculateCourseProgress,
+} from "@/lib/progress-utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -39,13 +42,20 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const recentActivity = enrollments.slice(0, 3).map((enrollment) => {
-      return {
-        id: enrollment.id,
-        courseTitle: enrollment.course.title,
-        completedLessons: 0, // Simplified for now
-      };
-    });
+    // Calculate actual completed lessons for recent activity
+    const recentActivity = await Promise.all(
+      enrollments.slice(0, 3).map(async (enrollment) => {
+        const courseProgress = await calculateCourseProgress(
+          user.id,
+          enrollment.course.id,
+        );
+        return {
+          id: enrollment.id,
+          courseTitle: enrollment.course.title,
+          completedLessons: courseProgress.completedCount,
+        };
+      }),
+    );
 
     return NextResponse.json({
       user: {

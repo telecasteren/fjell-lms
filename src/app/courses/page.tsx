@@ -18,6 +18,7 @@ type Course = {
   title: string;
   description?: string;
   status?: string;
+  global?: boolean;
   departmentName?: string;
   departmentId?: string;
   isFoxLmsCourse?: boolean;
@@ -35,6 +36,7 @@ export default function CoursesPage() {
   const [user, setUser] = useState<User | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [global, setGlobal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     courseId: string | null;
@@ -46,19 +48,27 @@ export default function CoursesPage() {
   });
 
   async function load() {
-    const res = await fetch("/api/courses", { credentials: "include" });
-    if (res.ok) {
-      const data = await res.json();
-      setCourses(data.courses);
-      setUser(data.user);
-    }
+    try {
+      const res = await fetch("/api/courses", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setCourses(data.courses || []);
+        setUser(data.user);
+      } else {
+        console.error("Failed to fetch courses:", res.status, await res.text());
+      }
 
-    const enrollRes = await fetch("/api/enrollments", {
-      credentials: "include",
-    });
-    if (enrollRes.ok) {
-      const enrollData = await enrollRes.json();
-      setEnrollments(enrollData.enrollments);
+      const enrollRes = await fetch("/api/enrollments", {
+        credentials: "include",
+      });
+      if (enrollRes.ok) {
+        const enrollData = await enrollRes.json();
+        setEnrollments(enrollData.enrollments || []);
+      } else {
+        console.error("Failed to fetch enrollments:", enrollRes.status);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
     }
   }
 
@@ -71,13 +81,14 @@ export default function CoursesPage() {
     const res = await fetch("/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description }),
+      body: JSON.stringify({ title, description, global }),
       credentials: "include",
     });
     if (res.ok) {
       const data = await res.json();
       setTitle("");
       setDescription("");
+      setGlobal(false);
       await load();
       // Redirect to course management page
       window.location.href = `/courses/${data.course.id}`;
@@ -115,10 +126,20 @@ export default function CoursesPage() {
   }
 
   async function updateCourseStatus(courseId: string, status: string) {
-    const res = await fetch(`/api/courses/${courseId}/status`, {
+    const res = await fetch(`/api/courses/${courseId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
+      credentials: "include",
+    });
+    if (res.ok) await load();
+  }
+
+  async function updateCourseGlobal(courseId: string, global: boolean) {
+    const res = await fetch(`/api/courses/${courseId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ global }),
       credentials: "include",
     });
     if (res.ok) await load();
@@ -173,12 +194,6 @@ export default function CoursesPage() {
     );
   }
 
-  // Check if user can view Get Started section (same roles as canCreateCourse)
-  // This mirrors requireWriterOrAdminOrAuthor but for client-side UI checks
-  function canViewGetStarted() {
-    return canCreateCourse();
-  }
-
   function canDeleteCourse(course: Course) {
     if (course.enrollmentCount > 0) return false;
 
@@ -205,43 +220,50 @@ export default function CoursesPage() {
     return false;
   }
 
-  function getFilteredCourses() {
-    if (!user) return courses;
-
-    // AUTHOR sees all courses (including archived)
-    if (user.role === "AUTHOR") {
-      return courses;
-    }
-
-    // ADMIN and WRITER see all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
-    // but only published courses from other departments
-    if (user.role === "ADMIN" || user.role === "WRITER") {
-      return courses.filter((course) => {
-        // Show all courses from their own department regardless of status
-        if (course.departmentId === user.departmentId) {
-          return true;
-        }
-        // For other departments, only show published courses
-        return course.status === "PUBLISHED";
-      });
-    }
-
-    // BASIC only see published courses
-    return courses.filter((course) => course.status === "PUBLISHED");
-  }
-
-  function getFoxLmsCourses() {
+  // Get Started section shows GLOBAL courses from FOX-LMS (published only)
+  function getGlobalFoxLmsCourses() {
     return courses.filter(
-      (course) => course.isFoxLmsCourse && course.status === "PUBLISHED",
+      (course) =>
+        course.isFoxLmsCourse &&
+        course.global === true &&
+        course.status === "PUBLISHED",
     );
   }
 
-  function getNonFoxLmsCourses() {
-    return getFilteredCourses().filter((course) => !course.isFoxLmsCourse);
+  // Department courses - all courses that belong to the user's department workflow
+  function getDepartmentCourses() {
+    if (!user) return [];
+
+    return courses.filter((course) => {
+      // AUTHOR in FOX-LMS: sees ALL courses in their department (including non-global ones)
+      if (user.role === "AUTHOR" && course.departmentId === user.departmentId) {
+        return true;
+      }
+
+      // WRITER/ADMIN: see all courses from their own department
+      if (
+        (user.role === "WRITER" || user.role === "ADMIN") &&
+        course.departmentId === user.departmentId
+      ) {
+        return true;
+      }
+
+      // BASIC: see only published courses from their department
+      if (
+        user.role === "BASIC" &&
+        course.departmentId === user.departmentId &&
+        course.status === "PUBLISHED"
+      ) {
+        return true;
+      }
+
+      return false;
+    });
   }
 
-  const foxLmsCourses = getFoxLmsCourses();
-  const hasFoxLmsCourses = foxLmsCourses.length > 0;
+  const globalFoxLmsCourses = getGlobalFoxLmsCourses();
+  const departmentCourses = getDepartmentCourses();
+  const hasGlobalCourses = globalFoxLmsCourses.length > 0;
 
   return (
     <div className="space-y-6">
@@ -266,13 +288,29 @@ export default function CoursesPage() {
               onChange={(e) => setDescription(e.target.value)}
               className="bg-background rounded-md border px-3 py-2"
             />
+            {/* Global checkbox - only for AUTHOR in FOX-LMS department */}
+            {/* Note: Backend will also validate this, but we hide UI for better UX */}
+            {isAuthor() && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="global"
+                  checked={global}
+                  onChange={(e) => setGlobal(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <label htmlFor="global" className="text-sm font-medium">
+                  Publish globally (visible to all departments in Get Started)
+                </label>
+              </div>
+            )}
             <Button onClick={createCourse}>Create</Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Get Started section for FOX-LMS courses - only visible to WRITER, ADMIN, or AUTHOR */}
-      {hasFoxLmsCourses && canViewGetStarted() && (
+      {/* Get Started section - shows global courses from FOX-LMS */}
+      {hasGlobalCourses && (
         <Card className="border-primary/50 bg-primary/5">
           <CardHeader>
             <CardTitle>Get Started</CardTitle>
@@ -293,7 +331,7 @@ export default function CoursesPage() {
       )}
 
       <div className="grid gap-3">
-        {getNonFoxLmsCourses().map((c) => {
+        {departmentCourses.map((c) => {
           const canManage = canManageCourseStatus(c);
           const isArchived = c.status === "ARCHIVED";
 
@@ -316,9 +354,16 @@ export default function CoursesPage() {
                       </span>
                     )}
                   </CardTitle>
-                  <Badge variant={getStatusBadgeVariant(c.status)}>
-                    {c.status || "DRAFT"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {c.global && (
+                      <Badge variant="secondary" className="text-xs">
+                        GLOBAL
+                      </Badge>
+                    )}
+                    <Badge variant={getStatusBadgeVariant(c.status)}>
+                      {c.status || "DRAFT"}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -335,21 +380,46 @@ export default function CoursesPage() {
 
                 {/* Status Management for Authors, Writers, and Admins */}
                 {canManageCourseStatus(c) && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Status:</span>
-                    <Select
-                      value={c.status || "DRAFT"}
-                      onValueChange={(value) => updateCourseStatus(c.id, value)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="PUBLISHED">Published</SelectItem>
-                        <SelectItem value="ARCHIVED">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Status:</span>
+                      <Select
+                        value={c.status || "DRAFT"}
+                        onValueChange={(value) =>
+                          updateCourseStatus(c.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="DRAFT">Draft</SelectItem>
+                          <SelectItem value="PUBLISHED">Published</SelectItem>
+                          <SelectItem value="ARCHIVED">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Global toggle - only for AUTHOR in FOX-LMS department */}
+                    {isAuthor() && c.isFoxLmsCourse && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`global-${c.id}`}
+                          checked={c.global || false}
+                          onChange={(e) =>
+                            updateCourseGlobal(c.id, e.target.checked)
+                          }
+                          className="h-4 w-4"
+                        />
+                        <label
+                          htmlFor={`global-${c.id}`}
+                          className="text-sm font-medium"
+                        >
+                          Global
+                        </label>
+                      </div>
+                    )}
                   </div>
                 )}
 

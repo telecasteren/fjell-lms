@@ -50,12 +50,12 @@ export default function GetStartedPage() {
     const res = await fetch("/api/courses", { credentials: "include" });
     if (res.ok) {
       const data = await res.json();
-      // Filter only FOX-LMS courses
-      const foxLmsCourses = data.courses.filter(
-        (c: Course & { isFoxLmsCourse?: boolean }) =>
-          c.isFoxLmsCourse && c.status === "PUBLISHED",
+      // Filter only GLOBAL courses from FOX-LMS (published)
+      const globalFoxLmsCourses = data.courses.filter(
+        (c: Course & { isFoxLmsCourse?: boolean; global?: boolean }) =>
+          c.isFoxLmsCourse && c.global === true && c.status === "PUBLISHED",
       );
-      setCourses(foxLmsCourses);
+      setCourses(globalFoxLmsCourses);
     }
 
     const enrollRes = await fetch("/api/enrollments", {
@@ -136,9 +136,9 @@ export default function GetStartedPage() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
-            Explore our foundational courses to get started with your learning
-            journey. These courses are designed to help you build a strong
-            foundation.
+            Explore our global foundational courses to get started with your
+            learning journey. These courses are available to all departments and
+            designed to help you build a strong foundation.
           </p>
         </CardContent>
       </Card>
@@ -147,7 +147,7 @@ export default function GetStartedPage() {
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">
-              No foundational courses available at the moment.
+              No global foundational courses available at the moment.
             </p>
           </CardContent>
         </Card>

@@ -61,6 +61,7 @@ model Course {
   title        String
   description  String?
   status       CourseStatus @default(DRAFT)
+  global       Boolean      @default(false)
   departmentId String
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -69,6 +70,7 @@ model Course {
   modules      Module[]
 
   @@index([departmentId])
+  @@index([global])
 }
 
 model Module {

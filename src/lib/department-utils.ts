@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { Role } from "@prisma/client";
+import { Role, CourseStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
 /**
@@ -125,40 +125,64 @@ export async function getCourseWhereClause(
   let whereClause: Prisma.CourseWhereInput = {};
 
   if (user.role === Role.AUTHOR) {
-    // AUTHOR sees ALL courses (platform-wide)
+    // AUTHOR sees ALL courses (platform-wide) - no status filter so they can manage their drafts
     whereClause = {};
-  } else if (user.role === Role.WRITER) {
-    // WRITER sees courses from their own department and parent department (for viewing FOX-LMS courses)
+  } else if (user.role === Role.WRITER || user.role === Role.ADMIN) {
+    // Content creators see:
+    // 1. All courses from their own department (regardless of status)
+    // 2. Published courses from parent department
+    // 3. Global published courses from any department
     const departmentIds = user.departmentId ? [user.departmentId] : [];
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
 
     whereClause = {
-      departmentId: {
-        in: departmentIds,
-      },
+      OR: [
+        // Own department courses (all statuses)
+        {
+          departmentId: user.departmentId,
+        },
+        // Parent department published courses
+        user.department?.parentDepartmentId
+          ? {
+              departmentId: user.department.parentDepartmentId,
+              status: CourseStatus.PUBLISHED,
+            }
+          : {},
+        // Global published courses
+        {
+          global: true,
+          status: CourseStatus.PUBLISHED,
+        },
+      ].filter((condition) => Object.keys(condition).length > 0),
     };
-
-    if (includeStatusFilter) {
-      whereClause.status = "PUBLISHED";
-    }
-  } else if (user.role === Role.ADMIN || user.role === Role.BASIC) {
-    // ADMIN/BASIC see published courses from their department and parent department
+  } else if (user.role === Role.BASIC) {
+    // BASIC users see:
+    // 1. Published courses from their department
+    // 2. Published courses from parent department
+    // 3. Global published courses
     const departmentIds = user.departmentId ? [user.departmentId] : [];
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
 
     whereClause = {
-      departmentId: {
-        in: departmentIds,
-      },
+      OR: [
+        // Department courses (published only)
+        {
+          departmentId: {
+            in: departmentIds,
+          },
+          status: CourseStatus.PUBLISHED,
+        },
+        // Global published courses
+        {
+          global: true,
+          status: CourseStatus.PUBLISHED,
+        },
+      ],
     };
-
-    if (includeStatusFilter) {
-      whereClause.status = "PUBLISHED";
-    }
   } else {
     // No access for unknown roles
     whereClause = { id: { in: [] } };
@@ -198,6 +222,7 @@ export async function canAccessCourse(
     select: {
       departmentId: true,
       status: true,
+      global: true,
     },
   });
 
@@ -208,29 +233,14 @@ export async function canAccessCourse(
     return true;
   }
 
-  // WRITER can access all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
-  // but only published courses from parent department
-  if (user.role === Role.WRITER) {
-    const departmentIds = [user.departmentId];
-    if (user.department?.parentDepartmentId) {
-      departmentIds.push(user.department.parentDepartmentId);
-    }
-
-    // If course is from their own department, allow access regardless of status
-    if (course.departmentId === user.departmentId) {
-      return true;
-    }
-
-    // For other departments (e.g., parent), only allow published courses
-    return (
-      departmentIds.includes(course.departmentId) &&
-      course.status === "PUBLISHED"
-    );
+  // Check if it's a global published course - accessible to all users
+  if (course.global && course.status === CourseStatus.PUBLISHED) {
+    return true;
   }
 
-  // ADMIN can access all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
+  // WRITER can access all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
   // but only published courses from parent department
-  if (user.role === Role.ADMIN) {
+  if (user.role === Role.WRITER || user.role === Role.ADMIN) {
     const departmentIds = [user.departmentId];
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
@@ -244,13 +254,13 @@ export async function canAccessCourse(
     // For other departments (e.g., parent), only allow published courses
     return (
       departmentIds.includes(course.departmentId) &&
-      course.status === "PUBLISHED"
+      course.status === CourseStatus.PUBLISHED
     );
   }
 
   // BASIC can only access published courses from their department and parent department
   if (user.role === Role.BASIC) {
-    if (course.status !== "PUBLISHED") return false;
+    if (course.status !== CourseStatus.PUBLISHED) return false;
 
     const departmentIds = [user.departmentId];
     if (user.department?.parentDepartmentId) {
@@ -265,9 +275,10 @@ export async function canAccessCourse(
 
 /**
  * Check if a user can manage a course (create/edit/delete)
- * - AUTHOR: Can manage any course
+ * - AUTHOR: Can manage any course (including global courses)
  * - WRITER: Can only manage courses from their own department
  * - ADMIN: Can only manage courses from their own department
+ * Note: Only AUTHORs can set/unset the global flag
  */
 export async function canManageCourse(
   userId: string,

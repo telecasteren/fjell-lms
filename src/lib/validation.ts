@@ -55,6 +55,7 @@ export const passwordChangeSchema = z.object({
 export const courseCreateSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   description: z.string().max(1000, "Description too long").optional(),
+  global: z.boolean().optional().default(false),
 });
 
 export const courseUpdateSchema = z.object({
@@ -65,6 +66,7 @@ export const courseUpdateSchema = z.object({
     .optional(),
   description: z.string().max(1000, "Description too long").optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+  global: z.boolean().optional(),
 });
 
 // Module validation schemas

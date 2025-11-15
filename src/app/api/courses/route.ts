@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         title: true,
         description: true,
         status: true,
+        global: true,
         createdAt: true,
         departmentId: true,
         department: {
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest) {
       title: string;
       description: string | null;
       status: string;
+      global: boolean;
       createdAt: Date;
       departmentId: string;
       department: {
@@ -71,6 +73,7 @@ export async function GET(req: NextRequest) {
         title: course.title,
         description: course.description,
         status: course.status,
+        global: course.global,
         createdAt: course.createdAt,
         departmentId: course.departmentId,
         departmentName: course.department?.name,
@@ -113,12 +116,28 @@ export async function POST(req: NextRequest) {
     if (!validation.success) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
-    const { title, description } = validation.data;
+    const { title, description, global } = validation.data;
+
+    // Check if user is in FOX-LMS department for global course creation
+    const userDepartment = await prisma.department.findUnique({
+      where: { id: user.departmentId },
+      select: { name: true },
+    });
+
+    // Only AUTHOR in FOX-LMS department can create global courses
+    const isInFoxLmsDepartment = userDepartment?.name === "FOX-LMS";
+    const canCreateGlobal =
+      user.role === "AUTHOR" && isInFoxLmsDepartment && global;
 
     // WRITER can only create courses in their own department
     // AUTHOR can create courses in any department (but defaults to their own)
     const course = await prisma.course.create({
-      data: { title, description, departmentId: user.departmentId },
+      data: {
+        title,
+        description,
+        departmentId: user.departmentId,
+        global: canCreateGlobal || false,
+      },
     });
     return NextResponse.json({ course });
   } catch (error) {

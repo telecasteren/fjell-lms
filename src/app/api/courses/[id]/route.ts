@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireWriterOrAdminOrAuthor } from "@/lib/rbac";
 import { canManageCourse } from "@/lib/department-utils";
+import { courseUpdateSchema, validateRequestBody } from "@/lib/validation";
 
 export async function PATCH(
   req: NextRequest,
@@ -10,7 +11,14 @@ export async function PATCH(
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
     const { id } = await params;
-    const { title, description } = await req.json();
+    const body = await req.json();
+
+    const validation = validateRequestBody(courseUpdateSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { title, description, status, global } = validation.data;
 
     // Check if user can manage this course
     const canManage = await canManageCourse(user.id, id);
@@ -21,9 +29,29 @@ export async function PATCH(
       );
     }
 
+    // Check if user is in FOX-LMS department for global flag changes
+    const userDepartment = await prisma.department.findUnique({
+      where: { id: user.departmentId },
+      select: { name: true },
+    });
+
+    // Only AUTHOR in FOX-LMS department can set global flag
+    const isInFoxLmsDepartment = userDepartment?.name === "FOX-LMS";
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
+    if (
+      global !== undefined &&
+      user.role === "AUTHOR" &&
+      isInFoxLmsDepartment
+    ) {
+      updateData.global = global;
+    }
+
     const updated = await prisma.course.update({
       where: { id },
-      data: { title, description },
+      data: updateData,
     });
     return NextResponse.json({ course: updated });
   } catch (error) {
