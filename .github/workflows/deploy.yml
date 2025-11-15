@@ -65,7 +65,7 @@ jobs:
           MISSING_VARS=""
 
           for var in "${REQUIRED_VARS[@]}"; do
-            if [ -z "${!var}" ] && [ -z "${{ secrets[var] }}" ]; then
+            if [ -z "${!var}" ]; then
               MISSING_VARS="$MISSING_VARS $var"
             fi
           done
