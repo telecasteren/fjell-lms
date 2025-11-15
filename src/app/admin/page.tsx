@@ -41,6 +41,12 @@ type Department = {
   };
 };
 
+type Course = {
+  id: string;
+  title: string;
+  departmentId: string;
+};
+
 type DepartmentDetails = {
   id: string;
   name: string;
@@ -132,6 +138,7 @@ type DepartmentStats = {
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [departmentStats, setDepartmentStats] =
     useState<DepartmentStats | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -155,6 +162,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     loadUsers();
+    loadCourses();
     loadDepartmentStats();
     loadCurrentUserRole();
     loadDepartments();
@@ -182,6 +190,14 @@ export default function AdminPage() {
     if (res.ok) {
       const data = await res.json();
       setUsers(data.users);
+    }
+  }
+
+  async function loadCourses() {
+    const res = await fetch("/api/admin/courses");
+    if (res.ok) {
+      const data = await res.json();
+      setCourses(data.courses);
     }
   }
 
@@ -224,6 +240,7 @@ export default function AdminPage() {
       loadDepartmentDetails(selectedDepartment);
     }
     loadUsers();
+    loadCourses();
     loadDepartmentStats();
   }
 
@@ -242,6 +259,7 @@ export default function AdminPage() {
       setFormData({ name: "", email: "", role: "BASIC" });
       setShowCreateForm(false);
       await loadUsers();
+      await loadCourses();
       await loadDepartmentStats();
     }
   }
@@ -799,7 +817,12 @@ export default function AdminPage() {
             <CardTitle>Course Enrollments</CardTitle>
           </CardHeader>
           <CardContent>
-            <EnrollmentManager />
+            <EnrollmentManager
+              selectedDepartment={selectedDepartment}
+              currentDepartment={departmentStats?.department?.id}
+              allUsers={users}
+              allCourses={courses}
+            />
           </CardContent>
         </Card>
       </div>

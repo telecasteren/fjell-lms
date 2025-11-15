@@ -6,7 +6,7 @@ import { courseUpdateSchema, validateRequestBody } from "@/lib/validation";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -25,7 +25,7 @@ export async function PATCH(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this course" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -37,7 +37,7 @@ export async function PATCH(
 
     // Only AUTHOR in FOX-LMS department can set global flag
     const isInFoxLmsDepartment = userDepartment?.name === "FOX-LMS";
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
@@ -66,7 +66,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -77,7 +77,7 @@ export async function DELETE(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to delete this course" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -98,7 +98,7 @@ export async function DELETE(
 
       // Delete all progress records for lessons in this course
       const lessonIds = modules.flatMap((module) =>
-        module.lessons.map((lesson) => lesson.id),
+        module.lessons.map((lesson) => lesson.id)
       );
 
       if (lessonIds.length > 0) {
@@ -111,7 +111,7 @@ export async function DELETE(
       const quizIds = modules.flatMap((module) =>
         module.lessons
           .filter((lesson) => lesson.quiz)
-          .map((lesson) => lesson.quiz!.id),
+          .map((lesson) => lesson.quiz!.id)
       );
 
       if (quizIds.length > 0) {
@@ -153,7 +153,7 @@ export async function DELETE(
     }
     return NextResponse.json(
       { error: "Failed to delete course" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

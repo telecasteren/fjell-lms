@@ -22,14 +22,28 @@ type User = {
   id: string;
   name: string;
   email: string;
+  departmentId?: string;
 };
 
 type Course = {
   id: string;
   title: string;
+  departmentId?: string;
 };
 
-export function EnrollmentManager() {
+type EnrollmentManagerProps = {
+  selectedDepartment?: string;
+  currentDepartment?: string;
+  allUsers?: User[];
+  allCourses?: Course[];
+};
+
+export function EnrollmentManager({
+  selectedDepartment,
+  currentDepartment,
+  allUsers = [],
+  allCourses = [],
+}: EnrollmentManagerProps) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -41,7 +55,7 @@ export function EnrollmentManager() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedDepartment, currentDepartment, allUsers, allCourses]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadData() {
     // Load enrollments
@@ -51,14 +65,34 @@ export function EnrollmentManager() {
       setEnrollments(enrollData.enrollments);
     }
 
-    // Load users
+    // If props are provided, use filtered data instead of API calls
+    if (allUsers.length > 0 && allCourses.length > 0) {
+      const targetDepartmentId = selectedDepartment || currentDepartment;
+
+      // Filter users by department
+      const departmentUsers = targetDepartmentId
+        ? allUsers.filter((user) => user.departmentId === targetDepartmentId)
+        : allUsers;
+
+      // Filter courses by department
+      const departmentCourses = targetDepartmentId
+        ? allCourses.filter(
+            (course) => course.departmentId === targetDepartmentId
+          )
+        : allCourses;
+
+      setUsers(departmentUsers);
+      setCourses(departmentCourses);
+      return;
+    }
+
+    // Fallback to API calls if no props provided
     const usersRes = await fetch("/api/admin/users");
     if (usersRes.ok) {
       const usersData = await usersRes.json();
       setUsers(usersData.users);
     }
 
-    // Load courses - use admin endpoint to get only department and parent department courses
     const coursesRes = await fetch("/api/admin/courses");
     if (coursesRes.ok) {
       const coursesData = await coursesRes.json();
