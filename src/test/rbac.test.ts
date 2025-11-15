@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Role } from "@prisma/client";
+import { Role, User } from "@prisma/client";
 
 // Mock the session and auth functions
 vi.mock("@/lib/session", () => ({
@@ -18,6 +18,22 @@ import { getCurrentUser } from "@/lib/session";
 
 const mockGetCurrentUser = vi.mocked(getCurrentUser);
 
+// Helper function to create complete mock user objects
+const createMockUser = (overrides: Partial<User> = {}): User => ({
+  id: "test-user-id",
+  name: "Test User",
+  email: "test@example.com",
+  emailVerified: null,
+  image: null,
+  passwordHash: "$2b$10$mockhashedpassword",
+  role: Role.BASIC,
+  departmentId: "test-department-id",
+  theme: null,
+  createdAt: new Date("2024-01-01T00:00:00Z"),
+  updatedAt: new Date("2024-01-01T00:00:00Z"),
+  ...overrides,
+});
+
 describe("RBAC Functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,7 +47,7 @@ describe("RBAC Functions", () => {
     });
 
     it("returns user when authenticated", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: Role.BASIC };
+      const mockUser = createMockUser({ role: Role.BASIC });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       const result = await requireAuth();
@@ -41,7 +57,7 @@ describe("RBAC Functions", () => {
 
   describe("requireRole", () => {
     it("throws error when user role is not allowed", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: Role.BASIC };
+      const mockUser = createMockUser({ role: Role.BASIC });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       await expect(requireRole([Role.ADMIN, Role.AUTHOR])).rejects.toThrow(
@@ -50,7 +66,7 @@ describe("RBAC Functions", () => {
     });
 
     it("returns user when role is allowed", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: Role.ADMIN };
+      const mockUser = createMockUser({ role: Role.ADMIN });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       const result = await requireRole([Role.ADMIN, Role.AUTHOR]);
@@ -60,18 +76,14 @@ describe("RBAC Functions", () => {
 
   describe("requireAuthor", () => {
     it("throws error when user is not author", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: Role.BASIC };
+      const mockUser = createMockUser({ role: Role.BASIC });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       await expect(requireAuthor()).rejects.toThrow("Forbidden");
     });
 
     it("returns user when user is author", async () => {
-      const mockUser = {
-        id: "1",
-        email: "test@example.com",
-        role: Role.AUTHOR,
-      };
+      const mockUser = createMockUser({ role: Role.AUTHOR });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       const result = await requireAuthor();
@@ -81,14 +93,14 @@ describe("RBAC Functions", () => {
 
   describe("requireAdminOrAuthor", () => {
     it("throws error when user is basic", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: Role.BASIC };
+      const mockUser = createMockUser({ role: Role.BASIC });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       await expect(requireAdminOrAuthor()).rejects.toThrow("Forbidden");
     });
 
     it("returns user when user is admin", async () => {
-      const mockUser = { id: "1", email: "test@example.com", role: Role.ADMIN };
+      const mockUser = createMockUser({ role: Role.ADMIN });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       const result = await requireAdminOrAuthor();
@@ -96,11 +108,7 @@ describe("RBAC Functions", () => {
     });
 
     it("returns user when user is author", async () => {
-      const mockUser = {
-        id: "1",
-        email: "test@example.com",
-        role: Role.AUTHOR,
-      };
+      const mockUser = createMockUser({ role: Role.AUTHOR });
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       const result = await requireAdminOrAuthor();
@@ -113,7 +121,7 @@ describe("RBAC Functions", () => {
       const roles = [Role.BASIC, Role.ADMIN, Role.AUTHOR];
 
       for (const role of roles) {
-        const mockUser = { id: "1", email: "test@example.com", role };
+        const mockUser = createMockUser({ role });
         mockGetCurrentUser.mockResolvedValue(mockUser);
 
         const result = await requireBasicOrAbove();
