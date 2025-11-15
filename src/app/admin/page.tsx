@@ -677,7 +677,17 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Department Users</CardTitle>
+            <CardTitle>
+              Department Users
+              {selectedDepartment &&
+                departments.find((d) => d.id === selectedDepartment) && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    (
+                    {departments.find((d) => d.id === selectedDepartment)?.name}
+                    )
+                  </span>
+                )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
@@ -688,7 +698,12 @@ export default function AdminPage() {
                   // Auto-expand if there are search results
                   if (value.trim()) {
                     const query = value.toLowerCase();
-                    const filteredUsers = users.filter((user) => {
+                    const targetDepartmentId =
+                      selectedDepartment || departmentStats?.department?.id;
+                    const departmentUsers = users.filter(
+                      (user) => user.departmentId === targetDepartmentId,
+                    );
+                    const filteredUsers = departmentUsers.filter((user) => {
                       return (
                         (user.name &&
                           user.name.toLowerCase().includes(query)) ||
@@ -705,7 +720,14 @@ export default function AdminPage() {
             </div>
             <div className="space-y-3">
               {(() => {
-                const filteredUsers = users.filter((user) => {
+                // Filter users by selected department (or current department if none selected)
+                const targetDepartmentId =
+                  selectedDepartment || departmentStats?.department?.id;
+                const departmentUsers = users.filter(
+                  (user) => user.departmentId === targetDepartmentId,
+                );
+
+                const filteredUsers = departmentUsers.filter((user) => {
                   if (!userSearchQuery.trim()) return true;
                   const query = userSearchQuery.toLowerCase();
                   return (
