@@ -11,10 +11,12 @@ type Enrollment = {
     id: string;
     name: string;
     email: string;
+    departmentId?: string;
   };
   course: {
     id: string;
     title: string;
+    departmentId?: string;
   };
 };
 
@@ -172,27 +174,41 @@ export function EnrollmentManager({
 
       <div className="space-y-2">
         <h4 className="font-medium">Current Enrollments</h4>
-        {enrollments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No enrollments yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {enrollments.map((enrollment) => (
-              <div
-                key={enrollment.id}
-                className="flex items-center justify-between p-2 border rounded text-sm"
-              >
-                <div>
-                  <span className="font-medium">{enrollment.user.name}</span>{" "}
-                  enrolled in{" "}
-                  <span className="font-medium">{enrollment.course.title}</span>
+        {(() => {
+          // Filter enrollments by selected department
+          const targetDepartmentId = selectedDepartment || currentDepartment;
+          const filteredEnrollments = targetDepartmentId
+            ? enrollments.filter(
+                (enrollment) =>
+                  enrollment.user.departmentId === targetDepartmentId ||
+                  enrollment.course.departmentId === targetDepartmentId,
+              )
+            : enrollments;
+
+          return filteredEnrollments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No enrollments yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {filteredEnrollments.map((enrollment) => (
+                <div
+                  key={enrollment.id}
+                  className="flex items-center justify-between p-2 border rounded text-sm"
+                >
+                  <div>
+                    <span className="font-medium">{enrollment.user.name}</span>{" "}
+                    enrolled in{" "}
+                    <span className="font-medium">
+                      {enrollment.course.title}
+                    </span>
+                  </div>
+                  <div className="text-muted-foreground">
+                    {new Date(enrollment.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
-                <div className="text-muted-foreground">
-                  {new Date(enrollment.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

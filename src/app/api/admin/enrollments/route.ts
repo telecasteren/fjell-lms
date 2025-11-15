@@ -20,12 +20,14 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true,
             email: true,
+            departmentId: true,
           },
         },
         course: {
           select: {
             id: true,
             title: true,
+            departmentId: true,
           },
         },
       },
@@ -126,12 +128,14 @@ export async function POST(req: NextRequest) {
             id: true,
             name: true,
             email: true,
+            departmentId: true,
           },
         },
         course: {
           select: {
             id: true,
             title: true,
+            departmentId: true,
           },
         },
       },

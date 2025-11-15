@@ -248,11 +248,18 @@ export default function AdminPage() {
   async function createUser() {
     if (!formData.name || !formData.email) return;
 
+    // Use selected department or fallback to current department
+    const targetDepartmentId =
+      selectedDepartment || departmentStats?.department?.id;
+
     setLoading(true);
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify({
+        ...formData,
+        departmentId: targetDepartmentId,
+      }),
     });
     setLoading(false);
 
@@ -284,7 +291,6 @@ export default function AdminPage() {
               Add Department
             </Button>
           )}
-          <Button onClick={() => setShowCreateForm(true)}>Add User</Button>
         </div>
       </div>
 
@@ -346,13 +352,13 @@ export default function AdminPage() {
         </Card>
       )}
 
-      {/* Department Selection - Only show if user has access to multiple departments */}
-      {departments.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Department Management</CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Department Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Department Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {departments.length > 1 ? (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium">Select Department:</span>
@@ -454,6 +460,10 @@ export default function AdminPage() {
 
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-4">
+                    <Button onClick={() => setShowCreateForm(true)}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Add User
+                    </Button>
                     <Button
                       onClick={() => setShowConfigure(!showConfigure)}
                       variant={showConfigure ? "secondary" : "default"}
@@ -583,9 +593,19 @@ export default function AdminPage() {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-sm">
+                You have access to one department.
+              </p>
+              <Button onClick={() => setShowCreateForm(true)}>
+                <Users className="mr-2 h-4 w-4" />
+                Add User
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {showCreateForm && (
         <Card>

@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { name, email, role } = body;
+    const { name, email, role, departmentId } = body;
 
     // Restrict role creation based on user role
     if (user.role === "ADMIN") {
@@ -92,17 +92,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Determine target department ID
+    const targetDepartmentId = departmentId || user.departmentId;
+
+    // Validate department access if departmentId is provided
+    if (departmentId && departmentId !== user.departmentId) {
+      const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
+
+      // Check if user has access to the target department
+      if (
+        accessibleDepartmentIds === null ||
+        !accessibleDepartmentIds.includes(departmentId)
+      ) {
+        return NextResponse.json(
+          { error: "Access denied to target department" },
+          { status: 403 },
+        );
+      }
+    }
+
     // Create user with placeholder password hash (user will set password via sign-up link)
     const placeholderPasswordHash = await bcrypt.hash("placeholder", 10);
 
-    // Create user in same department
+    // Create user in specified department
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash: placeholderPasswordHash,
         role: role || "BASIC",
-        departmentId: user.departmentId,
+        departmentId: targetDepartmentId,
       },
       select: {
         id: true,
