@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Role } from "@prisma/client";
@@ -76,7 +77,15 @@ export default function Home() {
 
   // Show loading while checking authentication
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   }
 
   // Don't render anything if redirecting to login
@@ -85,7 +94,81 @@ export default function Home() {
   }
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+
+        {/* Overall Statistics Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-6">
+              <Skeleton className="h-24 w-24 rounded-full" />
+              <div className="grid flex-1 grid-cols-2 gap-4 md:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="text-center">
+                    <Skeleton className="h-8 w-16 mx-auto mb-2" />
+                    <Skeleton className="h-4 w-20 mx-auto" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Skeleton className="h-3 w-full mt-4 rounded-full" />
+          </CardContent>
+        </Card>
+
+        {/* Current Course Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <Skeleton className="h-6 w-64 mb-2" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <Skeleton className="h-10 w-32" />
+              </div>
+              <Skeleton className="h-3 w-full rounded-full" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Ongoing and Completed Courses Skeleton */}
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Array.from({ length: 2 }).map((_, j) => (
+                    <div key={j} className="space-y-3 rounded border p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Skeleton className="h-5 w-48 mb-2" />
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                        <Skeleton className="h-8 w-20" />
+                      </div>
+                      <Skeleton className="h-2 w-full rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (!data) {

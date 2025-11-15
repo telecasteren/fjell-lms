@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -390,7 +391,45 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
     });
   }
 
-  if (!lesson) return null;
+  if (!lesson) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <Card className="max-h-[90vh] w-full max-w-4xl overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex space-x-2">
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-16" />
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-32 w-full" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Skeleton className="h-10 w-16" />
+                <Skeleton className="h-10 w-20" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

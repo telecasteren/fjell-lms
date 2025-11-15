@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, HelpCircle, ChevronDown, ChevronRight } from "lucide-react";
 // Simple markdown to HTML converter
 
@@ -125,9 +126,23 @@ export default function FAQPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Loading FAQ...</span>
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-6 flex items-center gap-2">
+            <Skeleton className="h-6 w-6 rounded" />
+            <Skeleton className="h-8 w-80" />
+          </div>
+          <div className="space-y-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-6 w-64" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );

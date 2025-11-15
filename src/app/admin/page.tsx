@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EnrollmentManager } from "@/components/enrollment-manager";
 import { AdminUserEditModal } from "@/components/admin-user-edit-modal";
 import { UserReassignmentModal } from "@/components/user-reassignment-modal";

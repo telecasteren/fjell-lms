@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { QuizEditor } from "@/components/quiz-editor";
 import { LessonEditor } from "@/components/lesson-editor";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
@@ -21,6 +22,7 @@ export default function CoursePage({
   const { data: session } = useSession();
   const router = useRouter();
   const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
   const [moduleTitle, setModuleTitle] = useState("");
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({});
@@ -59,6 +61,7 @@ export default function CoursePage({
       const data = await res.json();
       setModules(data.modules);
     }
+    setLoading(false);
   }
 
   async function loadLessons(moduleId: string) {
@@ -275,6 +278,66 @@ export default function CoursePage({
       moduleId: null,
       moduleTitle: "",
     });
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-20" />
+          <Skeleton className="h-8 w-40" />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-6 rounded" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-8 rounded" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {Array.from({ length: 2 }).map((_, j) => (
+                    <div
+                      key={j}
+                      className="flex items-center justify-between p-3 border rounded"
+                    >
+                      <Skeleton className="h-5 w-32" />
+                      <div className="flex gap-1">
+                        <Skeleton className="h-6 w-6 rounded" />
+                        <Skeleton className="h-6 w-6 rounded" />
+                        <Skeleton className="h-6 w-6 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

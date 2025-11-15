@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 
@@ -113,6 +114,80 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Profile Card Skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-24" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-24 w-24 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i}>
+                    <Skeleton className="h-8 w-12 mx-auto mb-2" />
+                    <Skeleton className="h-4 w-16 mx-auto" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Settings Card Skeleton */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-8 w-8 rounded" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded border p-3"
+                >
+                  <div>
+                    <Skeleton className="h-5 w-48 mb-1" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-6 w-12" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const handleProfileUpdate = async (data: { name: string }) => {
     setSettingsLoading(true);
@@ -330,10 +405,6 @@ export default function ProfilePage() {
       fileInputRef.current?.click();
     }
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   if (!profileData) {
     return <div>Failed to load profile data</div>;
