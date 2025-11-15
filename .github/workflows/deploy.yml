@@ -110,13 +110,13 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Deploying version: $VERSION"
 
-      - name: Set deployment URL
+      - name: Set expected deployment URL
         id: deployment-url
         run: |
           if [ "${{ inputs.environment }}" == "staging" ]; then
-            echo "url=https://fox-lms-staging.vercel.app" >> $GITHUB_OUTPUT
+            echo "url=https://fox-lms-git-web-tele-caster-nilsens-projects.vercel.app" >> $GITHUB_OUTPUT
           else
-            echo "url=https://fox-lms.vercel.app" >> $GITHUB_OUTPUT
+            echo "url=https://fox-lms.no" >> $GITHUB_OUTPUT
           fi
 
   database-migration:
@@ -126,7 +126,7 @@ jobs:
     if: always() && (needs.pre-deployment-checks.result == 'success' || inputs.skip_tests)
     environment:
       name: ${{ inputs.environment || 'production' }}
-      url: ${{ needs.pre-deployment-checks.outputs.deployment-url || 'https://fox-lms.vercel.app' }}
+      url: ${{ needs.pre-deployment-checks.outputs.deployment-url || 'https://fox-lms.no' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -232,6 +232,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [vercel-deployment]
     if: always() && needs.vercel-deployment.result == 'success'
+    # Note: This job uses the actual Vercel deployment URL returned from the deployment
+    # For production: should resolve to https://fox-lms.no (custom domain)
+    # For staging/preview: uses Vercel's generated URLs like fox-lms-git-web-*.vercel.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
