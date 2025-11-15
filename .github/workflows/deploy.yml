@@ -20,6 +20,12 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+  deployments: write
+  actions: read
+  id-token: write
+
 concurrency:
   group: production-deployment
   cancel-in-progress: false

@@ -21,6 +21,12 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write
+  actions: read
+  issues: write
+  pull-requests: read
+
 concurrency:
   group: release-automation
   cancel-in-progress: false
