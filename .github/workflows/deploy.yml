@@ -42,9 +42,9 @@ jobs:
         run: |
           url="${{ steps.deploy.outputs.url }}"
           echo "Testing: $url"
-          
+
           status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
-          
+
           if [[ "$status" =~ ^(200|302|401)$ ]]; then
             echo "✅ Health check passed (HTTP $status)"
           else
