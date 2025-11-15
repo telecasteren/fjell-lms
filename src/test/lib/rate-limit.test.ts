@@ -15,6 +15,9 @@ type MockRatelimit = {
 
 // Mock the simple rate limiter
 vi.mock("@/lib/simple-rate-limit", () => ({
+  SimpleRateLimiter: vi.fn().mockImplementation(() => ({
+    checkLimit: vi.fn(),
+  })),
   simpleRateLimiters: {
     auth: {
       checkLimit: vi.fn(),
@@ -87,7 +90,7 @@ describe("Rate Limiting", () => {
         request,
         null,
         undefined,
-        simpleRateLimiters.auth,
+        simpleRateLimiters.auth
       );
 
       expect(result.success).toBe(true);
@@ -112,7 +115,7 @@ describe("Rate Limiting", () => {
         request,
         null,
         undefined,
-        simpleRateLimiters.auth,
+        simpleRateLimiters.auth
       );
 
       expect(result.success).toBe(false);
@@ -142,7 +145,7 @@ describe("Rate Limiting", () => {
         request,
         null,
         undefined,
-        simpleRateLimiters.general,
+        simpleRateLimiters.general
       );
 
       expect(result.success).toBe(true);

@@ -41,37 +41,42 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /sign in/i }),
+      screen.getByRole("button", { name: /sign in/i })
     ).toBeInTheDocument();
   });
 
-  it("shows validation errors for empty fields", async () => {
+  it("prevents submission when fields are empty", async () => {
     const user = userEvent.setup();
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
+    const submitButton = screen.getByRole("button", { name: /sign in/i });
+
+    // Submit button should be disabled when fields are empty
+    expect(submitButton).toBeDisabled();
+
+    // Type in email only
     const emailInput = screen.getByLabelText(/email/i);
+    await user.type(emailInput, "test@example.com");
+
+    // Submit button should still be disabled without password
+    expect(submitButton).toBeDisabled();
+
+    // Now add password
     const passwordInput = screen.getByLabelText(/password/i);
+    await user.type(passwordInput, "password123");
 
-    // Focus and blur inputs to trigger validation
-    await user.click(emailInput);
-    await user.click(passwordInput);
-    await user.click(emailInput);
-
-    // Check if validation errors appear
-    await waitFor(() => {
-      expect(screen.getByText("Email is required")).toBeInTheDocument();
-      expect(screen.getByText("Password is required")).toBeInTheDocument();
-    });
+    // Submit button should now be enabled
+    expect(submitButton).not.toBeDisabled();
   });
 
   it("submits form with valid data", async () => {
@@ -87,7 +92,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const emailInput = screen.getByLabelText(/email/i);
@@ -107,7 +112,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const signUpLink = screen.getByRole("link", { name: /sign up/i });
