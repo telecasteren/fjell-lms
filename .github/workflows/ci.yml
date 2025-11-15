@@ -21,6 +21,9 @@ jobs:
       DATABASE_URL: postgresql://test:test@localhost:5432/test
       NEXTAUTH_SECRET: test-secret
       NEXTAUTH_URL: http://localhost:3000
+      # Required for Bunny CDN (can be dummy values for tests)
+      BUNNY_API_KEY: dummy-key-for-tests
+      BUNNY_STORAGE_ZONE: fox-lms
     services:
       postgres:
         image: postgres:15
@@ -67,6 +70,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Setup E2E test data
+        run: node scripts/create-e2e-test-users.mjs
 
       - name: E2E Tests
         run: |
