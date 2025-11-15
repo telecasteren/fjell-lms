@@ -11,7 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Users, Building2, BookOpen, TrendingUp, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Users,
+  Building2,
+  BookOpen,
+  TrendingUp,
+  Trash2,
+  Link,
+} from "lucide-react";
 import { UserEditModal } from "@/components/user-edit-modal";
 import { DepartmentSearchInput } from "@/components/department-search-input";
 import { UserSearchInput } from "@/components/user-search-input";
@@ -25,6 +33,7 @@ import {
 import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { getSignUpUrl } from "@/lib/url";
 import toast from "react-hot-toast";
 
 type Department = {
@@ -121,13 +130,23 @@ export default function AuthorDashboard() {
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(
-    null,
+    null
   );
   const [departmentSearchQuery, setDepartmentSearchQuery] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "tree">("list");
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "BASIC",
+  });
   const { refreshDashboard } = useDashboardRefresh();
   const { user: currentUser } = useCurrentUser();
+
+  // Get current user's role for permission checks
+  const currentUserRole = currentUser?.role;
 
   useEffect(() => {
     loadDashboard();
@@ -241,6 +260,41 @@ export default function AuthorDashboard() {
     }
   }
 
+  async function createUser() {
+    if (!selectedDepartment) return;
+
+    setCreateLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/users?departmentId=${selectedDepartment}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+          credentials: "include",
+        }
+      );
+
+      if (res.ok) {
+        toast.success("User created successfully");
+        setShowCreateForm(false);
+        setFormData({ name: "", email: "", role: "BASIC" });
+        if (selectedDepartment) {
+          loadDepartmentDetails(selectedDepartment);
+        }
+        refreshDashboard();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to create user");
+      }
+    } catch (error) {
+      console.error("Create user error:", error);
+      toast.error("Failed to create user");
+    } finally {
+      setCreateLoading(false);
+    }
+  }
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -329,11 +383,11 @@ export default function AuthorDashboard() {
                   console.log("selectedDepartment:", selectedDepartment);
                   console.log(
                     "currentUser departmentId:",
-                    currentUser?.departmentId,
+                    currentUser?.departmentId
                   );
                   console.log(
                     "Computed defaultParentDepartmentId:",
-                    selectedDepartment || currentUser?.departmentId,
+                    selectedDepartment || currentUser?.departmentId
                   );
                   setShowCreateDepartment(true);
                 }}
@@ -374,8 +428,8 @@ export default function AuthorDashboard() {
                           dept.name
                             .toLowerCase()
                             .includes(
-                              departmentSearchQuery.toLowerCase().trim(),
-                            ),
+                              departmentSearchQuery.toLowerCase().trim()
+                            )
                         )
                       : data.departments
                     ).map((dept) => (
@@ -394,7 +448,7 @@ export default function AuthorDashboard() {
                     const filtered = data.departments.filter((dept) =>
                       dept.name
                         .toLowerCase()
-                        .includes(value.toLowerCase().trim()),
+                        .includes(value.toLowerCase().trim())
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -472,12 +526,20 @@ export default function AuthorDashboard() {
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Department
                   </Button>
-                  <Button
-                    onClick={() => setShowConfigure(!showConfigure)}
-                    variant={showConfigure ? "secondary" : "default"}
-                  >
-                    {showConfigure ? "Hide Configure" : "Configure"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => setShowCreateForm(true)}
+                      variant="default"
+                    >
+                      Add User
+                    </Button>
+                    <Button
+                      onClick={() => setShowConfigure(!showConfigure)}
+                      variant={showConfigure ? "secondary" : "default"}
+                    >
+                      {showConfigure ? "Hide Configure" : "Configure"}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Configuration Panel */}
@@ -613,6 +675,116 @@ export default function AuthorDashboard() {
                             }
                           />
                         )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {showCreateForm && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Create New User</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Name</Label>
+                          <input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                            className="bg-background w-full rounded-md border px-3 py-2"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                email: e.target.value,
+                              })
+                            }
+                            className="bg-background w-full rounded-md border px-3 py-2"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="role">Role</Label>
+                          <select
+                            id="role"
+                            value={formData.role}
+                            onChange={(e) =>
+                              setFormData({ ...formData, role: e.target.value })
+                            }
+                            className="bg-background w-full rounded-md border px-3 py-2"
+                          >
+                            {currentUserRole === "AUTHOR" ? (
+                              <>
+                                <option value="BASIC">Basic User</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="WRITER">Writer</option>
+                                <option value="AUTHOR">Author</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="BASIC">Basic User</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="WRITER">Writer</option>
+                              </>
+                            )}
+                          </select>
+                          {currentUserRole === "ADMIN" && (
+                            <p className="text-muted-foreground text-xs">
+                              ADMIN users can only create BASIC, ADMIN, or
+                              WRITER users
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sign-up Link</Label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={getSignUpUrl(formData.email, formData.role)}
+                            readOnly
+                            className="bg-background w-full rounded-md border px-3 py-2 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const signupUrl = getSignUpUrl(
+                                formData.email,
+                                formData.role
+                              );
+                              navigator.clipboard.writeText(signupUrl);
+                              toast.success("Sign-up link copied to clipboard");
+                            }}
+                          >
+                            <Link className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                          Copy this link and send it to the user to complete
+                          their registration
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={createUser} disabled={createLoading}>
+                          {createLoading ? "Creating..." : "Create User"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowCreateForm(false)}
+                        >
+                          Cancel
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

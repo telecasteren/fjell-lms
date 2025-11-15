@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (!userId || !courseId) {
       return NextResponse.json(
         { error: "User ID and Course ID required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     if (!targetUser) {
       return NextResponse.json(
         { error: "User not found in department" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     if (!course) {
       return NextResponse.json(
         { error: "Course not found or not available for enrollment" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     if (existingEnrollment) {
       return NextResponse.json(
         { error: "User already enrolled" },
-        { status: 409 },
+        { status: 409 }
       );
     }
 

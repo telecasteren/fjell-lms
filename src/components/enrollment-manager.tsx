@@ -82,7 +82,7 @@ export function EnrollmentManager({
         ? allCourses.filter(
             (course) =>
               course.departmentId === targetDepartmentId &&
-              course.status === "PUBLISHED",
+              course.status === "PUBLISHED"
           )
         : allCourses.filter((course) => course.status === "PUBLISHED");
 
@@ -181,7 +181,7 @@ export function EnrollmentManager({
             ? enrollments.filter(
                 (enrollment) =>
                   enrollment.user.departmentId === targetDepartmentId ||
-                  enrollment.course.departmentId === targetDepartmentId,
+                  enrollment.course.departmentId === targetDepartmentId
               )
             : enrollments;
 
