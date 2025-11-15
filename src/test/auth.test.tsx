@@ -41,13 +41,13 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /sign in/i }),
+      screen.getByRole("button", { name: /sign in/i })
     ).toBeInTheDocument();
   });
 
@@ -56,15 +56,21 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
-    await user.click(submitButton);
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+
+    // Focus and blur inputs to trigger validation
+    await user.click(emailInput);
+    await user.click(passwordInput);
+    await user.click(emailInput);
 
     // Check if validation errors appear
     await waitFor(() => {
-      expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+      expect(screen.getByText("Email is required")).toBeInTheDocument();
+      expect(screen.getByText("Password is required")).toBeInTheDocument();
     });
   });
 
@@ -81,7 +87,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const emailInput = screen.getByLabelText(/email/i);
@@ -101,7 +107,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const signUpLink = screen.getByRole("link", { name: /sign up/i });

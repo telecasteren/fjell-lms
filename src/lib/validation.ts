@@ -10,12 +10,13 @@ export const passwordPolicy = z
   .regex(/[0-9]/, "Password must contain at least one number")
   .regex(
     /[^A-Za-z0-9]/,
-    "Password must contain at least one special character",
+    "Password must contain at least one special character"
   );
 
 // User validation schemas
 export const userRegistrationSchema = z
   .object({
+    name: z.string().min(1, "Name is required").max(100, "Name too long"),
     email: z.string().email("Invalid email format").max(255, "Email too long"),
     password: passwordPolicy,
     confirmPassword: z.string(),
@@ -108,7 +109,7 @@ export const quizQuestionSchema = z.object({
     .max(500, "Question too long"),
   options: z
     .array(
-      z.string().min(1, "Option cannot be empty").max(200, "Option too long"),
+      z.string().min(1, "Option cannot be empty").max(200, "Option too long")
     )
     .min(2, "At least 2 options required"),
   correctAnswers: z
@@ -155,18 +156,16 @@ export const emailUpdateSchema = z.object({
 // Helper function to validate request body
 export function validateRequestBody<T>(
   schema: z.ZodSchema<T>,
-  body: unknown,
+  body: unknown
 ): { success: true; data: T } | { success: false; error: string } {
   try {
     const data = schema.parse(body);
     return { success: true, data };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessage = error.issues
-        .map((err) => `${err.path.join(".")}: ${err.message}`)
-        .join(", ");
+      const errorMessage = error.issues.map((err) => err.message).join(", ");
       return { success: false, error: errorMessage };
     }
-    return { success: false, error: "Invalid request data" };
+    return { success: false, error: "Invalid input" };
   }
 }
