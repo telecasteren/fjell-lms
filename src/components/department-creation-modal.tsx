@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Plus, Trash2, Link, Search } from "lucide-react";
 import toast from "react-hot-toast";
+import { getSignUpUrl } from "@/lib/url";
 
 interface DepartmentCreationModalProps {
   isOpen: boolean;
@@ -446,7 +447,7 @@ export function DepartmentCreationModal({
                           <Label>Sign-up Link</Label>
                           <div className="flex items-center gap-2">
                             <Input
-                              value={`${window.location.origin}/sign-up?email=${encodeURIComponent(user.email)}&role=${user.role}`}
+                              value={getSignUpUrl(user.email, user.role)}
                               readOnly
                               className="text-sm"
                             />
@@ -455,7 +456,7 @@ export function DepartmentCreationModal({
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                const signupUrl = `${window.location.origin}/sign-up?email=${encodeURIComponent(user.email)}&role=${user.role}`;
+                                const signupUrl = getSignUpUrl(user.email, user.role);
                                 navigator.clipboard.writeText(signupUrl);
                                 toast.success(
                                   "Sign-up link copied to clipboard"

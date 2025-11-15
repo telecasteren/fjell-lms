@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { TrendingUp, Users, BookOpen, Building2, Link } from "lucide-react";
 import toast from "react-hot-toast";
+import { getSignUpUrl } from "@/lib/url";
 
 type User = {
   id: string;
@@ -593,7 +594,7 @@ export default function AdminPage() {
               <Label>Sign-up Link</Label>
               <div className="flex items-center gap-2">
                 <input
-                  value={`${window.location.origin}/sign-up?email=${encodeURIComponent(formData.email)}&role=${formData.role}`}
+                  value={getSignUpUrl(formData.email, formData.role)}
                   readOnly
                   className="bg-background w-full rounded-md border px-3 py-2 text-sm"
                 />
@@ -602,7 +603,7 @@ export default function AdminPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const signupUrl = `${window.location.origin}/sign-up?email=${encodeURIComponent(formData.email)}&role=${formData.role}`;
+                    const signupUrl = getSignUpUrl(formData.email, formData.role);
                     navigator.clipboard.writeText(signupUrl);
                     toast.success("Sign-up link copied to clipboard");
                   }}

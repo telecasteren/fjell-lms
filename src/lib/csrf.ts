@@ -19,10 +19,14 @@ export async function validateCSRF(request: NextRequest): Promise<boolean> {
   const referer = request.headers.get("referer");
 
   // Validate origin/referer
+  // Use NEXTAUTH_URL as primary allowed origin, and allow localhost for development
   const allowedOrigins = [
     process.env.NEXTAUTH_URL,
-    "http://localhost:3000",
-    "https://localhost:3000",
+    // Allow localhost for local development
+    ...(process.env.NODE_ENV === 'development' 
+      ? ["http://localhost:3000", "https://localhost:3000"]
+      : []
+    ),
   ].filter(Boolean);
 
   const requestOrigin = origin || (referer ? new URL(referer).origin : null);
