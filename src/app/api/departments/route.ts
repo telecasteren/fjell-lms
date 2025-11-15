@@ -38,7 +38,16 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log("Department creation request body:", body);
+    console.log("Department creation - User:", {
+      role: user.role,
+      id: user.id,
+      departmentId: user.departmentId,
+    });
+    console.log("Department creation - Request body:", body);
+    console.log(
+      "Department creation - parentDepartmentId:",
+      body.parentDepartmentId,
+    );
     const validation = createDepartmentSchema.safeParse(body);
 
     if (!validation.success) {
@@ -139,6 +148,11 @@ export async function POST(req: NextRequest) {
 
     // Create department and users in a transaction
     const result = await prisma.$transaction(async (tx) => {
+      console.log("Creating department with data:", {
+        name,
+        orgNr: orgNr || null,
+        parentDepartmentId: parentDepartmentId || null,
+      });
       // Create department
       const department = await tx.department.create({
         data: {
@@ -147,6 +161,7 @@ export async function POST(req: NextRequest) {
           parentDepartmentId: parentDepartmentId || null,
         },
       });
+      console.log("Created department:", department);
 
       let totalUserCount = 0;
 

@@ -323,7 +323,21 @@ export default function AuthorDashboard() {
                   Tree
                 </Button>
               </div>
-              <Button onClick={() => setShowCreateDepartment(true)}>
+              <Button
+                onClick={() => {
+                  console.log("Author opening department creation modal");
+                  console.log("selectedDepartment:", selectedDepartment);
+                  console.log(
+                    "currentUser departmentId:",
+                    currentUser?.departmentId,
+                  );
+                  console.log(
+                    "Computed defaultParentDepartmentId:",
+                    selectedDepartment || currentUser?.departmentId,
+                  );
+                  setShowCreateDepartment(true);
+                }}
+              >
                 Add new
               </Button>
             </div>
@@ -680,6 +694,9 @@ export default function AuthorDashboard() {
         isOpen={showCreateDepartment}
         onClose={() => setShowCreateDepartment(false)}
         onDepartmentCreated={handleDepartmentCreated}
+        defaultParentDepartmentId={
+          selectedDepartment || currentUser?.departmentId
+        }
       />
 
       {/* Delete Department Confirmation Dialog */}

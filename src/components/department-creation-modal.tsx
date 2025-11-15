@@ -189,6 +189,15 @@ export function DepartmentCreationModal({
       return;
     }
 
+    if (!defaultParentDepartmentId) {
+      toast.error("Parent department is required");
+      console.error(
+        "defaultParentDepartmentId is missing:",
+        defaultParentDepartmentId,
+      );
+      return;
+    }
+
     // Validate users - separate existing and new users
     const validUsers = users.filter(
       (user) => user.name.trim() && user.email.trim(),
@@ -213,16 +222,22 @@ export function DepartmentCreationModal({
 
     setLoading(true);
     try {
+      const requestBody = {
+        name: departmentName.trim(),
+        orgNr: orgNr.trim() || null,
+        parentDepartmentId: defaultParentDepartmentId,
+        users: newUsers,
+        existingUsers: existingUsers.map((u) => ({ userId: u.userId })),
+      };
+      console.log("Frontend - Department creation request:");
+      console.log("- defaultParentDepartmentId:", defaultParentDepartmentId);
+      console.log("- Using parentDepartmentId:", defaultParentDepartmentId);
+      console.log("- Full request body:", requestBody);
+
       const res = await fetch("/api/departments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: departmentName.trim(),
-          orgNr: orgNr.trim() || null,
-          parentDepartmentId: defaultParentDepartmentId || null,
-          users: newUsers,
-          existingUsers: existingUsers.map((u) => ({ userId: u.userId })),
-        }),
+        body: JSON.stringify(requestBody),
         credentials: "include",
       });
 
