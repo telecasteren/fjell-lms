@@ -179,9 +179,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [database-migration]
     if: always() && needs.database-migration.result == 'success'
+    outputs:
+      deployment-url: ${{ steps.deploy.outputs.deployment-url }}
     environment:
       name: ${{ inputs.environment || 'production' }}
-      url: ${{ needs.pre-deployment-checks.outputs.deployment-url || 'https://fox-lms.vercel.app' }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -228,7 +230,7 @@ jobs:
   post-deployment-tests:
     name: Post-deployment Health Checks
     runs-on: ubuntu-latest
-    needs: [vercel-deployment, pre-deployment-checks]
+    needs: [vercel-deployment]
     if: always() && needs.vercel-deployment.result == 'success'
     steps:
       - name: Checkout code
@@ -245,45 +247,58 @@ jobs:
 
       - name: Wait for deployment to be ready
         run: |
-          DEPLOYMENT_URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          DEPLOYMENT_URL="${{ needs.vercel-deployment.outputs.deployment-url }}"
           echo "Waiting for deployment to be ready at $DEPLOYMENT_URL"
-
+          
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "❌ No deployment URL found from Vercel deployment"
+            exit 1
+          fi
+          
           for i in {1..30}; do
-            if curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" | grep -q "200"; then
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" || echo "000")
+            if [ "$HTTP_STATUS" -eq 200 ]; then
               echo "✅ Deployment is ready!"
               break
             else
-              echo "⏳ Waiting for deployment... (attempt $i/30)"
-              sleep 10
+              echo "⏳ Waiting for deployment... (attempt $i/30) - HTTP $HTTP_STATUS"
+              sleep 15
             fi
           done
 
       - name: Health check
         run: |
-          DEPLOYMENT_URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
-
+          DEPLOYMENT_URL="${{ needs.vercel-deployment.outputs.deployment-url }}"
+          
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "❌ No deployment URL found"
+            exit 1
+          fi
+          
+          echo "🔍 Running health checks against: $DEPLOYMENT_URL"
+          
           # Test main page
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" || echo "000")
           if [ "$HTTP_STATUS" -eq 200 ]; then
             echo "✅ Main page health check passed (HTTP $HTTP_STATUS)"
           else
             echo "❌ Main page health check failed (HTTP $HTTP_STATUS)"
+            echo "🔍 Let's check what we got:"
+            curl -s -I "$DEPLOYMENT_URL" || echo "Failed to get headers"
             exit 1
           fi
-
-          # Test API health endpoint
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL/api/health")
+          
+          # Test API health endpoint (optional - don't fail if it doesn't exist)
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL/api/health" || echo "000")
           if [ "$API_STATUS" -eq 200 ]; then
             echo "✅ API health check passed (HTTP $API_STATUS)"
           else
-            echo "⚠️ API health check returned HTTP $API_STATUS"
+            echo "⚠️ API health check returned HTTP $API_STATUS (this may be expected if endpoint doesn't exist)"
           fi
 
       - name: Performance baseline check
         run: |
-          DEPLOYMENT_URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
-
-          # Simple performance check using curl
+          DEPLOYMENT_URL="${{ needs.vercel-deployment.outputs.deployment-url }}"          # Simple performance check using curl
           RESPONSE_TIME=$(curl -o /dev/null -s -w "%{time_total}" "$DEPLOYMENT_URL")
 
           echo "Response time: ${RESPONSE_TIME}s"
@@ -345,7 +360,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ needs.pre-deployment-checks.outputs.version || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment URL:** ${{ needs.pre-deployment-checks.outputs.deployment-url || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment URL:** ${{ needs.vercel-deployment.outputs.deployment-url || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
