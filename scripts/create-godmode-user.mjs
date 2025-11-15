@@ -11,7 +11,7 @@ async function createGodmodeUser() {
     const role = "AUTHOR";
 
     console.log(
-      `Creating godmode user for environment: ${process.env.NODE_ENV || "development"}`
+      `Creating godmode user for environment: ${process.env.NODE_ENV || "development"}`,
     );
 
     // Check if user already exists
@@ -21,7 +21,7 @@ async function createGodmodeUser() {
 
     if (existing) {
       console.log(
-        `✅ Godmode user already exists: ${existing.email} (${existing.role})`
+        `✅ Godmode user already exists: ${existing.email} (${existing.role})`,
       );
       return existing;
     }
@@ -51,7 +51,7 @@ async function createGodmodeUser() {
     console.log(`Password: ${password}`);
     console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     console.log(
-      `Database: ${process.env.DATABASE_URL ? "[CONNECTED]" : "[LOCAL]"}`
+      `Database: ${process.env.DATABASE_URL ? "[CONNECTED]" : "[LOCAL]"}`,
     );
 
     return user;

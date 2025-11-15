@@ -27,10 +27,10 @@ export const authOptions: NextAuthOptions = {
         typeof (metadata as { description?: unknown }).description ===
           "string" &&
         ((metadata as { description: string }).description.includes(
-          "Dynamic server usage"
+          "Dynamic server usage",
         ) ||
           (metadata as { description: string }).description.includes(
-            "couldn't be rendered statically"
+            "couldn't be rendered statically",
           ))
       ) {
         return; // Don't log expected dynamic rendering warnings
@@ -118,12 +118,12 @@ export const authOptions: NextAuthOptions = {
 
           const valid = await bcrypt.compare(
             credentials.password,
-            user.passwordHash
+            user.passwordHash,
           );
 
           console.log(
             "[AUTH] Password check result:",
-            valid ? "SUCCESS" : "FAILED"
+            valid ? "SUCCESS" : "FAILED",
           );
 
           if (!valid) return null;
@@ -132,7 +132,7 @@ export const authOptions: NextAuthOptions = {
             "[AUTH] Login successful for:",
             user.email,
             "Role:",
-            user.role
+            user.role,
           );
 
           return {
