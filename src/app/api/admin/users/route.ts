@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (!body.name || !body.email) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
           {
             error: "ADMIN users can only create BASIC, ADMIN, or WRITER users",
           },
-          { status: 403 }
+          { status: 403 },
         );
       }
     } else if (user.role === "AUTHOR") {
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     if (existingUser) {
       return NextResponse.json(
         { error: "User already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       ) {
         return NextResponse.json(
           { error: "Access denied to target department" },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
