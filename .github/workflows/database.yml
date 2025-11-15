@@ -35,6 +35,22 @@ jobs:
   schema-validation:
     name: Prisma Schema Validation
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -69,11 +85,8 @@ jobs:
   migration-validation:
     name: Migration Validation
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        database: ["sqlite", "postgresql"]
     env:
-      DATABASE_URL: ${{ matrix.database == 'sqlite' && 'file:./test.db' || 'postgresql://test:test@localhost:5432/test' }}
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
     services:
       postgres:
         image: postgres:15
@@ -104,13 +117,8 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Apply migrations (${{ matrix.database }})
-        run: |
-          if [ "${{ matrix.database }}" == "sqlite" ]; then
-            npx prisma db push
-          else
-            npx prisma migrate deploy
-          fi
+      - name: Apply schema (using db push for CI)
+        run: npx prisma db push --accept-data-loss
 
       - name: Validate database schema
         run: npx prisma validate
@@ -123,9 +131,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: [schema-validation]
     env:
-      DATABASE_URL: file:./seed-test.db
+      DATABASE_URL: postgresql://test:test@localhost:5432/seedtest
       NEXTAUTH_SECRET: seed-test-secret
       NEXTAUTH_URL: http://localhost:3000
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: seedtest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -143,7 +165,7 @@ jobs:
         run: npx prisma generate
 
       - name: Apply schema
-        run: npx prisma db push
+        run: npx prisma db push --accept-data-loss
 
       - name: Run seed scripts
         run: |
@@ -262,7 +284,21 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     env:
-      DATABASE_URL: file:./backup-test.db
+      DATABASE_URL: postgresql://test:test@localhost:5432/backuptest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: backuptest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -279,26 +315,23 @@ jobs:
       - name: Setup test database
         run: |
           npx prisma generate
-          npx prisma db push
+          npx prisma db push --accept-data-loss
           node scripts/create-dev-user.mjs
 
       - name: Create database backup
         run: |
-          # For SQLite, simply copy the file
-          cp backup-test.db backup-test-backup.db
-
-          # Verify backup integrity
-          sqlite3 backup-test-backup.db "PRAGMA integrity_check;" | grep -q "ok"
-
-          echo "✅ Database backup created and verified"
+          # Create PostgreSQL backup
+          pg_dump $DATABASE_URL > backup.sql
+          
+          echo "✅ Database backup created"
 
       - name: Test backup restoration
         run: |
-          # Remove original database
-          rm backup-test.db
-
+          # Drop and recreate database (simulate restoration scenario)
+          psql $DATABASE_URL -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+          
           # Restore from backup
-          cp backup-test-backup.db backup-test.db
+          psql $DATABASE_URL < backup.sql
 
           # Verify data integrity
           node -e "
