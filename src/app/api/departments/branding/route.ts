@@ -17,9 +17,12 @@ export async function POST(req: NextRequest) {
     const appDescription = formData.get("appDescription") as string;
     const file = formData.get("file") as File;
     const darkModeFile = formData.get("darkModeFile") as File;
-    const useSameLogoForDarkMode = formData.get("useSameLogoForDarkMode") === "true";
+    const useSameLogoForDarkMode =
+      formData.get("useSameLogoForDarkMode") === "true";
     // Footer fields
-    const footerLinkSectionTitle = formData.get("footerLinkSectionTitle") as string;
+    const footerLinkSectionTitle = formData.get(
+      "footerLinkSectionTitle",
+    ) as string;
     const footerLink1Url = formData.get("footerLink1Url") as string;
     const footerLink1Text = formData.get("footerLink1Text") as string;
     const footerLink2Url = formData.get("footerLink2Url") as string;
@@ -29,12 +32,14 @@ export async function POST(req: NextRequest) {
     const footerContactEmail = formData.get("footerContactEmail") as string;
     const footerContactPhone = formData.get("footerContactPhone") as string;
     const footerContactAddress = formData.get("footerContactAddress") as string;
-    const footerContactAddress2 = formData.get("footerContactAddress2") as string;
+    const footerContactAddress2 = formData.get(
+      "footerContactAddress2",
+    ) as string;
 
     if (!departmentId) {
       return NextResponse.json(
         { error: "Department ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,16 +48,16 @@ export async function POST(req: NextRequest) {
     if (user.role === "ADMIN" && user.departmentId !== departmentId) {
       return NextResponse.json(
         { error: "You can only update your own department's branding" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // Get current department to check for existing logos
     const currentDepartment = await prisma.department.findUnique({
       where: { id: departmentId },
-      select: { 
+      select: {
         logoUrl: true,
-        darkModeLogoUrl: true 
+        darkModeLogoUrl: true,
       },
     });
 
@@ -74,7 +79,10 @@ export async function POST(req: NextRequest) {
             console.log("Deleted old light logo:", oldFilePath);
           }
         } catch (error) {
-          console.error("Failed to delete old light logo (continuing anyway):", error);
+          console.error(
+            "Failed to delete old light logo (continuing anyway):",
+            error,
+          );
           // Continue even if delete fails - we don't want to block the upload
         }
       }
@@ -93,7 +101,7 @@ export async function POST(req: NextRequest) {
       } else {
         return NextResponse.json(
           { error: "Failed to upload light logo" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -102,7 +110,7 @@ export async function POST(req: NextRequest) {
     if (useSameLogoForDarkMode) {
       // If using same logo for dark mode, set darkModeLogoUrl to null
       darkModeLogoUrl = null;
-      
+
       // Also delete the existing dark mode logo from storage if it exists
       if (currentDepartment?.darkModeLogoUrl) {
         try {
@@ -114,7 +122,10 @@ export async function POST(req: NextRequest) {
             console.log("Deleted old dark logo:", oldFilePath);
           }
         } catch (error) {
-          console.error("Failed to delete old dark logo (continuing anyway):", error);
+          console.error(
+            "Failed to delete old dark logo (continuing anyway):",
+            error,
+          );
         }
       }
     } else if (darkModeFile && darkModeFile.size > 0) {
@@ -130,7 +141,10 @@ export async function POST(req: NextRequest) {
             console.log("Deleted old dark logo:", oldFilePath);
           }
         } catch (error) {
-          console.error("Failed to delete old dark logo (continuing anyway):", error);
+          console.error(
+            "Failed to delete old dark logo (continuing anyway):",
+            error,
+          );
         }
       }
 
@@ -148,7 +162,7 @@ export async function POST(req: NextRequest) {
       } else {
         return NextResponse.json(
           { error: "Failed to upload dark logo" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -172,7 +186,8 @@ export async function POST(req: NextRequest) {
       footerContactAddress2?: string | null;
     } = {};
     if (logoUrl) updateData.logoUrl = logoUrl;
-    if (darkModeLogoUrl !== undefined) updateData.darkModeLogoUrl = darkModeLogoUrl;
+    if (darkModeLogoUrl !== undefined)
+      updateData.darkModeLogoUrl = darkModeLogoUrl;
     if (logoText !== null && logoText !== undefined)
       updateData.logoText = logoText;
     if (appDescription !== null && appDescription !== undefined)
@@ -204,7 +219,7 @@ export async function POST(req: NextRequest) {
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: "No updates provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -224,7 +239,7 @@ export async function POST(req: NextRequest) {
         error: "Failed to update department branding",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

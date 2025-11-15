@@ -8,35 +8,44 @@ export const authOptions: NextAuthOptions = {
   logger: {
     error(code, metadata: unknown) {
       // Suppress JWT_SESSION_ERROR when it's a decryption error
-      if (code === 'JWT_SESSION_ERROR' && 
-          typeof metadata === 'object' && 
-          metadata !== null && 
-          'message' in metadata && 
-          typeof (metadata as { message?: unknown }).message === 'string' && 
-          (metadata as { message: string }).message.includes('decryption')) {
+      if (
+        code === "JWT_SESSION_ERROR" &&
+        typeof metadata === "object" &&
+        metadata !== null &&
+        "message" in metadata &&
+        typeof (metadata as { message?: unknown }).message === "string" &&
+        (metadata as { message: string }).message.includes("decryption")
+      ) {
         return; // Don't log JWT decryption errors
       }
-      
+
       // Suppress Next.js dynamic server usage warnings (expected for authenticated pages)
-      if (typeof metadata === 'object' && 
-          metadata !== null && 
-          'description' in metadata && 
-          typeof (metadata as { description?: unknown }).description === 'string' && 
-          ((metadata as { description: string }).description.includes('Dynamic server usage') ||
-           (metadata as { description: string }).description.includes('couldn\'t be rendered statically'))) {
+      if (
+        typeof metadata === "object" &&
+        metadata !== null &&
+        "description" in metadata &&
+        typeof (metadata as { description?: unknown }).description ===
+          "string" &&
+        ((metadata as { description: string }).description.includes(
+          "Dynamic server usage",
+        ) ||
+          (metadata as { description: string }).description.includes(
+            "couldn't be rendered statically",
+          ))
+      ) {
         return; // Don't log expected dynamic rendering warnings
       }
-      
-      console.error('[auth]', code, metadata);
+
+      console.error("[auth]", code, metadata);
     },
     warn(code) {
-      console.warn('[auth]', code);
+      console.warn("[auth]", code);
     },
     debug(code, metadata) {
-      console.log('[auth]', code, metadata);
+      console.log("[auth]", code, metadata);
     },
   },
-  session: { 
+  session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
     updateAge: 60 * 60, // 1 hour
@@ -49,9 +58,9 @@ export const authOptions: NextAuthOptions = {
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
         maxAge: 24 * 60 * 60, // 24 hours
       },
     },
@@ -59,18 +68,18 @@ export const authOptions: NextAuthOptions = {
       name: `next-auth.callback-url`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
       },
     },
     csrfToken: {
       name: `next-auth.csrf-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
       },
     },
   },
@@ -83,20 +92,23 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({ 
+        const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-          include: { department: true }
+          include: { department: true },
         });
         if (!user?.passwordHash) return null;
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
+        const valid = await bcrypt.compare(
+          credentials.password,
+          user.passwordHash,
+        );
         if (!valid) return null;
-        return { 
+        return {
           id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,
           departmentId: user.departmentId,
-          theme: user.theme || "light"
+          theme: user.theme || "light",
         };
       },
     }),
@@ -111,7 +123,7 @@ export const authOptions: NextAuthOptions = {
         token.departmentId = user.departmentId;
         token.theme = user.theme || "light";
       }
-      
+
       // Re-fetch theme from database on session update or refresh
       if (token.id && (trigger === "update" || !user)) {
         const dbUser = await prisma.user.findUnique({
@@ -122,7 +134,7 @@ export const authOptions: NextAuthOptions = {
           token.theme = dbUser.theme;
         }
       }
-      
+
       return token;
     },
     async session({ session, token }) {

@@ -65,7 +65,11 @@ export function Logo({
           }
         } else {
           // Handle any non-200 response (401, 403, 500, etc.) - use default branding
-          console.warn("Failed to fetch department branding:", res.status, res.statusText);
+          console.warn(
+            "Failed to fetch department branding:",
+            res.status,
+            res.statusText,
+          );
           setDepartmentBranding(null);
         }
       } catch (error) {
@@ -135,7 +139,7 @@ export function Logo({
           className={cn(
             "text-foreground font-bold",
             textSizeClasses[size],
-            textClassName
+            textClassName,
           )}
         >
           {logoTextDisplay}
@@ -192,7 +196,7 @@ export function LogoWithText({
         className={cn(
           "text-foreground font-bold",
           textSizeClasses[size],
-          textClassName
+          textClassName,
         )}
       >
         {text}

@@ -65,21 +65,21 @@ export async function GET(req: NextRequest) {
 
     // Calculate detailed statistics for each department
     const departmentReports = await Promise.all(
-      departments.map(async dept => {
+      departments.map(async (dept) => {
         // User statistics
         const userStats = {
           total: dept.users.length,
           byRole: {
-            BASIC: dept.users.filter(u => u.role === "BASIC").length,
-            ADMIN: dept.users.filter(u => u.role === "ADMIN").length,
-            AUTHOR: dept.users.filter(u => u.role === "AUTHOR").length,
-            WRITER: dept.users.filter(u => u.role === "WRITER").length,
+            BASIC: dept.users.filter((u) => u.role === "BASIC").length,
+            ADMIN: dept.users.filter((u) => u.role === "ADMIN").length,
+            AUTHOR: dept.users.filter((u) => u.role === "AUTHOR").length,
+            WRITER: dept.users.filter((u) => u.role === "WRITER").length,
           },
           recentUsers: dept.users
             .sort(
               (a, b) =>
                 new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
+                new Date(a.createdAt).getTime(),
             )
             .slice(0, 5),
         };
@@ -88,14 +88,15 @@ export async function GET(req: NextRequest) {
         const courseStats = {
           total: dept.courses.length,
           byStatus: {
-            DRAFT: dept.courses.filter(c => c.status === "DRAFT").length,
-            PUBLISHED: dept.courses.filter(c => c.status === "PUBLISHED")
+            DRAFT: dept.courses.filter((c) => c.status === "DRAFT").length,
+            PUBLISHED: dept.courses.filter((c) => c.status === "PUBLISHED")
               .length,
-            ARCHIVED: dept.courses.filter(c => c.status === "ARCHIVED").length,
+            ARCHIVED: dept.courses.filter((c) => c.status === "ARCHIVED")
+              .length,
           },
           totalEnrollments: dept.courses.reduce(
             (acc, course) => acc + course.enrollments.length,
-            0
+            0,
           ),
         };
 
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
 
         // Calculate individual user progress using standardized utilities
         const userProgressDetails = await Promise.all(
-          dept.users.map(async deptUser => {
+          dept.users.map(async (deptUser) => {
             const overallProgress = await calculateOverallProgress(deptUser.id);
             return {
               userId: deptUser.id,
@@ -124,13 +125,13 @@ export async function GET(req: NextRequest) {
               totalCourses: overallProgress.totalCourses,
               completedCourses: overallProgress.completedCourses,
             };
-          })
+          }),
         );
 
         // Calculate overall department completion
         const totalCompletedLessons = userProgressDetails.reduce(
           (acc, user) => acc + user.completed,
-          0
+          0,
         );
 
         const progressStats = {
@@ -145,18 +146,18 @@ export async function GET(req: NextRequest) {
 
         // Top performing courses
         const coursePerformance = dept.courses
-          .map(course => {
+          .map((course) => {
             const enrollments = course.enrollments.length;
             const completedEnrollments = course.enrollments.filter(
-              enrollment => {
+              (enrollment) => {
                 const courseLessons = course.modules.flatMap(
-                  module => module.lessons
+                  (module) => module.lessons,
                 );
                 const userCompleted = enrollment.user.progresses.filter(
-                  p => p.completed
+                  (p) => p.completed,
                 ).length;
                 return userCompleted >= courseLessons.length;
-              }
+              },
             ).length;
 
             return {
@@ -182,7 +183,7 @@ export async function GET(req: NextRequest) {
           coursePerformance,
           createdAt: dept.createdAt,
         };
-      })
+      }),
     );
 
     // Overall platform statistics
@@ -191,16 +192,16 @@ export async function GET(req: NextRequest) {
       totalUsers: departments.reduce((acc, dept) => acc + dept.users.length, 0),
       totalCourses: departments.reduce(
         (acc, dept) => acc + dept.courses.length,
-        0
+        0,
       ),
       totalEnrollments: departments.reduce(
         (acc, dept) =>
           acc +
           dept.courses.reduce(
             (courseAcc, course) => courseAcc + course.enrollments.length,
-            0
+            0,
           ),
-        0
+        0,
       ),
     };
 

@@ -3,8 +3,9 @@
 ## What types of content are available in lessons?
 
 Lessons support multiple content types:
+
 - **Text Editor**: Rich text WYSIWYG editor with formatting toolbar
-  - Format text with **bold**, *italic*, and <u>underline</u>
+  - Format text with **bold**, _italic_, and <u>underline</u>
   - Add headings (H1, H2, H3) for structure
   - Create bulleted and numbered lists
   - Insert links to external resources

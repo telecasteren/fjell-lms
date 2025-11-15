@@ -17,7 +17,7 @@ export function isMainDepartment(departmentName: string): boolean {
  * - BASIC: Returns array with only their department ID
  */
 export async function getAccessibleDepartmentIds(
-  userId: string
+  userId: string,
 ): Promise<string[] | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -48,7 +48,7 @@ export async function getAccessibleDepartmentIds(
   // ADMIN can access their own department and all sub-departments
   if (user.role === Role.ADMIN) {
     if (!user.departmentId) return [];
-    
+
     // Get all sub-departments recursively
     const departmentIds = [user.departmentId];
     const getSubDepartments = async (deptId: string) => {
@@ -56,13 +56,13 @@ export async function getAccessibleDepartmentIds(
         where: { parentDepartmentId: deptId },
         select: { id: true },
       });
-      
+
       for (const subDept of subDepts) {
         departmentIds.push(subDept.id);
         await getSubDepartments(subDept.id); // Recursively get nested sub-departments
       }
     };
-    
+
     await getSubDepartments(user.departmentId);
     return departmentIds;
   }
@@ -80,20 +80,20 @@ export async function getAccessibleDepartmentIds(
  * Returns an object that can be used directly in Prisma queries
  */
 export async function getDepartmentWhereClause(
-  userId: string
+  userId: string,
 ): Promise<{ id?: { in: string[] } } | Record<string, never>> {
   const departmentIds = await getAccessibleDepartmentIds(userId);
-  
+
   // null means AUTHOR can access all departments
   if (departmentIds === null) {
     return {} as Record<string, never>;
   }
-  
+
   // Empty array means no access
   if (departmentIds.length === 0) {
     return { id: { in: [] } }; // This will return no results
   }
-  
+
   return { id: { in: departmentIds } };
 }
 
@@ -103,7 +103,7 @@ export async function getDepartmentWhereClause(
  */
 export async function getCourseWhereClause(
   userId: string,
-  includeStatusFilter: boolean = false
+  includeStatusFilter: boolean = false,
 ): Promise<Prisma.CourseWhereInput> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -133,13 +133,13 @@ export async function getCourseWhereClause(
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
-    
+
     whereClause = {
       departmentId: {
         in: departmentIds,
       },
     };
-    
+
     if (includeStatusFilter) {
       whereClause.status = "PUBLISHED";
     }
@@ -149,13 +149,13 @@ export async function getCourseWhereClause(
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
-    
+
     whereClause = {
       departmentId: {
         in: departmentIds,
       },
     };
-    
+
     if (includeStatusFilter) {
       whereClause.status = "PUBLISHED";
     }
@@ -176,7 +176,7 @@ export async function getCourseWhereClause(
  */
 export async function canAccessCourse(
   userId: string,
-  courseId: string
+  courseId: string,
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -215,14 +215,17 @@ export async function canAccessCourse(
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
-    
+
     // If course is from their own department, allow access regardless of status
     if (course.departmentId === user.departmentId) {
       return true;
     }
-    
+
     // For other departments (e.g., parent), only allow published courses
-    return departmentIds.includes(course.departmentId) && course.status === "PUBLISHED";
+    return (
+      departmentIds.includes(course.departmentId) &&
+      course.status === "PUBLISHED"
+    );
   }
 
   // ADMIN can access all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
@@ -232,25 +235,28 @@ export async function canAccessCourse(
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
-    
+
     // If course is from their own department, allow access regardless of status
     if (course.departmentId === user.departmentId) {
       return true;
     }
-    
+
     // For other departments (e.g., parent), only allow published courses
-    return departmentIds.includes(course.departmentId) && course.status === "PUBLISHED";
+    return (
+      departmentIds.includes(course.departmentId) &&
+      course.status === "PUBLISHED"
+    );
   }
 
   // BASIC can only access published courses from their department and parent department
   if (user.role === Role.BASIC) {
     if (course.status !== "PUBLISHED") return false;
-    
+
     const departmentIds = [user.departmentId];
     if (user.department?.parentDepartmentId) {
       departmentIds.push(user.department.parentDepartmentId);
     }
-    
+
     return departmentIds.includes(course.departmentId);
   }
 
@@ -265,7 +271,7 @@ export async function canAccessCourse(
  */
 export async function canManageCourse(
   userId: string,
-  courseId: string
+  courseId: string,
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -301,7 +307,7 @@ export async function canManageCourse(
  */
 export async function canManageModule(
   userId: string,
-  moduleId: string
+  moduleId: string,
 ): Promise<boolean> {
   const courseModule = await prisma.module.findUnique({
     where: { id: moduleId },
@@ -318,7 +324,7 @@ export async function canManageModule(
  */
 export async function canManageLesson(
   userId: string,
-  lessonId: string
+  lessonId: string,
 ): Promise<boolean> {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
@@ -340,7 +346,7 @@ export async function canManageLesson(
  * Traverses up the parent chain to find FOX-LMS
  */
 export async function isInChildDepartmentOfFoxLms(
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -364,7 +370,7 @@ export async function isInChildDepartmentOfFoxLms(
 
   // Traverse up the parent chain to find FOX-LMS
   let currentDepartmentId = user.department.parentDepartmentId;
-  
+
   while (currentDepartmentId) {
     const parentDept = await prisma.department.findUnique({
       where: { id: currentDepartmentId },
@@ -388,4 +394,3 @@ export async function isInChildDepartmentOfFoxLms(
 
   return false;
 }
-

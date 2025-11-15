@@ -79,44 +79,50 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
   }
 
   function updateQuestion(id: string, updates: Partial<Question>) {
-    setQuestions(questions.map(q => q.id === id ? { ...q, ...updates } : q));
+    setQuestions(
+      questions.map((q) => (q.id === id ? { ...q, ...updates } : q)),
+    );
   }
 
   function deleteQuestion(id: string) {
-    setQuestions(questions.filter(q => q.id !== id));
+    setQuestions(questions.filter((q) => q.id !== id));
   }
 
   function addOption(questionId: string) {
     updateQuestion(questionId, {
-      options: [...questions.find(q => q.id === questionId)!.options, ""]
+      options: [...questions.find((q) => q.id === questionId)!.options, ""],
     });
   }
 
-  function updateOption(questionId: string, optionIndex: number, value: string) {
-    const question = questions.find(q => q.id === questionId)!;
+  function updateOption(
+    questionId: string,
+    optionIndex: number,
+    value: string,
+  ) {
+    const question = questions.find((q) => q.id === questionId)!;
     const newOptions = [...question.options];
     newOptions[optionIndex] = value;
     updateQuestion(questionId, { options: newOptions });
   }
 
   function toggleCorrectAnswer(questionId: string, optionIndex: number) {
-    const question = questions.find(q => q.id === questionId)!;
-    
+    const question = questions.find((q) => q.id === questionId)!;
+
     // For radio questions, only one answer can be correct
     if (question.type === "radio") {
       updateQuestion(questionId, { correctAnswers: [optionIndex] });
     } else {
       // For checkbox questions, multiple answers can be correct
       const newCorrectAnswers = question.correctAnswers.includes(optionIndex)
-        ? question.correctAnswers.filter(i => i !== optionIndex)
+        ? question.correctAnswers.filter((i) => i !== optionIndex)
         : [...question.correctAnswers, optionIndex];
       updateQuestion(questionId, { correctAnswers: newCorrectAnswers });
     }
   }
 
   function handleQuestionTypeChange(questionId: string, newType: QuestionType) {
-    const question = questions.find(q => q.id === questionId)!;
-    
+    const question = questions.find((q) => q.id === questionId)!;
+
     // When switching to radio, ensure only one correct answer
     if (newType === "radio" && question.correctAnswers.length > 1) {
       updateQuestion(questionId, {
@@ -164,7 +170,9 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
         <div className="flex justify-between">
           <Button onClick={addQuestion}>Add Question</Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button onClick={saveQuiz} disabled={loading}>
               {loading ? "Saving..." : "Save Quiz"}
             </Button>
@@ -180,11 +188,16 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
                   <textarea
                     placeholder="Enter question text..."
                     value={question.text}
-                    onChange={(e) => updateQuestion(question.id, { text: e.target.value })}
+                    onChange={(e) =>
+                      updateQuestion(question.id, { text: e.target.value })
+                    }
                     className="w-full rounded-md border px-3 py-2 bg-background"
                   />
                 </div>
-                <Button variant="destructive" onClick={() => deleteQuestion(question.id)}>
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteQuestion(question.id)}
+                >
                   Delete
                 </Button>
               </div>
@@ -194,14 +207,18 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
                 <Label>Question Type</Label>
                 <Select
                   value={question.type}
-                  onValueChange={(value) => handleQuestionTypeChange(question.id, value as QuestionType)}
+                  onValueChange={(value) =>
+                    handleQuestionTypeChange(question.id, value as QuestionType)
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="radio">Single Choice (Radio)</SelectItem>
-                    <SelectItem value="checkbox">Multiple Choice (Checkbox)</SelectItem>
+                    <SelectItem value="checkbox">
+                      Multiple Choice (Checkbox)
+                    </SelectItem>
                     <SelectItem value="text">Short Text Answer</SelectItem>
                   </SelectContent>
                 </Select>
@@ -214,35 +231,51 @@ export function QuizEditor({ lessonId, onClose }: QuizEditorProps) {
                     type="text"
                     placeholder="Enter the expected answer..."
                     value={question.options[0] || ""}
-                    onChange={(e) => updateTextCorrectAnswer(question.id, e.target.value)}
+                    onChange={(e) =>
+                      updateTextCorrectAnswer(question.id, e.target.value)
+                    }
                     className="w-full rounded-md border px-3 py-2 bg-background"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Students will type their answer in a text field. This is the expected correct answer.
+                    Students will type their answer in a text field. This is the
+                    expected correct answer.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <Label>
-                    {question.type === "radio" ? "Options (select one correct answer)" : "Options (check correct answers)"}
+                    {question.type === "radio"
+                      ? "Options (select one correct answer)"
+                      : "Options (check correct answers)"}
                   </Label>
                   {question.options.map((option, oIndex) => (
                     <div key={oIndex} className="flex items-center gap-2">
                       <input
                         type={question.type === "radio" ? "radio" : "checkbox"}
-                        name={question.type === "radio" ? `question-${question.id}` : undefined}
+                        name={
+                          question.type === "radio"
+                            ? `question-${question.id}`
+                            : undefined
+                        }
                         checked={question.correctAnswers.includes(oIndex)}
-                        onChange={() => toggleCorrectAnswer(question.id, oIndex)}
+                        onChange={() =>
+                          toggleCorrectAnswer(question.id, oIndex)
+                        }
                       />
                       <input
                         placeholder={`Option ${oIndex + 1}`}
                         value={option}
-                        onChange={(e) => updateOption(question.id, oIndex, e.target.value)}
+                        onChange={(e) =>
+                          updateOption(question.id, oIndex, e.target.value)
+                        }
                         className="flex-1 rounded-md border px-3 py-2 bg-background"
                       />
                     </div>
                   ))}
-                  <Button variant="outline" onClick={() => addOption(question.id)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => addOption(question.id)}
+                  >
                     Add Option
                   </Button>
                 </div>

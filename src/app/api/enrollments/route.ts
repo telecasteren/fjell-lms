@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     if (!courseId) {
       return NextResponse.json(
         { error: "Course ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (!course) {
       return NextResponse.json(
         { error: "Course not found or not available for enrollment" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -109,7 +109,7 @@ export async function DELETE(req: NextRequest) {
     if (!courseId) {
       return NextResponse.json(
         { error: "Course ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -126,7 +126,7 @@ export async function DELETE(req: NextRequest) {
     if (!enrollment) {
       return NextResponse.json(
         { error: "Not enrolled in this course" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -155,7 +155,7 @@ export async function DELETE(req: NextRequest) {
         where: {
           userId: user.id,
           lessonId: {
-            in: lessons.map(lesson => lesson.id),
+            in: lessons.map((lesson) => lesson.id),
           },
         },
       });

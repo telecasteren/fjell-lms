@@ -61,10 +61,16 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "quiz">("content");
   const [contentType, setContentType] = useState<ContentType>("text");
-  const [multimediaTab, setMultimediaTab] = useState<"embed" | "upload">("embed");
+  const [multimediaTab, setMultimediaTab] = useState<"embed" | "upload">(
+    "embed",
+  );
   const [embedCode, setEmbedCode] = useState("");
-  const [uploadTextContent, setUploadTextContent] = useState<Record<string, string>>({});
-  const [showUploadTextEditor, setShowUploadTextEditor] = useState<Set<string>>(new Set());
+  const [uploadTextContent, setUploadTextContent] = useState<
+    Record<string, string>
+  >({});
+  const [showUploadTextEditor, setShowUploadTextEditor] = useState<Set<string>>(
+    new Set(),
+  );
   const [savedMultimediaFiles, setSavedMultimediaFiles] = useState<
     SavedMultimediaFile[]
   >([]);
@@ -106,9 +112,13 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
         // Try to parse content to extract embed code and text
         // For now, we'll check if content contains embed markers
         // Format: <!--EMBED_START-->...<!--EMBED_END--><!--TEXT_START-->...<!--TEXT_END-->
-        const embedMatch = data.lesson.content.match(/<!--EMBED_START-->([\s\S]*?)<!--EMBED_END-->/);
-        const textMatch = data.lesson.content.match(/<!--TEXT_START-->([\s\S]*?)<!--TEXT_END-->/);
-        
+        const embedMatch = data.lesson.content.match(
+          /<!--EMBED_START-->([\s\S]*?)<!--EMBED_END-->/,
+        );
+        const textMatch = data.lesson.content.match(
+          /<!--TEXT_START-->([\s\S]*?)<!--TEXT_END-->/,
+        );
+
         if (embedMatch) {
           setEmbedCode(embedMatch[1].trim());
           setMultimediaTab("embed");
@@ -169,7 +179,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
 
       // Delete each file from server and Bunny Storage
       for (const fileId of filesToDelete) {
-        const file = savedMultimediaFiles.find(f => f.id === fileId);
+        const file = savedMultimediaFiles.find((f) => f.id === fileId);
 
         // Call DELETE endpoint to remove from database and Bunny Storage
         const response = await fetch(`/api/lessons/${lessonId}/multimedia`, {
@@ -185,8 +195,8 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
       }
 
       // Update local state to remove deleted files
-      setSavedMultimediaFiles(prev =>
-        prev.filter(file => !selectedFilesToDelete.has(file.id))
+      setSavedMultimediaFiles((prev) =>
+        prev.filter((file) => !selectedFilesToDelete.has(file.id)),
       );
       setSelectedFilesToDelete(new Set());
 
@@ -208,7 +218,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
 
     try {
       let contentToSave = lesson.content;
-      
+
       // If multimedia type, combine embed code and upload text content
       if (contentType === "multimedia") {
         const parts: string[] = [];
@@ -216,16 +226,21 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
           parts.push(`<!--EMBED_START-->${embedCode.trim()}<!--EMBED_END-->`);
         }
         // Combine all text content from different files
-        const allTextContent = Object.values(uploadTextContent).filter(text => text.trim()).join("\n");
+        const allTextContent = Object.values(uploadTextContent)
+          .filter((text) => text.trim())
+          .join("\n");
         if (allTextContent.trim()) {
-          parts.push(`<!--TEXT_START-->${allTextContent.trim()}<!--TEXT_END-->`);
+          parts.push(
+            `<!--TEXT_START-->${allTextContent.trim()}<!--TEXT_END-->`,
+          );
         }
         contentToSave = parts.length > 0 ? parts.join("\n") : undefined;
       }
 
       const requestBody = {
         title: lesson.title,
-        ...(contentToSave !== undefined && contentToSave !== null && { content: contentToSave }),
+        ...(contentToSave !== undefined &&
+          contentToSave !== null && { content: contentToSave }),
         contentType: contentType,
       };
 
@@ -278,7 +293,9 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
   }
 
   function updateQuestion(id: string, updates: Partial<Question>) {
-    setQuestions(questions.map(q => (q.id === id ? { ...q, ...updates } : q)));
+    setQuestions(
+      questions.map((q) => (q.id === id ? { ...q, ...updates } : q)),
+    );
   }
 
   // Function available for future use
@@ -297,7 +314,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
   function handleDeleteQuestionConfirm() {
     if (deleteConfirmation.questionId) {
       setQuestions(
-        questions.filter(q => q.id !== deleteConfirmation.questionId)
+        questions.filter((q) => q.id !== deleteConfirmation.questionId),
       );
     }
   }
@@ -312,39 +329,39 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
 
   function addOption(questionId: string) {
     updateQuestion(questionId, {
-      options: [...questions.find(q => q.id === questionId)!.options, ""],
+      options: [...questions.find((q) => q.id === questionId)!.options, ""],
     });
   }
 
   function updateOption(
     questionId: string,
     optionIndex: number,
-    value: string
+    value: string,
   ) {
-    const question = questions.find(q => q.id === questionId)!;
+    const question = questions.find((q) => q.id === questionId)!;
     const newOptions = [...question.options];
     newOptions[optionIndex] = value;
     updateQuestion(questionId, { options: newOptions });
   }
 
   function toggleCorrectAnswer(questionId: string, optionIndex: number) {
-    const question = questions.find(q => q.id === questionId)!;
-    
+    const question = questions.find((q) => q.id === questionId)!;
+
     // For radio questions, only one answer can be correct
     if (question.type === "radio") {
       updateQuestion(questionId, { correctAnswers: [optionIndex] });
     } else {
       // For checkbox questions, multiple answers can be correct
       const correctAnswers = question.correctAnswers.includes(optionIndex)
-        ? question.correctAnswers.filter(i => i !== optionIndex)
+        ? question.correctAnswers.filter((i) => i !== optionIndex)
         : [...question.correctAnswers, optionIndex];
       updateQuestion(questionId, { correctAnswers });
     }
   }
 
   function handleQuestionTypeChange(questionId: string, newType: QuestionType) {
-    const question = questions.find(q => q.id === questionId)!;
-    
+    const question = questions.find((q) => q.id === questionId)!;
+
     // When switching to radio, ensure only one correct answer
     if (newType === "radio" && question.correctAnswers.length > 1) {
       updateQuestion(questionId, {
@@ -408,7 +425,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                   id="title"
                   placeholder="Lesson title"
                   value={lesson.title}
-                  onChange={e =>
+                  onChange={(e) =>
                     setLesson({ ...lesson, title: e.target.value })
                   }
                   className="bg-background w-full rounded-md border px-3 py-2"
@@ -437,9 +454,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                   <Label htmlFor="content">Lesson Content</Label>
                   <RichTextEditor
                     content={lesson.content || ""}
-                    onChange={(content) =>
-                      setLesson({ ...lesson, content })
-                    }
+                    onChange={(content) => setLesson({ ...lesson, content })}
                     placeholder="Enter lesson content..."
                     minHeight="16rem"
                   />
@@ -458,12 +473,17 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
               {contentType === "multimedia" && (
                 <div className="space-y-4">
                   <Label htmlFor="multimedia-content">Multimedia Content</Label>
-                  <Tabs value={multimediaTab} onValueChange={(v) => setMultimediaTab(v as "embed" | "upload")}>
+                  <Tabs
+                    value={multimediaTab}
+                    onValueChange={(v) =>
+                      setMultimediaTab(v as "embed" | "upload")
+                    }
+                  >
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="embed">Embed</TabsTrigger>
                       <TabsTrigger value="upload">Upload</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="embed" className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="embed-code">Embed Code</Label>
@@ -475,20 +495,21 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                           className="bg-background w-full rounded-md border px-3 py-2 font-mono text-sm min-h-[200px]"
                         />
                         <p className="text-muted-foreground text-xs">
-                          Paste the full embed code including &lt;script&gt; and &lt;div&gt; tags.
+                          Paste the full embed code including &lt;script&gt; and
+                          &lt;div&gt; tags.
                         </p>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="upload" className="space-y-4">
                       <MultimediaUploader
                         onFilesChange={() => {}}
-                        onUploadComplete={uploadedFiles => {
+                        onUploadComplete={(uploadedFiles) => {
                           toast.success(
-                            `${uploadedFiles.length} file(s) uploaded successfully`
+                            `${uploadedFiles.length} file(s) uploaded successfully`,
                           );
                           // Add uploaded files to saved files
-                          setSavedMultimediaFiles(prev => [
+                          setSavedMultimediaFiles((prev) => [
                             ...prev,
                             ...uploadedFiles,
                           ]);
@@ -518,8 +539,12 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                   <div className="absolute top-1 left-1 z-10">
                                     <input
                                       type="checkbox"
-                                      checked={selectedFilesToDelete.has(file.id)}
-                                      onChange={() => toggleFileSelection(file.id)}
+                                      checked={selectedFilesToDelete.has(
+                                        file.id,
+                                      )}
+                                      onChange={() =>
+                                        toggleFileSelection(file.id)
+                                      }
                                       className="border-primary h-4 w-4 cursor-pointer rounded border-2 bg-white"
                                     />
                                   </div>
@@ -556,11 +581,12 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                           onError={() => {
                                             console.error(
                                               "Video load error:",
-                                              file.url
+                                              file.url,
                                             );
                                           }}
                                         >
-                                          Your browser does not support the video tag.
+                                          Your browser does not support the
+                                          video tag.
                                         </video>
                                         <div>
                                           <p className="truncate text-sm font-medium">
@@ -583,7 +609,8 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                               {file.name}
                                             </p>
                                             <p className="text-muted-foreground text-xs">
-                                              {file.type || "Interactive content"}
+                                              {file.type ||
+                                                "Interactive content"}
                                             </p>
                                           </div>
                                           <Button
@@ -598,16 +625,21 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                           </Button>
                                         </div>
                                       )}
-                                    
+
                                     {/* Add text to content link */}
                                     {!showUploadTextEditor.has(file.id) && (
                                       <Button
                                         variant="link"
                                         size="sm"
                                         onClick={() => {
-                                          setShowUploadTextEditor(prev => new Set(prev).add(file.id));
+                                          setShowUploadTextEditor((prev) =>
+                                            new Set(prev).add(file.id),
+                                          );
                                           if (!uploadTextContent[file.id]) {
-                                            setUploadTextContent(prev => ({ ...prev, [file.id]: "" }));
+                                            setUploadTextContent((prev) => ({
+                                              ...prev,
+                                              [file.id]: "",
+                                            }));
                                           }
                                         }}
                                         className="mt-2 p-0 h-auto"
@@ -615,7 +647,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                         Add text to content
                                       </Button>
                                     )}
-                                    
+
                                     {/* Text editor below preview */}
                                     {showUploadTextEditor.has(file.id) && (
                                       <div className="mt-4 space-y-2">
@@ -625,12 +657,14 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => {
-                                              setShowUploadTextEditor(prev => {
-                                                const newSet = new Set(prev);
-                                                newSet.delete(file.id);
-                                                return newSet;
-                                              });
-                                              setUploadTextContent(prev => {
+                                              setShowUploadTextEditor(
+                                                (prev) => {
+                                                  const newSet = new Set(prev);
+                                                  newSet.delete(file.id);
+                                                  return newSet;
+                                                },
+                                              );
+                                              setUploadTextContent((prev) => {
                                                 const newContent = { ...prev };
                                                 delete newContent[file.id];
                                                 return newContent;
@@ -642,8 +676,15 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                           </Button>
                                         </div>
                                         <RichTextEditor
-                                          content={uploadTextContent[file.id] || ""}
-                                          onChange={(content) => setUploadTextContent(prev => ({ ...prev, [file.id]: content }))}
+                                          content={
+                                            uploadTextContent[file.id] || ""
+                                          }
+                                          onChange={(content) =>
+                                            setUploadTextContent((prev) => ({
+                                              ...prev,
+                                              [file.id]: content,
+                                            }))
+                                          }
                                           placeholder="Add text content here..."
                                           minHeight="12rem"
                                         />
@@ -651,7 +692,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                                     )}
                                   </CardContent>
                                 </Card>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
@@ -713,7 +754,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                       <textarea
                         placeholder="Enter question text..."
                         value={question.text}
-                        onChange={e =>
+                        onChange={(e) =>
                           updateQuestion(question.id, { text: e.target.value })
                         }
                         className="bg-background w-full rounded-md border px-3 py-2"
@@ -725,15 +766,26 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                       <Label>Question Type</Label>
                       <Select
                         value={question.type}
-                        onValueChange={(value) => handleQuestionTypeChange(question.id, value as QuestionType)}
+                        onValueChange={(value) =>
+                          handleQuestionTypeChange(
+                            question.id,
+                            value as QuestionType,
+                          )
+                        }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="radio">Single Choice (Radio)</SelectItem>
-                          <SelectItem value="checkbox">Multiple Choice (Checkbox)</SelectItem>
-                          <SelectItem value="text">Short Text Answer</SelectItem>
+                          <SelectItem value="radio">
+                            Single Choice (Radio)
+                          </SelectItem>
+                          <SelectItem value="checkbox">
+                            Multiple Choice (Checkbox)
+                          </SelectItem>
+                          <SelectItem value="text">
+                            Short Text Answer
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -745,11 +797,14 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                           type="text"
                           placeholder="Enter the expected answer..."
                           value={question.options[0] || ""}
-                          onChange={(e) => updateTextCorrectAnswer(question.id, e.target.value)}
+                          onChange={(e) =>
+                            updateTextCorrectAnswer(question.id, e.target.value)
+                          }
                           className="bg-background w-full rounded-md border px-3 py-2"
                         />
                         <p className="text-sm text-muted-foreground">
-                          Students will type their answer in a text field. This is the expected correct answer.
+                          Students will type their answer in a text field. This
+                          is the expected correct answer.
                         </p>
                         <div className="flex justify-end">
                           <Button
@@ -757,7 +812,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                             onClick={() =>
                               handleDeleteQuestionClick(
                                 question.id,
-                                question.text
+                                question.text,
                               )
                             }
                           >
@@ -768,13 +823,21 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                     ) : (
                       <div className="space-y-2">
                         <Label>
-                          {question.type === "radio" ? "Options (select one correct answer)" : "Options (check correct answers)"}
+                          {question.type === "radio"
+                            ? "Options (select one correct answer)"
+                            : "Options (check correct answers)"}
                         </Label>
                         {question.options.map((option, oIndex) => (
                           <div key={oIndex} className="flex items-center gap-2">
                             <input
-                              type={question.type === "radio" ? "radio" : "checkbox"}
-                              name={question.type === "radio" ? `question-${question.id}` : undefined}
+                              type={
+                                question.type === "radio" ? "radio" : "checkbox"
+                              }
+                              name={
+                                question.type === "radio"
+                                  ? `question-${question.id}`
+                                  : undefined
+                              }
                               checked={question.correctAnswers.includes(oIndex)}
                               onChange={() =>
                                 toggleCorrectAnswer(question.id, oIndex)
@@ -783,8 +846,12 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                             <input
                               placeholder={`Option ${oIndex + 1}`}
                               value={option}
-                              onChange={e =>
-                                updateOption(question.id, oIndex, e.target.value)
+                              onChange={(e) =>
+                                updateOption(
+                                  question.id,
+                                  oIndex,
+                                  e.target.value,
+                                )
                               }
                               className="bg-background flex-1 rounded-md border px-3 py-2"
                             />
@@ -802,7 +869,7 @@ export function LessonEditor({ lessonId, onClose }: LessonEditorProps) {
                             onClick={() =>
                               handleDeleteQuestionClick(
                                 question.id,
-                                question.text
+                                question.text,
                               )
                             }
                           >

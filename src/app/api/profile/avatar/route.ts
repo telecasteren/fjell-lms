@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "File must be an image" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File size must be less than 5MB" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         // Extract path from URL (remove CDN base URL)
         const oldPath = userWithDept.image.replace(
           "https://fox-lms-pull-zone.b-cdn.net/",
-          ""
+          "",
         );
         await storageManager.deleteFile(oldPath);
         console.log("Old avatar deleted:", oldPath);
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     if (!result.success || !result.file) {
       return NextResponse.json(
         { error: result.error || "Upload failed" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -111,8 +111,7 @@ export async function POST(req: NextRequest) {
         error: "Failed to upload avatar",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

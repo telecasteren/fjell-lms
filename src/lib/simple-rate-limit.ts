@@ -11,7 +11,7 @@ export class SimpleRateLimiter {
 
   constructor(
     private maxRequests: number,
-    private windowMs: number
+    private windowMs: number,
   ) {}
 
   async checkLimit(identifier: string): Promise<{
@@ -22,16 +22,16 @@ export class SimpleRateLimiter {
   }> {
     const now = Date.now();
     const key = `${identifier}:${Math.floor(now / this.windowMs)}`;
-    
+
     const entry = this.limits.get(key);
-    
+
     if (!entry || entry.resetTime <= now) {
       // New window or expired entry
       this.limits.set(key, {
         count: 1,
         resetTime: now + this.windowMs,
       });
-      
+
       return {
         success: true,
         limit: this.maxRequests,
@@ -39,7 +39,7 @@ export class SimpleRateLimiter {
         reset: now + this.windowMs,
       };
     }
-    
+
     if (entry.count >= this.maxRequests) {
       return {
         success: false,
@@ -48,10 +48,10 @@ export class SimpleRateLimiter {
         reset: entry.resetTime,
       };
     }
-    
+
     // Increment count
     entry.count++;
-    
+
     return {
       success: true,
       limit: this.maxRequests,
@@ -82,6 +82,9 @@ export const simpleRateLimiters = {
 };
 
 // Cleanup expired entries every 5 minutes
-setInterval(() => {
-  Object.values(simpleRateLimiters).forEach(limiter => limiter.cleanup());
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    Object.values(simpleRateLimiters).forEach((limiter) => limiter.cleanup());
+  },
+  5 * 60 * 1000,
+);

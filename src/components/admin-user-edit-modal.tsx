@@ -201,7 +201,7 @@ export function AdminUserEditModal({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={e =>
+                onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
               />
@@ -212,7 +212,7 @@ export function AdminUserEditModal({
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={e =>
+                onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
               />
@@ -221,7 +221,7 @@ export function AdminUserEditModal({
               <Label htmlFor="role">Role</Label>
               <Select
                 value={formData.role}
-                onValueChange={value =>
+                onValueChange={(value) =>
                   setFormData({ ...formData, role: value })
                 }
               >
@@ -229,7 +229,7 @@ export function AdminUserEditModal({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {getAvailableRoles().map(roleOption => (
+                  {getAvailableRoles().map((roleOption) => (
                     <SelectItem
                       key={roleOption.value}
                       value={roleOption.value}

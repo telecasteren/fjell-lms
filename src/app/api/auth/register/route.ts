@@ -18,7 +18,7 @@ export const POST = apiHandler(async (req: Request) => {
     req,
     rateLimiters.registration,
     undefined,
-    simpleRateLimiters.registration
+    simpleRateLimiters.registration,
   );
   if (!rateLimitResult.success) {
     return rateLimitResult.error;
@@ -39,7 +39,7 @@ export const POST = apiHandler(async (req: Request) => {
     // If user exists but has placeholder password (created via department creation), update their password
     const isPlaceholderPassword = await bcrypt.compare(
       "PLACEHOLDER_PASSWORD",
-      existing.passwordHash
+      existing.passwordHash,
     );
     if (isPlaceholderPassword) {
       const passwordHash = await bcrypt.hash(password, 10);

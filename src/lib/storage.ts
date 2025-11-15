@@ -30,7 +30,7 @@ export interface StorageProvider {
   uploadFile(
     file: File,
     path: string,
-    metadata?: FileMetadata
+    metadata?: FileMetadata,
   ): Promise<UploadResult>;
 
   // Delete a file
@@ -74,7 +74,7 @@ export class StorageManager {
         return new BunnyStorageProvider(
           config.credentials.apiKey || "",
           config.credentials.region || "ny",
-          config.bucket
+          config.bucket,
         );
       default:
         throw new Error(`Unsupported storage provider: ${config.provider}`);
@@ -85,7 +85,7 @@ export class StorageManager {
   async uploadFile(
     file: File,
     path: string,
-    metadata?: FileMetadata
+    metadata?: FileMetadata,
   ): Promise<UploadResult> {
     return this.provider.uploadFile(file, path, metadata);
   }

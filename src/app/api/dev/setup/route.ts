@@ -15,7 +15,7 @@ export async function POST() {
   } catch {
     return NextResponse.json(
       { error: "Failed to create dev user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

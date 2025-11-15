@@ -7,12 +7,12 @@ import { Prisma } from "@prisma/client";
 // Upload multimedia files for a lesson
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req); // Allow WRITER, ADMIN, or AUTHOR
     const { id } = await params;
-    
+
     console.log("Multimedia upload request received for lesson:", id);
 
     // Verify lesson exists and user has access
@@ -39,7 +39,7 @@ export async function POST(
       console.error("FormData parsing error:", error);
       return NextResponse.json(
         { error: "Failed to parse form data" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,13 +54,13 @@ export async function POST(
       if (!(file instanceof File)) {
         return NextResponse.json(
           { error: "Invalid file format" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       if (file.size === 0) {
         return NextResponse.json(
           { error: `File ${file.name} is empty` },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -70,12 +70,12 @@ export async function POST(
 
     console.log("Starting multimedia upload for lesson:", id);
     console.log("Files to upload:", files.length);
-    
+
     // Check storage configuration
     const apiKey = process.env.BUNNY_STORAGE_API_KEY;
     const bucket = process.env.BUNNY_STORAGE_BUCKET;
     const region = process.env.BUNNY_STORAGE_REGION;
-    
+
     console.log("Storage configuration check:", {
       hasApiKey: !!apiKey,
       apiKeyLength: apiKey?.length || 0,
@@ -83,26 +83,32 @@ export async function POST(
       bucket: bucket || "MISSING",
       region: region || "MISSING",
     });
-    
+
     if (!apiKey) {
       console.error("BUNNY_STORAGE_API_KEY is not configured");
       return NextResponse.json(
-        { 
+        {
           error: "Storage not configured",
-          details: process.env.NODE_ENV === "development" ? "BUNNY_STORAGE_API_KEY environment variable is missing" : undefined
+          details:
+            process.env.NODE_ENV === "development"
+              ? "BUNNY_STORAGE_API_KEY environment variable is missing"
+              : undefined,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
-    
+
     if (!bucket) {
       console.error("BUNNY_STORAGE_BUCKET is not configured");
       return NextResponse.json(
-        { 
+        {
           error: "Storage not configured",
-          details: process.env.NODE_ENV === "development" ? "BUNNY_STORAGE_BUCKET environment variable is missing" : undefined
+          details:
+            process.env.NODE_ENV === "development"
+              ? "BUNNY_STORAGE_BUCKET environment variable is missing"
+              : undefined,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -126,7 +132,10 @@ export async function POST(
           });
         } catch (uploadError) {
           console.error("Storage manager upload error:", uploadError);
-          const errorMsg = uploadError instanceof Error ? uploadError.message : "Unknown upload error";
+          const errorMsg =
+            uploadError instanceof Error
+              ? uploadError.message
+              : "Unknown upload error";
           errors.push(`${file.name}: ${errorMsg}`);
           continue;
         }
@@ -141,7 +150,7 @@ export async function POST(
       } catch (error) {
         console.error("Upload error:", error);
         errors.push(
-          `${file.name}: ${error instanceof Error ? error.message : "Upload failed"}`
+          `${file.name}: ${error instanceof Error ? error.message : "Upload failed"}`,
         );
       }
     }
@@ -163,7 +172,8 @@ export async function POST(
     // Update lesson with multimedia files
     if (uploadedFiles.length > 0) {
       try {
-        const existingFiles = (lesson.multimediaFiles || []) as MultimediaFile[];
+        const existingFiles = (lesson.multimediaFiles ||
+          []) as MultimediaFile[];
         const updatedFiles = [...existingFiles, ...uploadedFiles];
 
         await prisma.lesson.update({
@@ -183,11 +193,15 @@ export async function POST(
 
     // Return error if no files were uploaded successfully
     if (uploadedFiles.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: errors.length > 0 ? errors.join("; ") : "No files were uploaded",
-        errors: errors.length > 0 ? errors : undefined,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            errors.length > 0 ? errors.join("; ") : "No files were uploaded",
+          errors: errors.length > 0 ? errors : undefined,
+        },
+        { status: 400 },
+      );
     }
 
     return NextResponse.json({
@@ -198,15 +212,17 @@ export async function POST(
     });
   } catch (error) {
     console.error("Multimedia upload error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     const errorStack = error instanceof Error ? error.stack : undefined;
     console.error("Error details:", { errorMessage, errorStack });
     return NextResponse.json(
-      { 
+      {
         error: "Upload failed",
-        details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+        details:
+          process.env.NODE_ENV === "development" ? errorMessage : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -214,7 +230,7 @@ export async function POST(
 // Get multimedia files for a lesson
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireWriterOrAdminOrAuthor(req); // Allow WRITER, ADMIN, or AUTHOR
@@ -252,7 +268,7 @@ export async function GET(
 // Delete a multimedia file
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireWriterOrAdminOrAuthor(req); // Allow WRITER, ADMIN, or AUTHOR
@@ -285,7 +301,7 @@ export async function DELETE(
 
     const existingFiles = (lesson.multimediaFiles || []) as MultimediaFile[];
     const fileToDelete = existingFiles.find(
-      (file: MultimediaFile) => file.id === fileId
+      (file: MultimediaFile) => file.id === fileId,
     );
 
     if (!fileToDelete) {
@@ -297,10 +313,10 @@ export async function DELETE(
     // Get the file path for deletion from Bunny Storage
     // metadata.fullPath might be a string, otherwise use the file id
     const metadataFullPath = fileToDelete.metadata?.fullPath;
-    const filePath: string = 
-      (typeof metadataFullPath === "string" ? metadataFullPath : null) || 
+    const filePath: string =
+      (typeof metadataFullPath === "string" ? metadataFullPath : null) ||
       fileToDelete.id;
-    
+
     console.log("Deleting from Bunny Storage with path:", filePath);
 
     // Delete from Bunny Storage
@@ -311,7 +327,7 @@ export async function DELETE(
 
       // Remove from lesson's multimedia files in database
       const updatedFiles = existingFiles.filter(
-        (file: MultimediaFile) => file.id !== fileId
+        (file: MultimediaFile) => file.id !== fileId,
       );
 
       await prisma.lesson.update({
@@ -328,7 +344,7 @@ export async function DELETE(
       console.error("Failed to delete from Bunny Storage");
       return NextResponse.json(
         { error: "Failed to delete file from storage" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {

@@ -5,19 +5,23 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ 
-      req, 
-      secret: process.env.NEXTAUTH_SECRET 
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
     });
 
     // Use ID from token if available, otherwise fall back to email
     let user = null;
     if (token?.id) {
-      user = await prisma.user.findUnique({ where: { id: token.id as string } });
+      user = await prisma.user.findUnique({
+        where: { id: token.id as string },
+      });
     } else if (token?.email) {
-      user = await prisma.user.findUnique({ where: { email: token.email as string } });
+      user = await prisma.user.findUnique({
+        where: { email: token.email as string },
+      });
     }
-    
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

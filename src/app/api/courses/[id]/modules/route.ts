@@ -5,7 +5,7 @@ import { canAccessCourse, canManageCourse } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireAuth(req);
@@ -16,7 +16,7 @@ export async function GET(
     if (!canAccess) {
       return NextResponse.json(
         { error: "You don't have access to this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -52,7 +52,7 @@ export async function POST(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 

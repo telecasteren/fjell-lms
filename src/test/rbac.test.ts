@@ -61,7 +61,7 @@ describe("RBAC Functions", () => {
       mockGetCurrentUser.mockResolvedValue(mockUser);
 
       await expect(requireRole([Role.ADMIN, Role.AUTHOR])).rejects.toThrow(
-        "Forbidden"
+        "Forbidden",
       );
     });
 

@@ -118,7 +118,9 @@ export default function ReportsPage() {
         if (mounted) setLoading(false);
 
         // Get user role for UI customization
-        const sessionRes = await fetch("/api/session", { credentials: "include" });
+        const sessionRes = await fetch("/api/session", {
+          credentials: "include",
+        });
         if (sessionRes.ok && mounted) {
           const sessionData = await sessionRes.json();
           setUserRole(sessionData.user?.role);
@@ -163,7 +165,9 @@ export default function ReportsPage() {
       setLoading(false);
 
       // Get user role for UI customization
-      const sessionRes = await fetch("/api/session", { credentials: "include" });
+      const sessionRes = await fetch("/api/session", {
+        credentials: "include",
+      });
       if (sessionRes.ok) {
         const sessionData = await sessionRes.json();
         setUserRole(sessionData.user?.role);
@@ -186,19 +190,18 @@ export default function ReportsPage() {
       // AUTHOR users can select specific department or all
       if (exportDepartmentId === "all") {
         // Export all departments (respect search filter if active)
-        reportsToExport =
-          searchQuery.trim()
-            ? data.departmentReports.filter(dept =>
-                dept.departmentName
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase().trim())
-              )
-            : data.departmentReports;
+        reportsToExport = searchQuery.trim()
+          ? data.departmentReports.filter((dept) =>
+              dept.departmentName
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase().trim()),
+            )
+          : data.departmentReports;
         filename = "all-departments-report.csv";
       } else {
         // Export specific department
         const selectedDept = data.departmentReports.find(
-          dept => dept.departmentId === exportDepartmentId
+          (dept) => dept.departmentId === exportDepartmentId,
         );
         if (!selectedDept) {
           console.error("Selected department not found");
@@ -223,7 +226,7 @@ export default function ReportsPage() {
           "Completion Rate",
           "Top Course",
         ],
-        ...reportsToExport.map(dept => [
+        ...reportsToExport.map((dept) => [
           dept.departmentName,
           dept.userStats.total.toString(),
           dept.courseStats.total.toString(),
@@ -232,7 +235,7 @@ export default function ReportsPage() {
           dept.coursePerformance[0]?.courseTitle || "N/A",
         ]),
       ]
-        .map(row => row.join(","))
+        .map((row) => row.join(","))
         .join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv" });
@@ -251,7 +254,7 @@ export default function ReportsPage() {
       } else {
         // Export specific department
         const selectedDept = data.departmentReports.find(
-          dept => dept.departmentId === exportDepartmentId
+          (dept) => dept.departmentId === exportDepartmentId,
         );
         if (!selectedDept) {
           console.error("Selected department not found");
@@ -276,7 +279,7 @@ export default function ReportsPage() {
           "Completion Rate",
           "Top Course",
         ],
-        ...reportsToExport.map(dept => [
+        ...reportsToExport.map((dept) => [
           dept.departmentName,
           dept.userStats.total.toString(),
           dept.courseStats.total.toString(),
@@ -285,7 +288,7 @@ export default function ReportsPage() {
           dept.coursePerformance[0]?.courseTitle || "N/A",
         ]),
       ]
-        .map(row => row.join(","))
+        .map((row) => row.join(","))
         .join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv" });
@@ -308,8 +311,8 @@ export default function ReportsPage() {
           "Total Lessons",
           "Completed Lessons",
         ],
-        ...data.departmentReports.flatMap(dept =>
-          dept.progressStats.userProgress.map(user => [
+        ...data.departmentReports.flatMap((dept) =>
+          dept.progressStats.userProgress.map((user) => [
             user.userName,
             user.userEmail,
             user.userRole,
@@ -318,10 +321,10 @@ export default function ReportsPage() {
             user.completionRate.toString() + "%",
             user.total.toString(),
             user.completed.toString(),
-          ])
+          ]),
         ),
       ]
-        .map(row => row.join(","))
+        .map((row) => row.join(","))
         .join("\n");
       filename = "user-activity-report.csv";
 
@@ -346,10 +349,10 @@ export default function ReportsPage() {
   // Filter departments based on search query (for AUTHOR and ADMIN users)
   const filteredDepartmentReports =
     (userRole === "AUTHOR" || userRole === "ADMIN") && searchQuery.trim()
-      ? data.departmentReports.filter(dept =>
+      ? data.departmentReports.filter((dept) =>
           dept.departmentName
             .toLowerCase()
-            .includes(searchQuery.toLowerCase().trim())
+            .includes(searchQuery.toLowerCase().trim()),
         )
       : data.departmentReports;
 
@@ -362,8 +365,8 @@ export default function ReportsPage() {
             {userRole === "AUTHOR"
               ? "Comprehensive analytics across all departments"
               : userRole === "ADMIN"
-              ? "Analytics for your department and sub-departments"
-              : "Analytics for your department"}
+                ? "Analytics for your department and sub-departments"
+                : "Analytics for your department"}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -377,7 +380,7 @@ export default function ReportsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {data.departmentReports.map(dept => (
+                {data.departmentReports.map((dept) => (
                   <SelectItem key={dept.departmentId} value={dept.departmentId}>
                     {dept.departmentName}
                   </SelectItem>
@@ -388,11 +391,16 @@ export default function ReportsPage() {
           <Button onClick={exportToCSV} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export CSV
-            {(userRole === "AUTHOR" || userRole === "ADMIN") && exportDepartmentId !== "all" && (
-              <span className="ml-2 text-xs opacity-70">
-                ({data?.departmentReports.find(d => d.departmentId === exportDepartmentId)?.departmentName || ""})
-              </span>
-            )}
+            {(userRole === "AUTHOR" || userRole === "ADMIN") &&
+              exportDepartmentId !== "all" && (
+                <span className="ml-2 text-xs opacity-70">
+                  (
+                  {data?.departmentReports.find(
+                    (d) => d.departmentId === exportDepartmentId,
+                  )?.departmentName || ""}
+                  )
+                </span>
+              )}
           </Button>
         </div>
       </div>
@@ -404,8 +412,8 @@ export default function ReportsPage() {
             {userRole === "AUTHOR"
               ? "Platform Overview"
               : userRole === "ADMIN"
-              ? "Department Overview"
-              : "Department Overview"}
+                ? "Department Overview"
+                : "Department Overview"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -473,7 +481,7 @@ export default function ReportsPage() {
                 </CardContent>
               </Card>
             ) : (
-              filteredDepartmentReports.map(dept => (
+              filteredDepartmentReports.map((dept) => (
                 <Card key={dept.departmentId}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -546,7 +554,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
           ) : (
-            filteredDepartmentReports.map(dept => (
+            filteredDepartmentReports.map((dept) => (
               <Card key={dept.departmentId}>
                 <CardHeader>
                   <CardTitle>{dept.departmentName} - Detailed Report</CardTitle>
@@ -596,7 +604,7 @@ export default function ReportsPage() {
                     <div>
                       <h4 className="mb-2 font-medium">Recent Users</h4>
                       <div className="space-y-1">
-                        {dept.userStats.recentUsers.map(user => (
+                        {dept.userStats.recentUsers.map((user) => (
                           <div
                             key={user.id}
                             className="flex justify-between text-sm"
@@ -652,7 +660,7 @@ export default function ReportsPage() {
                       Top Performing Courses
                     </h3>
                     <div className="space-y-2">
-                      {dept.coursePerformance.slice(0, 5).map(course => (
+                      {dept.coursePerformance.slice(0, 5).map((course) => (
                         <div
                           key={course.courseId}
                           className="flex items-center justify-between rounded border p-2"
@@ -688,7 +696,7 @@ export default function ReportsPage() {
                     <div className="space-y-2">
                       {dept.progressStats.userProgress
                         .slice(0, 10)
-                        .map(user => (
+                        .map((user) => (
                           <div
                             key={user.userId}
                             className="flex items-center justify-between rounded border p-2"

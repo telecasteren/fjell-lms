@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
     if (!department) {
       return NextResponse.json(
         { error: "Department not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -87,8 +87,10 @@ export async function GET(req: NextRequest) {
     }, 0);
 
     // Get all lesson IDs for the department
-    const allLessonIds = department.courses.flatMap(course =>
-      course.modules.flatMap(module => module.lessons.map(lesson => lesson.id))
+    const allLessonIds = department.courses.flatMap((course) =>
+      course.modules.flatMap((module) =>
+        module.lessons.map((lesson) => lesson.id),
+      ),
     );
 
     // Get all users in the department
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest) {
     for (const departmentUser of departmentUsers) {
       const completionMap = await getLessonCompletions(
         departmentUser.id,
-        allLessonIds
+        allLessonIds,
       );
       totalCompletedLessons +=
         Object.values(completionMap).filter(Boolean).length;
@@ -115,7 +117,7 @@ export async function GET(req: NextRequest) {
 
     // Get user statistics with individual progress
     const userProgressDetails = await Promise.all(
-      department.users.map(async deptUser => {
+      department.users.map(async (deptUser) => {
         const overallProgress = await calculateOverallProgress(deptUser.id);
         return {
           id: deptUser.id,
@@ -131,16 +133,16 @@ export async function GET(req: NextRequest) {
             completionRate: overallProgress.percentage,
           },
         };
-      })
+      }),
     );
 
     const userStats = {
       total: department.users.length,
-      admins: department.users.filter(u => u.role === "ADMIN").length,
-      basic: department.users.filter(u => u.role === "BASIC").length,
-      active: userProgressDetails.filter(u => u.progress.totalCourses > 0)
+      admins: department.users.filter((u) => u.role === "ADMIN").length,
+      basic: department.users.filter((u) => u.role === "BASIC").length,
+      active: userProgressDetails.filter((u) => u.progress.totalCourses > 0)
         .length,
-      inactive: userProgressDetails.filter(u => u.progress.totalCourses === 0)
+      inactive: userProgressDetails.filter((u) => u.progress.totalCourses === 0)
         .length,
     };
 
@@ -157,7 +159,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Get unique course IDs to count total enrolled courses
-    const enrolledCourseIds = [...new Set(enrollments.map(e => e.courseId))];
+    const enrolledCourseIds = [...new Set(enrollments.map((e) => e.courseId))];
     const totalEnrolledCourses = enrolledCourseIds.length;
 
     return NextResponse.json({
@@ -198,7 +200,7 @@ export async function GET(req: NextRequest) {
       {
         error: "Failed to fetch department stats",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

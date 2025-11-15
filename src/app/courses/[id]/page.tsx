@@ -67,26 +67,36 @@ export default function CoursePage({
     });
     if (res.ok) {
       const data = await res.json();
-      setLessons(prev => ({ ...prev, [moduleId]: data.lessons }));
+      setLessons((prev) => ({ ...prev, [moduleId]: data.lessons }));
     }
   }
 
   useEffect(() => {
     // Check if user is AUTHOR, WRITER, or ADMIN and redirect if not
-    if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER" && session.user.role !== "ADMIN") {
+    if (
+      session?.user?.role &&
+      session.user.role !== "AUTHOR" &&
+      session.user.role !== "WRITER" &&
+      session.user.role !== "ADMIN"
+    ) {
       router.push("/courses");
       return;
     }
-    
+
     const loadData = async () => {
       const { id } = await params;
       await loadModules(id);
     };
     loadData();
   }, [params, session, router]);
-  
+
   // Don't render if user is not AUTHOR, WRITER, or ADMIN
-  if (session?.user?.role && session.user.role !== "AUTHOR" && session.user.role !== "WRITER" && session.user.role !== "ADMIN") {
+  if (
+    session?.user?.role &&
+    session.user.role !== "AUTHOR" &&
+    session.user.role !== "WRITER" &&
+    session.user.role !== "ADMIN"
+  ) {
     return <div>Redirecting...</div>;
   }
 
@@ -165,7 +175,7 @@ export default function CoursePage({
   function handleDeleteLessonClick(
     lessonId: string,
     lessonTitle: string,
-    moduleId: string
+    moduleId: string,
   ) {
     setDeleteConfirmation({
       isOpen: true,
@@ -201,10 +211,10 @@ export default function CoursePage({
     });
 
     if (res.ok) {
-      setModules(prev =>
-        prev.map(m =>
-          m.id === moduleId ? { ...m, title: editingModuleTitle.trim() } : m
-        )
+      setModules((prev) =>
+        prev.map((m) =>
+          m.id === moduleId ? { ...m, title: editingModuleTitle.trim() } : m,
+        ),
       );
       setEditingModule(null);
       setEditingModuleTitle("");
@@ -218,7 +228,7 @@ export default function CoursePage({
     });
 
     if (res.ok) {
-      setModules(prev => prev.filter(m => m.id !== moduleId));
+      setModules((prev) => prev.filter((m) => m.id !== moduleId));
       if (expandedModule === moduleId) {
         setExpandedModule(null);
       }
@@ -289,7 +299,7 @@ export default function CoursePage({
           <input
             placeholder="Module title"
             value={moduleTitle}
-            onChange={e => setModuleTitle(e.target.value)}
+            onChange={(e) => setModuleTitle(e.target.value)}
             className="bg-background flex-1 rounded-md border px-3 py-2"
           />
           <Button onClick={createModule}>Next</Button>
@@ -297,7 +307,7 @@ export default function CoursePage({
       </Card>
 
       <div className="space-y-4">
-        {modules.map(module => (
+        {modules.map((module) => (
           <Card key={module.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -306,10 +316,10 @@ export default function CoursePage({
                     <div className="flex flex-1 items-center gap-2">
                       <input
                         value={editingModuleTitle}
-                        onChange={e => setEditingModuleTitle(e.target.value)}
+                        onChange={(e) => setEditingModuleTitle(e.target.value)}
                         className="bg-background flex-1 rounded-md border px-3 py-2"
                         autoFocus
-                        onKeyDown={e => {
+                        onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             updateModule(module.id);
                           } else if (e.key === "Escape") {
@@ -387,10 +397,10 @@ export default function CoursePage({
                           <input
                             placeholder="Enter lesson title..."
                             value={newLessonTitle}
-                            onChange={e => setNewLessonTitle(e.target.value)}
+                            onChange={(e) => setNewLessonTitle(e.target.value)}
                             className="bg-background mt-1 w-full rounded-md border px-3 py-2"
                             autoFocus
-                            onKeyDown={e => {
+                            onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 saveNewLesson(module.id);
                               } else if (e.key === "Escape") {
@@ -419,7 +429,7 @@ export default function CoursePage({
                     </div>
                   )}
 
-                  {lessons[module.id]?.map(lesson => (
+                  {lessons[module.id]?.map((lesson) => (
                     <div key={lesson.id} className="rounded border p-3">
                       <div className="flex items-start justify-between">
                         <div>
@@ -440,7 +450,7 @@ export default function CoursePage({
                               handleDeleteLessonClick(
                                 lesson.id,
                                 lesson.title,
-                                module.id
+                                module.id,
                               )
                             }
                           >

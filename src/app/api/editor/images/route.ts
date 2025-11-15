@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "File must be an image" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File size must be less than 10MB" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     if (!result.success || !result.file) {
       return NextResponse.json(
         { error: result.error || "Upload failed" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -94,8 +94,7 @@ export async function POST(req: NextRequest) {
         error: "Failed to upload image",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

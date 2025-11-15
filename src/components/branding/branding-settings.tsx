@@ -72,7 +72,7 @@ export function BrandingSettings() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       try {
         const imported = JSON.parse(e.target?.result as string);
         const errors = brandingUtils.validateBranding(imported);
@@ -90,14 +90,14 @@ export function BrandingSettings() {
   };
 
   const updateFormData = (updates: Partial<BrandingConfig>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const updateColors = (
     colorKey: keyof BrandingConfig["colors"],
-    value: string
+    value: string,
   ) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       colors: {
         primary: prev.colors?.primary || "#3b82f6",
@@ -115,9 +115,9 @@ export function BrandingSettings() {
 
   const updateFeatures = (
     featureKey: keyof BrandingConfig["features"],
-    value: boolean
+    value: boolean,
   ) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       features: {
         enableDarkMode: prev.features?.enableDarkMode ?? false,
@@ -131,9 +131,12 @@ export function BrandingSettings() {
 
   const updateTypography = (
     typographyKey: keyof BrandingConfig["typography"],
-    value: string | BrandingConfig["typography"]["fontWeights"] | BrandingConfig["typography"]["fontSizes"]
+    value:
+      | string
+      | BrandingConfig["typography"]["fontWeights"]
+      | BrandingConfig["typography"]["fontSizes"],
   ) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       typography: {
         fontFamily: prev.typography?.fontFamily || "Tomatogrotesk, sans-serif",
@@ -160,9 +163,9 @@ export function BrandingSettings() {
 
   const updateFontWeight = (
     weightKey: keyof BrandingConfig["typography"]["fontWeights"],
-    value: number
+    value: number,
   ) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       typography: {
         fontFamily: prev.typography?.fontFamily || "Tomatogrotesk, sans-serif",
@@ -189,13 +192,14 @@ export function BrandingSettings() {
 
   const updateLinks = (
     linkKey: keyof BrandingConfig["links"],
-    value: string
+    value: string,
   ) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       links: {
         homepage: prev.links?.homepage || "https://www.telecasternilsen.com",
-        contact: prev.links?.contact || "https://www.telecasternilsen.com/#contact",
+        contact:
+          prev.links?.contact || "https://www.telecasternilsen.com/#contact",
         link1: prev.links?.link1 || "https://example.com/link1",
         link2: prev.links?.link2 || "https://example.com/link2",
         link3: prev.links?.link3 || "https://example.com/link3",
@@ -297,7 +301,9 @@ export function BrandingSettings() {
                   <Input
                     id="appName"
                     value={formData.appName || ""}
-                    onChange={e => updateFormData({ appName: e.target.value })}
+                    onChange={(e) =>
+                      updateFormData({ appName: e.target.value })
+                    }
                     disabled={!isEditing}
                   />
                 </div>
@@ -306,7 +312,7 @@ export function BrandingSettings() {
                   <Input
                     id="appVersion"
                     value={formData.appVersion || ""}
-                    onChange={e =>
+                    onChange={(e) =>
                       updateFormData({ appVersion: e.target.value })
                     }
                     disabled={!isEditing}
@@ -318,7 +324,7 @@ export function BrandingSettings() {
                 <Input
                   id="appDescription"
                   value={formData.appDescription || ""}
-                  onChange={e =>
+                  onChange={(e) =>
                     updateFormData({ appDescription: e.target.value })
                   }
                   disabled={!isEditing}
@@ -396,13 +402,13 @@ export function BrandingSettings() {
                       id="primary"
                       type="color"
                       value={formData.colors?.primary || "#3b82f6"}
-                      onChange={e => updateColors("primary", e.target.value)}
+                      onChange={(e) => updateColors("primary", e.target.value)}
                       disabled={!isEditing}
                       className="h-10 w-16 p-1"
                     />
                     <Input
                       value={formData.colors?.primary || "#3b82f6"}
-                      onChange={e => updateColors("primary", e.target.value)}
+                      onChange={(e) => updateColors("primary", e.target.value)}
                       disabled={!isEditing}
                       placeholder="#3b82f6"
                     />
@@ -415,13 +421,17 @@ export function BrandingSettings() {
                       id="secondary"
                       type="color"
                       value={formData.colors?.secondary || "#64748b"}
-                      onChange={e => updateColors("secondary", e.target.value)}
+                      onChange={(e) =>
+                        updateColors("secondary", e.target.value)
+                      }
                       disabled={!isEditing}
                       className="h-10 w-16 p-1"
                     />
                     <Input
                       value={formData.colors?.secondary || "#64748b"}
-                      onChange={e => updateColors("secondary", e.target.value)}
+                      onChange={(e) =>
+                        updateColors("secondary", e.target.value)
+                      }
                       disabled={!isEditing}
                       placeholder="#64748b"
                     />
@@ -434,13 +444,13 @@ export function BrandingSettings() {
                       id="accent"
                       type="color"
                       value={formData.colors?.accent || "#f59e0b"}
-                      onChange={e => updateColors("accent", e.target.value)}
+                      onChange={(e) => updateColors("accent", e.target.value)}
                       disabled={!isEditing}
                       className="h-10 w-16 p-1"
                     />
                     <Input
                       value={formData.colors?.accent || "#f59e0b"}
-                      onChange={e => updateColors("accent", e.target.value)}
+                      onChange={(e) => updateColors("accent", e.target.value)}
                       disabled={!isEditing}
                       placeholder="#f59e0b"
                     />
@@ -453,13 +463,13 @@ export function BrandingSettings() {
                       id="success"
                       type="color"
                       value={formData.colors?.success || "#10b981"}
-                      onChange={e => updateColors("success", e.target.value)}
+                      onChange={(e) => updateColors("success", e.target.value)}
                       disabled={!isEditing}
                       className="h-10 w-16 p-1"
                     />
                     <Input
                       value={formData.colors?.success || "#10b981"}
-                      onChange={e => updateColors("success", e.target.value)}
+                      onChange={(e) => updateColors("success", e.target.value)}
                       disabled={!isEditing}
                       placeholder="#10b981"
                     />
@@ -501,7 +511,9 @@ export function BrandingSettings() {
                     formData.typography?.fontFamily ||
                     "Tomatogrotesk, sans-serif"
                   }
-                  onChange={e => updateTypography("fontFamily", e.target.value)}
+                  onChange={(e) =>
+                    updateTypography("fontFamily", e.target.value)
+                  }
                   disabled={!isEditing}
                   placeholder="Tomatogrotesk, sans-serif"
                 />
@@ -513,7 +525,7 @@ export function BrandingSettings() {
                     id="fontWeightNormal"
                     type="number"
                     value={formData.typography?.fontWeights?.normal || 400}
-                    onChange={e =>
+                    onChange={(e) =>
                       updateFontWeight("normal", parseInt(e.target.value))
                     }
                     disabled={!isEditing}
@@ -528,7 +540,7 @@ export function BrandingSettings() {
                     id="fontWeightBold"
                     type="number"
                     value={formData.typography?.fontWeights?.bold || 700}
-                    onChange={e =>
+                    onChange={(e) =>
                       updateFontWeight("bold", parseInt(e.target.value))
                     }
                     disabled={!isEditing}
@@ -572,7 +584,7 @@ export function BrandingSettings() {
                   <Input
                     id="homepage"
                     value={formData.links?.homepage || ""}
-                    onChange={e => updateLinks("homepage", e.target.value)}
+                    onChange={(e) => updateLinks("homepage", e.target.value)}
                     disabled={!isEditing}
                     placeholder="https://fox-lms.com"
                   />

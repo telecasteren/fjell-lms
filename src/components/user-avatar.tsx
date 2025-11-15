@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Shield } from "lucide-react";
@@ -18,7 +22,11 @@ interface UserAvatarProps {
   showPopover?: boolean;
 }
 
-export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatarProps) {
+export function UserAvatar({
+  user,
+  size = "md",
+  showPopover = true,
+}: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
 
   // Reset error state when user image changes
@@ -49,7 +57,7 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
     if (user.name) {
       return user.name
         .split(" ")
-        .map(n => n[0])
+        .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2);
@@ -81,8 +89,8 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
   const avatarElement = (
     <Avatar className={sizeClasses[size]}>
       {!imageError && user.image ? (
-        <AvatarImage 
-          src={user.image} 
+        <AvatarImage
+          src={user.image}
           alt={user.name || user.email || "User"}
           onError={handleImageError}
         />
@@ -110,8 +118,8 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
               {!imageError && user.image ? (
-                <AvatarImage 
-                  src={user.image} 
+                <AvatarImage
+                  src={user.image}
                   alt={user.name || user.email || "User"}
                   onError={handleImageError}
                 />
@@ -133,9 +141,11 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
           {/* Role Badge */}
           {user.role && (
             <div className="flex items-center space-x-2">
-              <Shield className={`${iconSizeClasses.md} text-muted-foreground`} />
-              <Badge 
-                variant="outline" 
+              <Shield
+                className={`${iconSizeClasses.md} text-muted-foreground`}
+              />
+              <Badge
+                variant="outline"
                 className={`${getRoleColor(user.role)} ${textSizeClasses.sm}`}
               >
                 {user.role}
@@ -145,11 +155,19 @@ export function UserAvatar({ user, size = "md", showPopover = true }: UserAvatar
 
           {/* Quick Actions */}
           <div className="space-y-2">
-            <Button variant="outline" size="sm" className="w-full justify-start">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+            >
               <User className={`${iconSizeClasses.sm} mr-2`} />
               View Profile
             </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+            >
               <Mail className={`${iconSizeClasses.sm} mr-2`} />
               Contact Support
             </Button>

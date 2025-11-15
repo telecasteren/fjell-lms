@@ -13,8 +13,8 @@ export function useDashboardRefresh() {
 
   const refreshAllDashboards = useCallback(() => {
     // Dispatch custom event to notify all dashboard components
-    window.dispatchEvent(new CustomEvent('dashboard-refresh'));
-    
+    window.dispatchEvent(new CustomEvent("dashboard-refresh"));
+
     // Also trigger a router refresh for server components
     router.refresh();
   }, [router]);

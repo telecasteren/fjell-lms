@@ -5,7 +5,7 @@ import { canManageModule } from "@/lib/department-utils";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -21,7 +21,7 @@ export async function PATCH(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this module" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -52,7 +52,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -63,7 +63,7 @@ export async function DELETE(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to delete this module" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -84,7 +84,7 @@ export async function DELETE(
         {
           error: "Cannot delete module with existing lessons",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

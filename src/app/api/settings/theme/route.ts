@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
       console.error("Validation failed:", validation.error);
       return NextResponse.json(
         { error: "Invalid theme value. Must be 'light' or 'dark'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const { theme } = validation.data;
@@ -51,11 +51,11 @@ export async function PATCH(req: NextRequest) {
       name: error instanceof Error ? error.name : undefined,
     });
     return NextResponse.json(
-      { 
+      {
         error: "Failed to update theme",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

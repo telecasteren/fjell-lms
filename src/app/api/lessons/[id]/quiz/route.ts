@@ -5,7 +5,7 @@ import { canManageLesson, canAccessCourse } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireAuth(req);
@@ -30,10 +30,10 @@ export async function GET(
     // Check if user can access this course (for viewing quiz)
     // This allows enrolled users, AUTHOR/WRITER/ADMIN who can manage the course
     const canAccess = await canAccessCourse(user.id, lesson.module.courseId);
-    
+
     // Also check if user can manage the lesson (for AUTHOR/WRITER/ADMIN editing)
     const canManage = await canManageLesson(user.id, id);
-    
+
     // Check if user is enrolled in the course
     const enrollment = await prisma.enrollment.findUnique({
       where: {
@@ -48,7 +48,7 @@ export async function GET(
     if (!enrollment && !canAccess && !canManage) {
       return NextResponse.json(
         { error: "You don't have access to this quiz" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -64,7 +64,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -72,7 +72,7 @@ export async function POST(
     if (!questions)
       return NextResponse.json(
         { error: "Questions required" },
-        { status: 400 }
+        { status: 400 },
       );
     const { id } = await params;
 
@@ -81,7 +81,7 @@ export async function POST(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this lesson" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 

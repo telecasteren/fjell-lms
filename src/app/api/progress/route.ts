@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     if (!lessonId)
       return NextResponse.json(
         { error: "Lesson ID required" },
-        { status: 400 }
+        { status: 400 },
       );
 
     // Check if user is enrolled in the course containing this lesson
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (!enrollment && !courseAccess) {
       return NextResponse.json(
         { error: "Not enrolled in this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 

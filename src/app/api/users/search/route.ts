@@ -17,11 +17,12 @@ export async function GET(req: NextRequest) {
 
     // Get accessible department IDs (includes sub-departments for ADMIN)
     const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
-    
+
     // AUTHOR can see all users, ADMIN can only see users in their department and sub-departments
-    const whereClause = accessibleDepartmentIds === null 
-      ? {} // AUTHOR sees all
-      : { departmentId: { in: accessibleDepartmentIds } };
+    const whereClause =
+      accessibleDepartmentIds === null
+        ? {} // AUTHOR sees all
+        : { departmentId: { in: accessibleDepartmentIds } };
 
     // Search users by name or email within accessible departments
     const allUsers = await prisma.user.findMany({
@@ -47,9 +48,9 @@ export async function GET(req: NextRequest) {
     const queryLower = query.toLowerCase();
     const users = allUsers
       .filter(
-        user =>
+        (user) =>
           (user.name && user.name.toLowerCase().includes(queryLower)) ||
-          (user.email && user.email.toLowerCase().includes(queryLower))
+          (user.email && user.email.toLowerCase().includes(queryLower)),
       )
       .slice(0, 20); // Limit results to 20
 

@@ -45,7 +45,7 @@ export function UserReassignmentModal({
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState(
-    user.departmentId
+    user.departmentId,
   );
 
   useEffect(() => {
@@ -90,9 +90,9 @@ export function UserReassignmentModal({
     }
   };
 
-  const currentDepartment = departments.find(d => d.id === user.departmentId);
+  const currentDepartment = departments.find((d) => d.id === user.departmentId);
   const selectedDepartment = departments.find(
-    d => d.id === selectedDepartmentId
+    (d) => d.id === selectedDepartmentId,
   );
 
   return (
@@ -125,7 +125,7 @@ export function UserReassignmentModal({
                 <SelectValue placeholder="Choose a department" />
               </SelectTrigger>
               <SelectContent>
-                {departments.map(dept => (
+                {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
                   </SelectItem>

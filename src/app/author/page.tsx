@@ -18,7 +18,10 @@ import { UserSearchInput } from "@/components/user-search-input";
 import { UserReassignmentModal } from "@/components/user-reassignment-modal";
 import { DepartmentCreationModal } from "@/components/department-creation-modal";
 import { DepartmentBrandingSettings } from "@/components/department-branding-settings";
-import { DepartmentTree, type DepartmentTreeNode } from "@/components/department-tree";
+import {
+  DepartmentTree,
+  type DepartmentTreeNode,
+} from "@/components/department-tree";
 import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -117,7 +120,9 @@ export default function AuthorDashboard() {
   const [showConfigure, setShowConfigure] = useState(false);
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
+  const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(
+    null,
+  );
   const [departmentSearchQuery, setDepartmentSearchQuery] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "tree">("list");
@@ -216,13 +221,13 @@ export default function AuthorDashboard() {
         toast.success(result.message);
         setShowDeleteDialog(false);
         setDepartmentToDelete(null);
-        
+
         // Reset selected department if it was deleted
         if (selectedDepartment === departmentToDelete) {
           setSelectedDepartment("");
           setDepartmentDetails(null);
         }
-        
+
         // Reload dashboard to refresh department list
         loadDashboard();
         refreshDashboard();
@@ -351,13 +356,15 @@ export default function AuthorDashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     {(departmentSearchQuery.trim()
-                      ? data.departments.filter(dept =>
+                      ? data.departments.filter((dept) =>
                           dept.name
                             .toLowerCase()
-                            .includes(departmentSearchQuery.toLowerCase().trim())
+                            .includes(
+                              departmentSearchQuery.toLowerCase().trim(),
+                            ),
                         )
                       : data.departments
-                    ).map(dept => (
+                    ).map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name} ({dept._count.users} users,{" "}
                         {dept._count.courses} courses)
@@ -370,8 +377,10 @@ export default function AuthorDashboard() {
                   onChange={(value) => {
                     setDepartmentSearchQuery(value);
                     // If search matches exactly one department, auto-select it
-                    const filtered = data.departments.filter(dept =>
-                      dept.name.toLowerCase().includes(value.toLowerCase().trim())
+                    const filtered = data.departments.filter((dept) =>
+                      dept.name
+                        .toLowerCase()
+                        .includes(value.toLowerCase().trim()),
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -441,7 +450,7 @@ export default function AuthorDashboard() {
                       setShowDeleteDialog(true);
                     }}
                     disabled={
-                      !departmentDetails || 
+                      !departmentDetails ||
                       departmentDetails.users.length > 0 ||
                       currentUser?.departmentId === departmentDetails.id
                     }
@@ -479,40 +488,42 @@ export default function AuthorDashboard() {
                           </div>
                           <div className="space-y-2">
                             {departmentDetails.users
-                              .filter(user => {
+                              .filter((user) => {
                                 if (!userSearchQuery.trim()) return true;
                                 const query = userSearchQuery.toLowerCase();
                                 return (
-                                  (user.name && user.name.toLowerCase().includes(query)) ||
-                                  (user.email && user.email.toLowerCase().includes(query))
+                                  (user.name &&
+                                    user.name.toLowerCase().includes(query)) ||
+                                  (user.email &&
+                                    user.email.toLowerCase().includes(query))
                                 );
                               })
-                              .map(user => (
-                              <div
-                                key={user.id}
-                                className="flex items-center justify-between rounded border p-3"
-                              >
-                                <div>
-                                  <div className="font-medium">
-                                    {user.name || "No name"}
+                              .map((user) => (
+                                <div
+                                  key={user.id}
+                                  className="flex items-center justify-between rounded border p-3"
+                                >
+                                  <div>
+                                    <div className="font-medium">
+                                      {user.name || "No name"}
+                                    </div>
+                                    <div className="text-muted-foreground text-sm">
+                                      {user.email}
+                                    </div>
                                   </div>
-                                  <div className="text-muted-foreground text-sm">
-                                    {user.email}
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline">{user.role}</Badge>
+                                    <UserEditModal
+                                      user={user}
+                                      onUserUpdate={handleUserUpdate}
+                                    />
+                                    <UserReassignmentModal
+                                      user={user}
+                                      onUserReassigned={handleUserUpdate}
+                                    />
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline">{user.role}</Badge>
-                                  <UserEditModal
-                                    user={user}
-                                    onUserUpdate={handleUserUpdate}
-                                  />
-                                  <UserReassignmentModal
-                                    user={user}
-                                    onUserReassigned={handleUserUpdate}
-                                  />
-                                </div>
-                              </div>
-                            ))}
+                              ))}
                           </div>
                         </div>
 
@@ -523,8 +534,8 @@ export default function AuthorDashboard() {
                           </h3>
                           <div className="space-y-2">
                             {departmentDetails.users
-                              .filter(user => user.role === "ADMIN")
-                              .map(admin => (
+                              .filter((user) => user.role === "ADMIN")
+                              .map((admin) => (
                                 <div
                                   key={admin.id}
                                   className="bg-muted rounded p-2"
@@ -547,19 +558,45 @@ export default function AuthorDashboard() {
                             departmentName={departmentDetails.name}
                             currentLogoUrl={departmentDetails.logoUrl}
                             currentLogoText={departmentDetails.logoText}
-                            currentAppDescription={departmentDetails.appDescription}
-                            currentDarkModeLogoUrl={departmentDetails.darkModeLogoUrl}
-                            currentFooterLinkSectionTitle={departmentDetails.footerLinkSectionTitle}
-                            currentFooterLink1Url={departmentDetails.footerLink1Url}
-                            currentFooterLink1Text={departmentDetails.footerLink1Text}
-                            currentFooterLink2Url={departmentDetails.footerLink2Url}
-                            currentFooterLink2Text={departmentDetails.footerLink2Text}
-                            currentFooterLink3Url={departmentDetails.footerLink3Url}
-                            currentFooterLink3Text={departmentDetails.footerLink3Text}
-                            currentFooterContactEmail={departmentDetails.footerContactEmail}
-                            currentFooterContactPhone={departmentDetails.footerContactPhone}
-                            currentFooterContactAddress={departmentDetails.footerContactAddress}
-                            currentFooterContactAddress2={departmentDetails.footerContactAddress2}
+                            currentAppDescription={
+                              departmentDetails.appDescription
+                            }
+                            currentDarkModeLogoUrl={
+                              departmentDetails.darkModeLogoUrl
+                            }
+                            currentFooterLinkSectionTitle={
+                              departmentDetails.footerLinkSectionTitle
+                            }
+                            currentFooterLink1Url={
+                              departmentDetails.footerLink1Url
+                            }
+                            currentFooterLink1Text={
+                              departmentDetails.footerLink1Text
+                            }
+                            currentFooterLink2Url={
+                              departmentDetails.footerLink2Url
+                            }
+                            currentFooterLink2Text={
+                              departmentDetails.footerLink2Text
+                            }
+                            currentFooterLink3Url={
+                              departmentDetails.footerLink3Url
+                            }
+                            currentFooterLink3Text={
+                              departmentDetails.footerLink3Text
+                            }
+                            currentFooterContactEmail={
+                              departmentDetails.footerContactEmail
+                            }
+                            currentFooterContactPhone={
+                              departmentDetails.footerContactPhone
+                            }
+                            currentFooterContactAddress={
+                              departmentDetails.footerContactAddress
+                            }
+                            currentFooterContactAddress2={
+                              departmentDetails.footerContactAddress2
+                            }
                           />
                         )}
                       </div>
@@ -588,7 +625,7 @@ export default function AuthorDashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {enrolledCourses.map(enrollment => (
+              {enrolledCourses.map((enrollment) => (
                 <div
                   key={enrollment.id}
                   className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors"

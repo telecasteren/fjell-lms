@@ -1,17 +1,22 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 async function createDevUser() {
   try {
     // Check if dev user already exists
-    const existing = await prisma.user.findUnique({ 
-      where: { email: "fox-author@dev.no" } 
+    const existing = await prisma.user.findUnique({
+      where: { email: "fox-author@dev.no" },
     });
-    
+
     if (existing) {
-      console.log("Dev user already exists:", existing.email, "Role:", existing.role);
+      console.log(
+        "Dev user already exists:",
+        existing.email,
+        "Role:",
+        existing.role,
+      );
       return existing;
     }
 
@@ -48,4 +53,3 @@ async function createDevUser() {
 }
 
 createDevUser();
-

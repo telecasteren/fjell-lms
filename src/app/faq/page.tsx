@@ -16,7 +16,7 @@ export default function FAQPage() {
   const [faqSections, setFaqSections] = useState<FAQSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   useEffect(() => {
@@ -48,57 +48,57 @@ export default function FAQPage() {
           // Headers
           .replace(
             /^### (.*$)/gim,
-            '<h3 class="text-lg font-semibold mb-3 mt-6 text-foreground">$1</h3>'
+            '<h3 class="text-lg font-semibold mb-3 mt-6 text-foreground">$1</h3>',
           )
           .replace(
             /^## (.*$)/gim,
-            '<h2 class="text-xl font-semibold mb-4 mt-8 text-foreground">$1</h2>'
+            '<h2 class="text-xl font-semibold mb-4 mt-8 text-foreground">$1</h2>',
           )
           .replace(
             /^# (.*$)/gim,
-            '<h1 class="text-2xl font-bold mb-6 mt-8 text-foreground">$1</h1>'
+            '<h1 class="text-2xl font-bold mb-6 mt-8 text-foreground">$1</h1>',
           )
 
           // Bold text
           .replace(
             /\*\*(.*?)\*\*/g,
-            '<strong class="font-semibold text-foreground">$1</strong>'
+            '<strong class="font-semibold text-foreground">$1</strong>',
           )
 
           // Lists
           .replace(
             /^- (.*$)/gim,
-            '<li class="mb-2 ml-4 text-muted-foreground">• $1</li>'
+            '<li class="mb-2 ml-4 text-muted-foreground">• $1</li>',
           )
           .replace(
             /^\* (.*$)/gim,
-            '<li class="mb-2 ml-4 text-muted-foreground">• $1</li>'
+            '<li class="mb-2 ml-4 text-muted-foreground">• $1</li>',
           )
 
           // Line breaks and paragraphs
           .replace(
             /\n\n/g,
-            '</p><p class="mb-4 text-muted-foreground leading-relaxed">'
+            '</p><p class="mb-4 text-muted-foreground leading-relaxed">',
           )
           .replace(/\n/g, "<br>")
 
           // Wrap in paragraph tags
           .replace(
             /^(?!<[h|l])/gm,
-            '<p class="mb-4 text-muted-foreground leading-relaxed">'
+            '<p class="mb-4 text-muted-foreground leading-relaxed">',
           )
           .replace(/(?<!>)$/gm, "</p>")
 
           // Clean up empty paragraphs
           .replace(
             /<p class="mb-4 text-muted-foreground leading-relaxed"><\/p>/g,
-            ""
+            "",
           )
 
           // Wrap lists in ul tags
           .replace(
             /(<li class="mb-2 ml-4 text-muted-foreground">[\s\S]*?<\/li>)/g,
-            '<ul class="mb-6 mt-4 space-y-2">$1</ul>'
+            '<ul class="mb-6 mt-4 space-y-2">$1</ul>',
           )
 
           // Clean up nested ul tags
@@ -111,7 +111,7 @@ export default function FAQPage() {
   };
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sectionId)) {
         newSet.delete(sectionId);
@@ -142,7 +142,7 @@ export default function FAQPage() {
         </div>
 
         <div className="space-y-4">
-          {faqSections.map(section => {
+          {faqSections.map((section) => {
             const isExpanded = expandedSections.has(section.id);
 
             return (

@@ -158,7 +158,7 @@ export default function CoursesPage() {
   }
 
   function isEnrolled(courseId: string) {
-    return enrollments.some(e => e.course.id === courseId);
+    return enrollments.some((e) => e.course.id === courseId);
   }
 
   function isAuthor() {
@@ -166,7 +166,11 @@ export default function CoursesPage() {
   }
 
   function canCreateCourse() {
-    return user?.role === "AUTHOR" || user?.role === "WRITER" || user?.role === "ADMIN";
+    return (
+      user?.role === "AUTHOR" ||
+      user?.role === "WRITER" ||
+      user?.role === "ADMIN"
+    );
   }
 
   // Check if user can view Get Started section (same roles as canCreateCourse)
@@ -177,27 +181,27 @@ export default function CoursesPage() {
 
   function canDeleteCourse(course: Course) {
     if (course.enrollmentCount > 0) return false;
-    
+
     // AUTHOR can delete any course
     if (isAuthor()) return true;
-    
+
     // WRITER and ADMIN can delete courses from their own department
     if (user?.role === "WRITER" || user?.role === "ADMIN") {
       return course.departmentId === user.departmentId;
     }
-    
+
     return false;
   }
 
   function canManageCourseStatus(course: Course) {
     // AUTHOR can manage status of any course
     if (isAuthor()) return true;
-    
+
     // WRITER and ADMIN can manage status of courses from their own department
     if (user?.role === "WRITER" || user?.role === "ADMIN") {
       return course.departmentId === user.departmentId;
     }
-    
+
     return false;
   }
 
@@ -212,7 +216,7 @@ export default function CoursesPage() {
     // ADMIN and WRITER see all courses from their own department (DRAFT, PUBLISHED, ARCHIVED)
     // but only published courses from other departments
     if (user.role === "ADMIN" || user.role === "WRITER") {
-      return courses.filter(course => {
+      return courses.filter((course) => {
         // Show all courses from their own department regardless of status
         if (course.departmentId === user.departmentId) {
           return true;
@@ -223,15 +227,17 @@ export default function CoursesPage() {
     }
 
     // BASIC only see published courses
-    return courses.filter(course => course.status === "PUBLISHED");
+    return courses.filter((course) => course.status === "PUBLISHED");
   }
 
   function getFoxLmsCourses() {
-    return courses.filter(course => course.isFoxLmsCourse && course.status === "PUBLISHED");
+    return courses.filter(
+      (course) => course.isFoxLmsCourse && course.status === "PUBLISHED",
+    );
   }
 
   function getNonFoxLmsCourses() {
-    return getFilteredCourses().filter(course => !course.isFoxLmsCourse);
+    return getFilteredCourses().filter((course) => !course.isFoxLmsCourse);
   }
 
   const foxLmsCourses = getFoxLmsCourses();
@@ -251,13 +257,13 @@ export default function CoursesPage() {
             <input
               placeholder="Title"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               className="bg-background rounded-md border px-3 py-2"
             />
             <textarea
               placeholder="Description"
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               className="bg-background rounded-md border px-3 py-2"
             />
             <Button onClick={createCourse}>Create</Button>
@@ -273,7 +279,8 @@ export default function CoursesPage() {
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">
-              Explore our foundational courses to get started with your learning journey.
+              Explore our foundational courses to get started with your learning
+              journey.
             </p>
             <Button
               variant="default"
@@ -286,127 +293,130 @@ export default function CoursesPage() {
       )}
 
       <div className="grid gap-3">
-        {getNonFoxLmsCourses().map(c => {
+        {getNonFoxLmsCourses().map((c) => {
           const canManage = canManageCourseStatus(c);
           const isArchived = c.status === "ARCHIVED";
-          
-          return (
-          <Card
-            key={c.id}
-            className={
-              isArchived && canManage ? "opacity-60" : ""
-            }
-          >
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle
-                  className={
-                    isArchived && canManage
-                      ? "text-muted-foreground"
-                      : ""
-                  }
-                >
-                  {c.title}
-                  {isArchived && canManage && (
-                    <span className="text-muted-foreground ml-2 text-xs">
-                      (Archived)
-                    </span>
-                  )}
-                </CardTitle>
-                <Badge variant={getStatusBadgeVariant(c.status)}>
-                  {c.status || "DRAFT"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground text-sm">{c.description}</p>
 
-              {/* Department name for ADMIN and BASIC users */}
-              {(user?.role === "ADMIN" || user?.role === "BASIC") &&
-                c.departmentName && (
-                  <div className="text-muted-foreground text-sm">
-                    <span className="font-medium">Department:</span>{" "}
-                    {c.departmentName}
+          return (
+            <Card
+              key={c.id}
+              className={isArchived && canManage ? "opacity-60" : ""}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle
+                    className={
+                      isArchived && canManage ? "text-muted-foreground" : ""
+                    }
+                  >
+                    {c.title}
+                    {isArchived && canManage && (
+                      <span className="text-muted-foreground ml-2 text-xs">
+                        (Archived)
+                      </span>
+                    )}
+                  </CardTitle>
+                  <Badge variant={getStatusBadgeVariant(c.status)}>
+                    {c.status || "DRAFT"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground text-sm">{c.description}</p>
+
+                {/* Department name for ADMIN and BASIC users */}
+                {(user?.role === "ADMIN" || user?.role === "BASIC") &&
+                  c.departmentName && (
+                    <div className="text-muted-foreground text-sm">
+                      <span className="font-medium">Department:</span>{" "}
+                      {c.departmentName}
+                    </div>
+                  )}
+
+                {/* Status Management for Authors, Writers, and Admins */}
+                {canManageCourseStatus(c) && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Status:</span>
+                    <Select
+                      value={c.status || "DRAFT"}
+                      onValueChange={(value) => updateCourseStatus(c.id, value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DRAFT">Draft</SelectItem>
+                        <SelectItem value="PUBLISHED">Published</SelectItem>
+                        <SelectItem value="ARCHIVED">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
 
-              {/* Status Management for Authors, Writers, and Admins */}
-              {canManageCourseStatus(c) && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Status:</span>
-                  <Select
-                    value={c.status || "DRAFT"}
-                    onValueChange={value => updateCourseStatus(c.id, value)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DRAFT">Draft</SelectItem>
-                      <SelectItem value="PUBLISHED">Published</SelectItem>
-                      <SelectItem value="ARCHIVED">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                {/* Manage button for users who can manage the course */}
-                {canManageCourseStatus(c) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => (window.location.href = `/courses/${c.id}`)}
-                  >
-                    Manage
-                  </Button>
-                )}
-                {isEnrolled(c.id) ? (
-                  <>
+                <div className="flex gap-2">
+                  {/* Manage button for users who can manage the course */}
+                  {canManageCourseStatus(c) && (
                     <Button
                       variant="outline"
-                      onClick={() => unenrollFromCourse(c.id)}
-                    >
-                      Leave Course
-                    </Button>
-                    <Button
-                      variant="secondary"
                       onClick={() =>
-                        (window.location.href = `/courses/${c.id}/learn`)
+                        (window.location.href = `/courses/${c.id}`)
                       }
                     >
-                      Learn
+                      Manage
                     </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="default"
-                    onClick={() => enrollInCourse(c.id)}
-                  >
-                    Enroll
-                  </Button>
-                )}
-                {(isAuthor() || user?.role === "WRITER" || user?.role === "ADMIN") && (
-                  <Button
-                    variant="destructive"
-                    disabled={!canDeleteCourse(c)}
-                    onClick={() => handleDeleteClick(c.id, c.title)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </div>
-
-              {/* Warning message for courses with enrollments */}
-              {(isAuthor() || user?.role === "WRITER" || user?.role === "ADMIN") && c.enrollmentCount > 0 && (
-                <div className="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-3">
-                  <p className="text-sm text-yellow-800">
-                    This course has active enrollments and cannot be deleted.
-                    You may still archive the course.
-                  </p>
+                  )}
+                  {isEnrolled(c.id) ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => unenrollFromCourse(c.id)}
+                      >
+                        Leave Course
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          (window.location.href = `/courses/${c.id}/learn`)
+                        }
+                      >
+                        Learn
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="default"
+                      onClick={() => enrollInCourse(c.id)}
+                    >
+                      Enroll
+                    </Button>
+                  )}
+                  {(isAuthor() ||
+                    user?.role === "WRITER" ||
+                    user?.role === "ADMIN") && (
+                    <Button
+                      variant="destructive"
+                      disabled={!canDeleteCourse(c)}
+                      onClick={() => handleDeleteClick(c.id, c.title)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {/* Warning message for courses with enrollments */}
+                {(isAuthor() ||
+                  user?.role === "WRITER" ||
+                  user?.role === "ADMIN") &&
+                  c.enrollmentCount > 0 && (
+                    <div className="mt-4 rounded-md border border-yellow-200 bg-yellow-50 p-3">
+                      <p className="text-sm text-yellow-800">
+                        This course has active enrollments and cannot be
+                        deleted. You may still archive the course.
+                      </p>
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
           );
         })}
       </div>

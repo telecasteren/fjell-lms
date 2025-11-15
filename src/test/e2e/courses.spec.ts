@@ -55,7 +55,7 @@ test.describe("Course Management - Author", () => {
 
     // Check for course management features
     const courseTitles = page.locator(
-      '[data-testid="course-title"], h3, .course-title'
+      '[data-testid="course-title"], h3, .course-title',
     );
     const selectElements = page.locator("select");
 
@@ -66,7 +66,7 @@ test.describe("Course Management - Author", () => {
 
       // Look for module/lesson management
       const managementButtons = page.locator(
-        'button:has-text("Add module"), button:has-text("Add lesson"), button:has-text("Edit")'
+        'button:has-text("Add module"), button:has-text("Add lesson"), button:has-text("Edit")',
       );
       if ((await managementButtons.count()) > 0) {
         await expect(managementButtons.first()).toBeVisible();
@@ -94,7 +94,7 @@ test.describe("Course Learning - Student", () => {
     // Check enroll functionality (make it optional since UI might vary)
     const enrollButtons = page.getByRole("button", { name: /enroll/i });
     const courseTitles = page.locator(
-      '[data-testid="course-title"], h3, .course-title'
+      '[data-testid="course-title"], h3, .course-title',
     );
 
     // Verify either enroll buttons exist OR we can navigate to course content
@@ -115,7 +115,7 @@ test.describe("Course Learning - Student", () => {
 
       // Check for learning features
       const learningFeatures = page.locator(
-        '[role="progressbar"], .progress, text=/progress|complete|quiz|question|answer/i'
+        '[role="progressbar"], .progress, text=/progress|complete|quiz|question|answer/i',
       );
       if ((await learningFeatures.count()) > 0) {
         await expect(learningFeatures.first()).toBeVisible();
@@ -123,7 +123,7 @@ test.describe("Course Learning - Student", () => {
 
       // Check for completion functionality
       const completionElements = page.locator(
-        'input[type="checkbox"], button:has-text("complete"), button:has-text("submit")'
+        'input[type="checkbox"], button:has-text("complete"), button:has-text("submit")',
       );
       if ((await completionElements.count()) > 0) {
         await expect(completionElements.first()).toBeVisible();

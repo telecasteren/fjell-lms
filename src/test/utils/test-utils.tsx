@@ -75,7 +75,7 @@ function customRender(
     session = null,
     theme = "light",
     ...renderOptions
-  }: CustomRenderOptions = {}
+  }: CustomRenderOptions = {},
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (

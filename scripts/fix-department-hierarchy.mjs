@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -17,14 +17,14 @@ async function fixDepartmentHierarchy() {
     });
 
     console.log("Current departments:");
-    departments.forEach(dept => {
+    departments.forEach((dept) => {
       console.log(`  - ${dept.name} (ID: ${dept.id})`);
       console.log(`    Parent: ${dept.parentDepartmentId || "None (root)"}`);
     });
 
     // Find FOX-LMS department
-    const foxLms = departments.find(d => d.name === "FOX-LMS");
-    
+    const foxLms = departments.find((d) => d.name === "FOX-LMS");
+
     if (!foxLms) {
       console.log("\n❌ FOX-LMS department not found!");
       console.log("Please create FOX-LMS department first.");
@@ -46,10 +46,10 @@ async function fixDepartmentHierarchy() {
     }
 
     // Find other departments (excluding FOX-LMS)
-    const otherDepartments = departments.filter(d => d.name !== "FOX-LMS");
-    
+    const otherDepartments = departments.filter((d) => d.name !== "FOX-LMS");
+
     console.log(`\nFound ${otherDepartments.length} other department(s):`);
-    otherDepartments.forEach(dept => {
+    otherDepartments.forEach((dept) => {
       console.log(`  - ${dept.name}`);
     });
 
@@ -86,17 +86,16 @@ async function fixDepartmentHierarchy() {
       orderBy: { name: "asc" },
     });
 
-    finalDepartments.forEach(dept => {
+    finalDepartments.forEach((dept) => {
       if (!dept.parentDepartmentId) {
         console.log(`\n📁 ${dept.name} (ROOT)`);
         if (dept.subDepartments.length > 0) {
-          dept.subDepartments.forEach(sub => {
+          dept.subDepartments.forEach((sub) => {
             console.log(`   └── ${sub.name}`);
           });
         }
       }
     });
-
   } catch (error) {
     console.error("Error fixing department hierarchy:", error);
     throw error;
@@ -106,4 +105,3 @@ async function fixDepartmentHierarchy() {
 }
 
 fixDepartmentHierarchy();
-

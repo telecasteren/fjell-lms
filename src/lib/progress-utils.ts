@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
  */
 export async function isLessonCompleted(
   userId: string,
-  lessonId: string
+  lessonId: string,
 ): Promise<boolean> {
   try {
     // Check Progress table first
@@ -29,7 +29,7 @@ export async function isLessonCompleted(
  */
 export async function getLessonCompletions(
   userId: string,
-  lessonIds: string[]
+  lessonIds: string[],
 ): Promise<Record<string, boolean>> {
   if (lessonIds.length === 0) return {};
 
@@ -47,12 +47,12 @@ export async function getLessonCompletions(
     const completionMap: Record<string, boolean> = {};
 
     // Initialize all lessons as not completed
-    lessonIds.forEach(lessonId => {
+    lessonIds.forEach((lessonId) => {
       completionMap[lessonId] = false;
     });
 
     // Mark lessons as completed based on progress records
-    progressRecords.forEach(progress => {
+    progressRecords.forEach((progress) => {
       completionMap[progress.lessonId] = true;
     });
 
@@ -61,7 +61,7 @@ export async function getLessonCompletions(
     console.error("Error in getLessonCompletions:", error);
     // Return empty completion map
     const completionMap: Record<string, boolean> = {};
-    lessonIds.forEach(lessonId => {
+    lessonIds.forEach((lessonId) => {
       completionMap[lessonId] = false;
     });
     return completionMap;
@@ -73,7 +73,7 @@ export async function getLessonCompletions(
  */
 export async function calculateCourseProgress(
   userId: string,
-  courseId: string
+  courseId: string,
 ): Promise<{
   completedCount: number;
   totalCount: number;
@@ -93,7 +93,7 @@ export async function calculateCourseProgress(
     return { completedCount: 0, totalCount: 0, percentage: 0 };
   }
 
-  const lessonIds = lessons.map(l => l.id);
+  const lessonIds = lessons.map((l) => l.id);
   const completionMap = await getLessonCompletions(userId, lessonIds);
 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
@@ -147,17 +147,17 @@ export async function calculateOverallProgress(userId: string): Promise<{
       select: { lessonId: true },
     });
 
-    const completedLessonIds = new Set(allProgress.map(p => p.lessonId));
+    const completedLessonIds = new Set(allProgress.map((p) => p.lessonId));
 
     for (const enrollment of enrollments) {
       const courseLessons = enrollment.course.modules.flatMap(
-        module => module.lessons
+        (module) => module.lessons,
       );
-      const courseLessonIds = courseLessons.map(lesson => lesson.id);
+      const courseLessonIds = courseLessons.map((lesson) => lesson.id);
       totalLessons += courseLessonIds.length;
 
-      const courseCompletedLessons = courseLessonIds.filter(id =>
-        completedLessonIds.has(id)
+      const courseCompletedLessons = courseLessonIds.filter((id) =>
+        completedLessonIds.has(id),
       ).length;
       completedLessons += courseCompletedLessons;
 

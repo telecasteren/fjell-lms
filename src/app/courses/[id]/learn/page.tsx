@@ -92,8 +92,8 @@ export default function LearnPage({
   // Auto-complete lessons with mandatory quizzes that have been passed
   useEffect(() => {
     if (!lessons.length || !progress) return;
-    
-    const lessonsToComplete = lessons.filter(lesson => {
+
+    const lessonsToComplete = lessons.filter((lesson) => {
       const isMandatoryQuiz = lesson.quiz?.mandatory ?? false;
       const hasPassedQuiz = lesson.quizCompletion?.passed ?? false;
       const isNotCompleted = !progress.progressMap[lesson.id]?.completed;
@@ -101,7 +101,7 @@ export default function LearnPage({
     });
 
     if (lessonsToComplete.length > 0) {
-      lessonsToComplete.forEach(lesson => {
+      lessonsToComplete.forEach((lesson) => {
         toggleLessonCompletion(lesson.id, true);
       });
     }
@@ -130,7 +130,7 @@ export default function LearnPage({
                 title: moduleData.title,
                 order: moduleData.order,
               },
-            })
+            }),
           );
           allLessons.push(...lessonsWithModule);
         }
@@ -189,13 +189,15 @@ export default function LearnPage({
             options?: string[];
             correctAnswers?: number[];
           };
-          const questions = (data.quiz.questions || []).map((q: QuizQuestion) => ({
-            ...q,
-            type: q.type || "checkbox", // Default to checkbox if type is missing
-            options: q.options || [],
-            correctAnswers: q.correctAnswers || [],
-          }));
-          
+          const questions = (data.quiz.questions || []).map(
+            (q: QuizQuestion) => ({
+              ...q,
+              type: q.type || "checkbox", // Default to checkbox if type is missing
+              options: q.options || [],
+              correctAnswers: q.correctAnswers || [],
+            }),
+          );
+
           // Only open quiz if it has questions
           if (questions.length > 0) {
             const quiz = {
@@ -221,10 +223,10 @@ export default function LearnPage({
     const lessonId = currentLessonId;
     setCurrentQuiz(null);
     setCurrentLessonId(null);
-    
+
     // Refresh lessons to update quiz completion status
     await loadLessons();
-    
+
     // If quiz is passed, automatically mark lesson as completed
     // This ensures the lesson is completed when mandatory quiz is passed
     if (passed && lessonId) {
@@ -276,7 +278,7 @@ export default function LearnPage({
       </div>
 
       <div className="space-y-4">
-        {lessons.map(lesson => {
+        {lessons.map((lesson) => {
           const lessonProgress = progress.progressMap[lesson.id];
           const isCompleted = lessonProgress?.completed || false;
           // A quiz only exists if it has an ID (API now filters out quizzes without questions)
@@ -287,7 +289,8 @@ export default function LearnPage({
           const canComplete = !hasQuiz || !isMandatoryQuiz || hasPassedQuiz;
           // If mandatory quiz is passed, automatically mark as completed and disable checkbox
           const shouldAutoComplete = isMandatoryQuiz && hasPassedQuiz;
-          const isCheckboxDisabled = loading || !canComplete || shouldAutoComplete;
+          const isCheckboxDisabled =
+            loading || !canComplete || shouldAutoComplete;
           const isCheckboxChecked = isCompleted || shouldAutoComplete;
 
           return (
@@ -296,7 +299,7 @@ export default function LearnPage({
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={isCheckboxChecked}
-                    onCheckedChange={checked => {
+                    onCheckedChange={(checked) => {
                       // Prevent unchecking if mandatory quiz is passed
                       if (shouldAutoComplete) return;
                       toggleLessonCompletion(lesson.id, checked === true);
@@ -311,7 +314,7 @@ export default function LearnPage({
                       <p className="text-muted-foreground text-sm">
                         Completed on{" "}
                         {new Date(
-                          lessonProgress.completedAt
+                          lessonProgress.completedAt,
                         ).toLocaleDateString()}
                       </p>
                     )}
@@ -323,96 +326,112 @@ export default function LearnPage({
                   </div>
                 </div>
               </CardHeader>
-              {(lesson.content || (lesson.contentType === "multimedia" && lesson.multimediaFiles && lesson.multimediaFiles.length > 0)) && (
+              {(lesson.content ||
+                (lesson.contentType === "multimedia" &&
+                  lesson.multimediaFiles &&
+                  lesson.multimediaFiles.length > 0)) && (
                 <CardContent>
                   {lesson.contentType === "multimedia" ? (
                     <div className="space-y-4">
                       {/* Render embed code if present */}
-                      {lesson.content && (() => {
-                        const embedMatch = lesson.content.match(/<!--EMBED_START-->([\s\S]*?)<!--EMBED_END-->/);
-                        const textMatch = lesson.content.match(/<!--TEXT_START-->([\s\S]*?)<!--TEXT_END-->/);
-                        
-                        return (
-                          <>
-                            {embedMatch && (
-                              <div
-                                className="w-full"
-                                dangerouslySetInnerHTML={{ __html: embedMatch[1].trim() }}
-                              />
-                            )}
-                            {/* Render uploaded multimedia files */}
-                            {lesson.multimediaFiles && lesson.multimediaFiles.length > 0 && (
-                              <div className="space-y-4">
-                                {lesson.multimediaFiles.map((file) => (
-                                  <div key={file.id} className="space-y-2">
-                                    {file.type?.startsWith("image/") && (
-                                      <Image
-                                        src={file.url}
-                                        alt={file.name}
-                                        width={800}
-                                        height={600}
-                                        className="w-full h-auto rounded-md"
-                                        unoptimized
-                                      />
-                                    )}
-                                    {file.type?.startsWith("video/") && (
-                                      <video
-                                        src={file.url}
-                                        controls
-                                        className="w-full rounded-md bg-black"
-                                      >
-                                        Your browser does not support the video tag.
-                                      </video>
-                                    )}
+                      {lesson.content &&
+                        (() => {
+                          const embedMatch = lesson.content.match(
+                            /<!--EMBED_START-->([\s\S]*?)<!--EMBED_END-->/,
+                          );
+                          const textMatch = lesson.content.match(
+                            /<!--TEXT_START-->([\s\S]*?)<!--TEXT_END-->/,
+                          );
+
+                          return (
+                            <>
+                              {embedMatch && (
+                                <div
+                                  className="w-full"
+                                  dangerouslySetInnerHTML={{
+                                    __html: embedMatch[1].trim(),
+                                  }}
+                                />
+                              )}
+                              {/* Render uploaded multimedia files */}
+                              {lesson.multimediaFiles &&
+                                lesson.multimediaFiles.length > 0 && (
+                                  <div className="space-y-4">
+                                    {lesson.multimediaFiles.map((file) => (
+                                      <div key={file.id} className="space-y-2">
+                                        {file.type?.startsWith("image/") && (
+                                          <Image
+                                            src={file.url}
+                                            alt={file.name}
+                                            width={800}
+                                            height={600}
+                                            className="w-full h-auto rounded-md"
+                                            unoptimized
+                                          />
+                                        )}
+                                        {file.type?.startsWith("video/") && (
+                                          <video
+                                            src={file.url}
+                                            controls
+                                            className="w-full rounded-md bg-black"
+                                          >
+                                            Your browser does not support the
+                                            video tag.
+                                          </video>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
-                              </div>
-                            )}
-                            {/* Render text content if present */}
-                            {textMatch && (
-                              <div
-                                className={cn(
-                                  "prose prose-sm dark:prose-invert max-w-none",
-                                  // Typography styling
-                                  "[&_p]:mb-2 [&_p]:last:mb-0",
-                                  "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6",
-                                  "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-6",
-                                  "[&_li]:my-1",
-                                  "[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2",
-                                  "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2",
-                                  "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:mt-2 [&_h3]:mb-2",
-                                  "[&_strong]:font-bold",
-                                  "[&_em]:italic",
-                                  "[&_u]:underline",
-                                  "[&_mark]:bg-yellow-200 [&_mark]:dark:bg-yellow-800 [&_mark]:px-0.5 [&_mark]:rounded",
-                                  "[&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono",
-                                  "[&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-2",
-                                  "[&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary/80 [&_a]:cursor-pointer",
-                                  "[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md [&_img]:my-4",
-                                  // Table styling
-                                  "[&_table]:border-collapse [&_table]:border [&_table]:border-border [&_table]:my-4 [&_table]:w-full",
-                                  "[&_table_td]:border [&_table_td]:border-border [&_table_td]:px-3 [&_table_td]:py-2 [&_table_td]:min-w-[100px]",
-                                  "[&_table_th]:border [&_table_th]:border-border [&_table_th]:px-3 [&_table_th]:py-2 [&_table_th]:bg-muted [&_table_th]:font-semibold [&_table_th]:text-left",
-                                  "[&_table_tr]:border-b [&_table_tr]:border-border",
-                                  // Text alignment styling
-                                  "[&_[style*='text-align:left']]:text-left",
-                                  "[&_[style*='text-align:center']]:text-center",
-                                  "[&_[style*='text-align:right']]:text-right",
-                                  "[&_[style*='text-align:justify']]:text-justify"
                                 )}
-                                dangerouslySetInnerHTML={{ __html: textMatch[1].trim() }}
-                              />
-                            )}
-                            {/* Backward compatibility: if no markers, render content as-is */}
-                            {!embedMatch && !textMatch && lesson.content && (
-                              <div
-                                className="w-full"
-                                dangerouslySetInnerHTML={{ __html: lesson.content }}
-                              />
-                            )}
-                          </>
-                        );
-                      })()}
+                              {/* Render text content if present */}
+                              {textMatch && (
+                                <div
+                                  className={cn(
+                                    "prose prose-sm dark:prose-invert max-w-none",
+                                    // Typography styling
+                                    "[&_p]:mb-2 [&_p]:last:mb-0",
+                                    "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6",
+                                    "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-6",
+                                    "[&_li]:my-1",
+                                    "[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2",
+                                    "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2",
+                                    "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:mt-2 [&_h3]:mb-2",
+                                    "[&_strong]:font-bold",
+                                    "[&_em]:italic",
+                                    "[&_u]:underline",
+                                    "[&_mark]:bg-yellow-200 [&_mark]:dark:bg-yellow-800 [&_mark]:px-0.5 [&_mark]:rounded",
+                                    "[&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono",
+                                    "[&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-2",
+                                    "[&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary/80 [&_a]:cursor-pointer",
+                                    "[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md [&_img]:my-4",
+                                    // Table styling
+                                    "[&_table]:border-collapse [&_table]:border [&_table]:border-border [&_table]:my-4 [&_table]:w-full",
+                                    "[&_table_td]:border [&_table_td]:border-border [&_table_td]:px-3 [&_table_td]:py-2 [&_table_td]:min-w-[100px]",
+                                    "[&_table_th]:border [&_table_th]:border-border [&_table_th]:px-3 [&_table_th]:py-2 [&_table_th]:bg-muted [&_table_th]:font-semibold [&_table_th]:text-left",
+                                    "[&_table_tr]:border-b [&_table_tr]:border-border",
+                                    // Text alignment styling
+                                    "[&_[style*='text-align:left']]:text-left",
+                                    "[&_[style*='text-align:center']]:text-center",
+                                    "[&_[style*='text-align:right']]:text-right",
+                                    "[&_[style*='text-align:justify']]:text-justify",
+                                  )}
+                                  dangerouslySetInnerHTML={{
+                                    __html: textMatch[1].trim(),
+                                  }}
+                                />
+                              )}
+                              {/* Backward compatibility: if no markers, render content as-is */}
+                              {!embedMatch && !textMatch && lesson.content && (
+                                <div
+                                  className="w-full"
+                                  dangerouslySetInnerHTML={{
+                                    __html: lesson.content,
+                                  }}
+                                />
+                              )}
+                            </>
+                          );
+                        })()}
                     </div>
                   ) : (
                     <div
@@ -443,7 +462,7 @@ export default function LearnPage({
                         "[&_[style*='text-align:left']]:text-left",
                         "[&_[style*='text-align:center']]:text-center",
                         "[&_[style*='text-align:right']]:text-right",
-                        "[&_[style*='text-align:justify']]:text-justify"
+                        "[&_[style*='text-align:justify']]:text-justify",
                       )}
                       dangerouslySetInnerHTML={{ __html: lesson.content || "" }}
                     />
@@ -481,22 +500,22 @@ export default function LearnPage({
                     size="sm"
                     onClick={async () => {
                       if (!lesson.quiz?.id) return;
-                      
+
                       // Delete quiz completion
                       const res = await fetch(
                         `/api/quiz-completion?quizId=${lesson.quiz.id}`,
                         {
                           method: "DELETE",
                           credentials: "include",
-                        }
+                        },
                       );
-                      
+
                       if (res.ok) {
                         // Refresh lessons and progress
                         await loadLessons();
                         await loadProgress();
                         refreshAllDashboards();
-                        
+
                         // Open the quiz again
                         openQuiz(lesson.id);
                       }

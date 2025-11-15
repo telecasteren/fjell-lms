@@ -49,32 +49,54 @@ export function DepartmentBrandingSettings({
   currentFooterContactAddress2,
 }: DepartmentBrandingSettingsProps) {
   const [logoText, setLogoText] = useState(currentLogoText || "FOX-LMS");
-  const [appDescription, setAppDescription] = useState(currentAppDescription || "");
+  const [appDescription, setAppDescription] = useState(
+    currentAppDescription || "",
+  );
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(
-    currentLogoUrl || null
+    currentLogoUrl || null,
   );
   const [useSameLogoForDarkMode, setUseSameLogoForDarkMode] = useState(
-    !currentDarkModeLogoUrl
+    !currentDarkModeLogoUrl,
   );
   const [darkModeLogoFile, setDarkModeLogoFile] = useState<File | null>(null);
   const [darkModeLogoPreview, setDarkModeLogoPreview] = useState<string | null>(
-    currentDarkModeLogoUrl || null
+    currentDarkModeLogoUrl || null,
   );
   // Footer fields
   const [footerLinkSectionTitle, setFooterLinkSectionTitle] = useState(
-    currentFooterLinkSectionTitle || ""
+    currentFooterLinkSectionTitle || "",
   );
-  const [footerLink1Url, setFooterLink1Url] = useState(currentFooterLink1Url || "");
-  const [footerLink1Text, setFooterLink1Text] = useState(currentFooterLink1Text || "");
-  const [footerLink2Url, setFooterLink2Url] = useState(currentFooterLink2Url || "");
-  const [footerLink2Text, setFooterLink2Text] = useState(currentFooterLink2Text || "");
-  const [footerLink3Url, setFooterLink3Url] = useState(currentFooterLink3Url || "");
-  const [footerLink3Text, setFooterLink3Text] = useState(currentFooterLink3Text || "");
-  const [footerContactEmail, setFooterContactEmail] = useState(currentFooterContactEmail || "");
-  const [footerContactPhone, setFooterContactPhone] = useState(currentFooterContactPhone || "");
-  const [footerContactAddress, setFooterContactAddress] = useState(currentFooterContactAddress || "");
-  const [footerContactAddress2, setFooterContactAddress2] = useState(currentFooterContactAddress2 || "");
+  const [footerLink1Url, setFooterLink1Url] = useState(
+    currentFooterLink1Url || "",
+  );
+  const [footerLink1Text, setFooterLink1Text] = useState(
+    currentFooterLink1Text || "",
+  );
+  const [footerLink2Url, setFooterLink2Url] = useState(
+    currentFooterLink2Url || "",
+  );
+  const [footerLink2Text, setFooterLink2Text] = useState(
+    currentFooterLink2Text || "",
+  );
+  const [footerLink3Url, setFooterLink3Url] = useState(
+    currentFooterLink3Url || "",
+  );
+  const [footerLink3Text, setFooterLink3Text] = useState(
+    currentFooterLink3Text || "",
+  );
+  const [footerContactEmail, setFooterContactEmail] = useState(
+    currentFooterContactEmail || "",
+  );
+  const [footerContactPhone, setFooterContactPhone] = useState(
+    currentFooterContactPhone || "",
+  );
+  const [footerContactAddress, setFooterContactAddress] = useState(
+    currentFooterContactAddress || "",
+  );
+  const [footerContactAddress2, setFooterContactAddress2] = useState(
+    currentFooterContactAddress2 || "",
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -184,7 +206,7 @@ export function DepartmentBrandingSettings({
       formData.append("appDescription", appDescription);
       formData.append(
         "useSameLogoForDarkMode",
-        useSameLogoForDarkMode.toString()
+        useSameLogoForDarkMode.toString(),
       );
       // Footer fields
       formData.append("footerLinkSectionTitle", footerLinkSectionTitle);
@@ -216,7 +238,7 @@ export function DepartmentBrandingSettings({
       if (res.ok) {
         const data = await res.json();
         toast.success(
-          data.message || "Department branding updated successfully"
+          data.message || "Department branding updated successfully",
         );
         setLogoFile(null);
         setDarkModeLogoFile(null);
@@ -256,7 +278,8 @@ export function DepartmentBrandingSettings({
                   placeholder="FOX-LMS"
                 />
                 <p className="text-muted-foreground text-xs">
-                  This text will appear next to your logo in the navbar and footer
+                  This text will appear next to your logo in the navbar and
+                  footer
                 </p>
               </div>
 
@@ -281,8 +304,8 @@ export function DepartmentBrandingSettings({
                     Use same logo for dark theme
                   </Label>
                   <p className="text-muted-foreground text-xs">
-                    When enabled, the light theme logo will be used for dark theme
-                    as well
+                    When enabled, the light theme logo will be used for dark
+                    theme as well
                   </p>
                 </div>
                 <Switch
@@ -307,7 +330,9 @@ export function DepartmentBrandingSettings({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Sun className="h-4 w-4" />
-                    <Label className="text-sm font-medium">Light Theme Logo</Label>
+                    <Label className="text-sm font-medium">
+                      Light Theme Logo
+                    </Label>
                   </div>
                   {logoPreview ? (
                     <div className="relative inline-block h-32 w-32 rounded border">
@@ -348,7 +373,9 @@ export function DepartmentBrandingSettings({
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => document.getElementById("logo-upload")?.click()}
+                      onClick={() =>
+                        document.getElementById("logo-upload")?.click()
+                      }
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       {logoPreview ? "Change Light Logo" : "Upload Light Logo"}
@@ -361,7 +388,9 @@ export function DepartmentBrandingSettings({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Moon className="h-4 w-4" />
-                      <Label className="text-sm font-medium">Dark Theme Logo</Label>
+                      <Label className="text-sm font-medium">
+                        Dark Theme Logo
+                      </Label>
                     </div>
                     {darkModeLogoPreview ? (
                       <div className="relative inline-block h-32 w-32 rounded border">
@@ -426,10 +455,12 @@ export function DepartmentBrandingSettings({
         {/* Footer Settings */}
         <div className="space-y-4 border-t pt-6">
           <Label className="text-base font-semibold">Footer Settings</Label>
-          
+
           {/* Footer Link Section Title */}
           <div className="space-y-2">
-            <Label htmlFor="footer-link-section-title">Link Section Title</Label>
+            <Label htmlFor="footer-link-section-title">
+              Link Section Title
+            </Label>
             <Input
               id="footer-link-section-title"
               value={footerLinkSectionTitle}
@@ -444,11 +475,13 @@ export function DepartmentBrandingSettings({
           {/* Footer Links */}
           <div className="space-y-4">
             <Label>Footer Links (up to 3)</Label>
-            
+
             {/* Link 1 */}
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label htmlFor="footer-link-1-text" className="text-xs">Link 1 Text</Label>
+                <Label htmlFor="footer-link-1-text" className="text-xs">
+                  Link 1 Text
+                </Label>
                 <Input
                   id="footer-link-1-text"
                   value={footerLink1Text}
@@ -457,7 +490,9 @@ export function DepartmentBrandingSettings({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="footer-link-1-url" className="text-xs">Link 1 URL</Label>
+                <Label htmlFor="footer-link-1-url" className="text-xs">
+                  Link 1 URL
+                </Label>
                 <Input
                   id="footer-link-1-url"
                   value={footerLink1Url}
@@ -470,7 +505,9 @@ export function DepartmentBrandingSettings({
             {/* Link 2 */}
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label htmlFor="footer-link-2-text" className="text-xs">Link 2 Text</Label>
+                <Label htmlFor="footer-link-2-text" className="text-xs">
+                  Link 2 Text
+                </Label>
                 <Input
                   id="footer-link-2-text"
                   value={footerLink2Text}
@@ -479,7 +516,9 @@ export function DepartmentBrandingSettings({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="footer-link-2-url" className="text-xs">Link 2 URL</Label>
+                <Label htmlFor="footer-link-2-url" className="text-xs">
+                  Link 2 URL
+                </Label>
                 <Input
                   id="footer-link-2-url"
                   value={footerLink2Url}
@@ -492,7 +531,9 @@ export function DepartmentBrandingSettings({
             {/* Link 3 */}
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label htmlFor="footer-link-3-text" className="text-xs">Link 3 Text</Label>
+                <Label htmlFor="footer-link-3-text" className="text-xs">
+                  Link 3 Text
+                </Label>
                 <Input
                   id="footer-link-3-text"
                   value={footerLink3Text}
@@ -501,7 +542,9 @@ export function DepartmentBrandingSettings({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="footer-link-3-url" className="text-xs">Link 3 URL</Label>
+                <Label htmlFor="footer-link-3-url" className="text-xs">
+                  Link 3 URL
+                </Label>
                 <Input
                   id="footer-link-3-url"
                   value={footerLink3Url}
@@ -514,11 +557,13 @@ export function DepartmentBrandingSettings({
 
           {/* Contact Section */}
           <div className="space-y-4 border-t pt-4">
-            <Label className="text-base font-semibold">Contact Information</Label>
+            <Label className="text-base font-semibold">
+              Contact Information
+            </Label>
             <p className="text-muted-foreground text-xs">
               Contact information will be displayed in the footer
             </p>
-            
+
             <div className="space-y-2">
               <Label htmlFor="footer-contact-email">Email</Label>
               <Input

@@ -4,7 +4,7 @@ import { requireAuthorOnly } from "@/lib/rbac";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireAuthorOnly(req);
@@ -14,7 +14,7 @@ export async function PATCH(
     if (!departmentId) {
       return NextResponse.json(
         { error: "Department ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,7 +26,7 @@ export async function PATCH(
     if (!department) {
       return NextResponse.json(
         { error: "Department not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -50,7 +50,7 @@ export async function PATCH(
     if (id === user.id) {
       return NextResponse.json(
         { error: "Cannot reassign yourself" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -74,7 +74,7 @@ export async function PATCH(
     });
 
     const newDepartmentCourseIds = newDepartmentCourses.map(
-      course => course.id
+      (course) => course.id,
     );
 
     // Remove enrollments from courses not in the new department
@@ -100,7 +100,7 @@ export async function PATCH(
     });
 
     const lessonIdsInNewDepartment = lessonsInNewDepartment.map(
-      lesson => lesson.id
+      (lesson) => lesson.id,
     );
 
     await prisma.progress.deleteMany({
@@ -121,7 +121,7 @@ export async function PATCH(
     console.error("Error reassigning user:", error);
     return NextResponse.json(
       { error: "Failed to reassign user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

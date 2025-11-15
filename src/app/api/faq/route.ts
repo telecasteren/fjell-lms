@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
           process.cwd(),
           "public",
           "faq",
-          section.file
+          section.file,
         );
         const content = fs.readFileSync(filePath, "utf8");
 

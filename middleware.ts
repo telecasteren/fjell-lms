@@ -8,7 +8,7 @@ export default async function middleware(req: NextRequest) {
     nextUrl.pathname.startsWith("/sign-in") ||
     nextUrl.pathname.startsWith("/sign-up");
   const isApiAuth = nextUrl.pathname.startsWith("/api/auth");
-  
+
   // Create response and set x-pathname header for layout to use
   const response = NextResponse.next();
   response.headers.set("x-pathname", nextUrl.pathname);
@@ -17,16 +17,16 @@ export default async function middleware(req: NextRequest) {
   if (isApiAuth || isAuthRoute) {
     // Clear any stale NextAuth cookies on auth pages to prevent JWT errors
     const cookiesToClear = [
-      'next-auth.session-token',
-      '__Secure-next-auth.session-token',
-      '__Host-next-auth.csrf-token',
-      'next-auth.callback-url',
+      "next-auth.session-token",
+      "__Secure-next-auth.session-token",
+      "__Host-next-auth.csrf-token",
+      "next-auth.callback-url",
     ];
-    
-    cookiesToClear.forEach(cookieName => {
+
+    cookiesToClear.forEach((cookieName) => {
       response.cookies.delete(cookieName);
     });
-    
+
     return response;
   }
 
@@ -51,7 +51,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
 };

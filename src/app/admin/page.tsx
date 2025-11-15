@@ -247,8 +247,8 @@ export default function AdminPage() {
   }
 
   // Check if user is an ADMIN in a child department of FOX-LMS
-  const canCreateDepartment = 
-    currentUserRole === "ADMIN" && 
+  const canCreateDepartment =
+    currentUserRole === "ADMIN" &&
     departmentStats?.department?.parentDepartment?.name === "FOX-LMS";
 
   return (
@@ -349,13 +349,15 @@ export default function AdminPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {(departmentSearchQuery.trim()
-                      ? departments.filter(dept =>
+                      ? departments.filter((dept) =>
                           dept.name
                             .toLowerCase()
-                            .includes(departmentSearchQuery.toLowerCase().trim())
+                            .includes(
+                              departmentSearchQuery.toLowerCase().trim(),
+                            ),
                         )
                       : departments
-                    ).map(dept => (
+                    ).map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name} ({dept._count.users} users,{" "}
                         {dept._count.courses} courses)
@@ -367,8 +369,10 @@ export default function AdminPage() {
                   value={departmentSearchQuery}
                   onChange={(value) => {
                     setDepartmentSearchQuery(value);
-                    const filtered = departments.filter(dept =>
-                      dept.name.toLowerCase().includes(value.toLowerCase().trim())
+                    const filtered = departments.filter((dept) =>
+                      dept.name
+                        .toLowerCase()
+                        .includes(value.toLowerCase().trim()),
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -387,7 +391,9 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Completion Rate</CardTitle>
+                        <CardTitle className="text-sm">
+                          Completion Rate
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
@@ -461,37 +467,45 @@ export default function AdminPage() {
                             </div>
                             <div className="space-y-2">
                               {departmentDetails.users
-                                .filter(user => {
-                                  if (!configureUserSearchQuery.trim()) return true;
-                                  const query = configureUserSearchQuery.toLowerCase();
+                                .filter((user) => {
+                                  if (!configureUserSearchQuery.trim())
+                                    return true;
+                                  const query =
+                                    configureUserSearchQuery.toLowerCase();
                                   return (
-                                    (user.name && user.name.toLowerCase().includes(query)) ||
-                                    (user.email && user.email.toLowerCase().includes(query))
+                                    (user.name &&
+                                      user.name
+                                        .toLowerCase()
+                                        .includes(query)) ||
+                                    (user.email &&
+                                      user.email.toLowerCase().includes(query))
                                   );
                                 })
-                                .map(user => (
-                                <div
-                                  key={user.id}
-                                  className="flex items-center justify-between rounded border p-3"
-                                >
-                                  <div>
-                                    <div className="font-medium">
-                                      {user.name || "No name"}
+                                .map((user) => (
+                                  <div
+                                    key={user.id}
+                                    className="flex items-center justify-between rounded border p-3"
+                                  >
+                                    <div>
+                                      <div className="font-medium">
+                                        {user.name || "No name"}
+                                      </div>
+                                      <div className="text-muted-foreground text-sm">
+                                        {user.email}
+                                      </div>
                                     </div>
-                                    <div className="text-muted-foreground text-sm">
-                                      {user.email}
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline">
+                                        {user.role}
+                                      </Badge>
+                                      <AdminUserEditModal
+                                        user={user}
+                                        onUserUpdate={handleUserUpdate}
+                                        currentUserRole={currentUserRole}
+                                      />
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline">{user.role}</Badge>
-                                    <AdminUserEditModal
-                                      user={user}
-                                      onUserUpdate={handleUserUpdate}
-                                      currentUserRole={currentUserRole}
-                                    />
-                                  </div>
-                                </div>
-                              ))}
+                                ))}
                             </div>
                           </div>
 
@@ -502,19 +516,45 @@ export default function AdminPage() {
                               departmentName={departmentDetails.name}
                               currentLogoUrl={departmentDetails.logoUrl}
                               currentLogoText={departmentDetails.logoText}
-                              currentAppDescription={departmentDetails.appDescription}
-                              currentDarkModeLogoUrl={departmentDetails.darkModeLogoUrl}
-                              currentFooterLinkSectionTitle={departmentDetails.footerLinkSectionTitle}
-                              currentFooterLink1Url={departmentDetails.footerLink1Url}
-                              currentFooterLink1Text={departmentDetails.footerLink1Text}
-                              currentFooterLink2Url={departmentDetails.footerLink2Url}
-                              currentFooterLink2Text={departmentDetails.footerLink2Text}
-                              currentFooterLink3Url={departmentDetails.footerLink3Url}
-                              currentFooterLink3Text={departmentDetails.footerLink3Text}
-                              currentFooterContactEmail={departmentDetails.footerContactEmail}
-                              currentFooterContactPhone={departmentDetails.footerContactPhone}
-                              currentFooterContactAddress={departmentDetails.footerContactAddress}
-                              currentFooterContactAddress2={departmentDetails.footerContactAddress2}
+                              currentAppDescription={
+                                departmentDetails.appDescription
+                              }
+                              currentDarkModeLogoUrl={
+                                departmentDetails.darkModeLogoUrl
+                              }
+                              currentFooterLinkSectionTitle={
+                                departmentDetails.footerLinkSectionTitle
+                              }
+                              currentFooterLink1Url={
+                                departmentDetails.footerLink1Url
+                              }
+                              currentFooterLink1Text={
+                                departmentDetails.footerLink1Text
+                              }
+                              currentFooterLink2Url={
+                                departmentDetails.footerLink2Url
+                              }
+                              currentFooterLink2Text={
+                                departmentDetails.footerLink2Text
+                              }
+                              currentFooterLink3Url={
+                                departmentDetails.footerLink3Url
+                              }
+                              currentFooterLink3Text={
+                                departmentDetails.footerLink3Text
+                              }
+                              currentFooterContactEmail={
+                                departmentDetails.footerContactEmail
+                              }
+                              currentFooterContactPhone={
+                                departmentDetails.footerContactPhone
+                              }
+                              currentFooterContactAddress={
+                                departmentDetails.footerContactAddress
+                              }
+                              currentFooterContactAddress2={
+                                departmentDetails.footerContactAddress2
+                              }
                             />
                           )}
                         </div>
@@ -540,7 +580,7 @@ export default function AdminPage() {
                 <input
                   id="name"
                   value={formData.name}
-                  onChange={e =>
+                  onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="bg-background w-full rounded-md border px-3 py-2"
@@ -552,7 +592,7 @@ export default function AdminPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={e =>
+                  onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
                   className="bg-background w-full rounded-md border px-3 py-2"
@@ -563,7 +603,7 @@ export default function AdminPage() {
                 <select
                   id="role"
                   value={formData.role}
-                  onChange={e =>
+                  onChange={(e) =>
                     setFormData({ ...formData, role: e.target.value })
                   }
                   className="bg-background w-full rounded-md border px-3 py-2"
@@ -603,7 +643,10 @@ export default function AdminPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const signupUrl = getSignUpUrl(formData.email, formData.role);
+                    const signupUrl = getSignUpUrl(
+                      formData.email,
+                      formData.role,
+                    );
                     navigator.clipboard.writeText(signupUrl);
                     toast.success("Sign-up link copied to clipboard");
                   }}
@@ -645,9 +688,10 @@ export default function AdminPage() {
                   // Auto-expand if there are search results
                   if (value.trim()) {
                     const query = value.toLowerCase();
-                    const filteredUsers = users.filter(user => {
+                    const filteredUsers = users.filter((user) => {
                       return (
-                        (user.name && user.name.toLowerCase().includes(query)) ||
+                        (user.name &&
+                          user.name.toLowerCase().includes(query)) ||
                         (user.email && user.email.toLowerCase().includes(query))
                       );
                     });
@@ -661,7 +705,7 @@ export default function AdminPage() {
             </div>
             <div className="space-y-3">
               {(() => {
-                const filteredUsers = users.filter(user => {
+                const filteredUsers = users.filter((user) => {
                   if (!userSearchQuery.trim()) return true;
                   const query = userSearchQuery.toLowerCase();
                   return (
@@ -669,43 +713,46 @@ export default function AdminPage() {
                     (user.email && user.email.toLowerCase().includes(query))
                   );
                 });
-                const displayedUsers = showAllUsers ? filteredUsers : filteredUsers.slice(0, 3);
-                
+                const displayedUsers = showAllUsers
+                  ? filteredUsers
+                  : filteredUsers.slice(0, 3);
+
                 return (
                   <>
-                    {displayedUsers.map(user => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between rounded border p-3"
-                >
-                  <div>
-                    <h3 className="font-medium">{user.name}</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {user.email}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      Role: {user.role}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-muted-foreground text-sm">
-                      Joined: {new Date(user.createdAt).toLocaleDateString()}
-                    </div>
-                    {currentUserRole !== "BASIC" && (
-                      <AdminUserEditModal
-                        user={user}
-                        onUserUpdate={loadUsers}
-                        currentUserRole={currentUserRole}
-                      />
-                    )}
-                    {currentUserRole === "AUTHOR" && (
-                      <UserReassignmentModal
-                        user={user}
-                        onUserReassigned={loadUsers}
-                      />
-                    )}
-                  </div>
-                </div>
+                    {displayedUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between rounded border p-3"
+                      >
+                        <div>
+                          <h3 className="font-medium">{user.name}</h3>
+                          <p className="text-muted-foreground text-sm">
+                            {user.email}
+                          </p>
+                          <p className="text-muted-foreground text-sm">
+                            Role: {user.role}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-muted-foreground text-sm">
+                            Joined:{" "}
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </div>
+                          {currentUserRole !== "BASIC" && (
+                            <AdminUserEditModal
+                              user={user}
+                              onUserUpdate={loadUsers}
+                              currentUserRole={currentUserRole}
+                            />
+                          )}
+                          {currentUserRole === "AUTHOR" && (
+                            <UserReassignmentModal
+                              user={user}
+                              onUserReassigned={loadUsers}
+                            />
+                          )}
+                        </div>
+                      </div>
                     ))}
                     {!showAllUsers && filteredUsers.length > 3 && (
                       <div className="pt-2">

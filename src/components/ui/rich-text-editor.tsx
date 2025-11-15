@@ -63,9 +63,9 @@ export interface RichTextEditorProps {
 
 /**
  * Rich Text Editor Component
- * 
+ *
  * A WYSIWYG editor built with Tiptap that matches the application's design system.
- * 
+ *
  * Styling is centralized in this component for easy maintenance.
  * To update styles, modify the classes in:
  * - editorContainer: Main editor wrapper
@@ -144,7 +144,10 @@ export function RichTextEditor({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const editorWrapperRef = useRef<HTMLDivElement>(null);
   const [selectedTable, setSelectedTable] = useState<HTMLElement | null>(null);
-  const [deleteButtonPosition, setDeleteButtonPosition] = useState<{ top: number; right: number } | null>(null);
+  const [deleteButtonPosition, setDeleteButtonPosition] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
 
   // Add keyboard handler for backspace/delete on tables
   useEffect(() => {
@@ -152,16 +155,19 @@ export function RichTextEditor({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Handle backspace/delete when table is selected
-      if ((event.key === "Backspace" || event.key === "Delete") && editor.isActive("table")) {
+      if (
+        (event.key === "Backspace" || event.key === "Delete") &&
+        editor.isActive("table")
+      ) {
         // Check if we're at the start of the table or table is selected
         const { selection } = editor.state;
         const { $anchor } = selection;
-        
+
         // Find if we're in a table
         let depth = $anchor.depth;
         let tableNode = null;
         let tableDepth = -1;
-        
+
         while (depth > 0) {
           const node = $anchor.node(depth);
           if (node.type.name === "table") {
@@ -171,15 +177,16 @@ export function RichTextEditor({
           }
           depth--;
         }
-        
+
         if (tableNode && tableDepth >= 0) {
           // Check if cursor is at the start of the table
           const tableStart = $anchor.start(tableDepth);
           const isAtTableStart = $anchor.pos === tableStart;
-          
+
           // Or if the entire table is selected
-          const isTableSelected = selection.$anchor.node(tableDepth) === tableNode;
-          
+          const isTableSelected =
+            selection.$anchor.node(tableDepth) === tableNode;
+
           if (isAtTableStart || isTableSelected) {
             event.preventDefault();
             editor.chain().focus().deleteTable().run();
@@ -202,7 +209,8 @@ export function RichTextEditor({
   useEffect(() => {
     if (!editor || !editorWrapperRef.current) return;
 
-    const editorElement = editorWrapperRef.current.querySelector(".ProseMirror");
+    const editorElement =
+      editorWrapperRef.current.querySelector(".ProseMirror");
     if (!editorElement) return;
 
     const handleSelectionUpdate = () => {
@@ -214,12 +222,12 @@ export function RichTextEditor({
 
       // Get the current selection position
       const { from } = editor.state.selection;
-      
+
       // Find the table node at the current position
       const $pos = editor.state.doc.resolve(from);
       let tableNode = null;
       let depth = $pos.depth;
-      
+
       while (depth > 0 && !tableNode) {
         const node = $pos.node(depth);
         if (node.type.name === "table") {
@@ -233,12 +241,12 @@ export function RichTextEditor({
         // Find the DOM element for this table
         const domPos = editor.view.domAtPos($pos.start(depth));
         let tableElement: Node | null = domPos.node;
-        
+
         // Walk up the DOM tree to find the table element
         while (tableElement && tableElement.nodeName !== "TABLE") {
           tableElement = (tableElement as HTMLElement).parentElement;
         }
-        
+
         if (tableElement && tableElement.nodeName === "TABLE") {
           const table = tableElement as HTMLElement;
           setSelectedTable(table);
@@ -249,12 +257,12 @@ export function RichTextEditor({
 
     const updateDeleteButtonPosition = (table: HTMLElement) => {
       if (!editorWrapperRef.current) return;
-      
+
       const editorRect = editorWrapperRef.current.getBoundingClientRect();
       const tableRect = table.getBoundingClientRect();
       const scrollTop = editorWrapperRef.current.scrollTop;
       const scrollLeft = editorWrapperRef.current.scrollLeft;
-      
+
       setDeleteButtonPosition({
         top: tableRect.top - editorRect.top + scrollTop + 4,
         right: editorRect.right - tableRect.right + scrollLeft + 4,
@@ -279,7 +287,7 @@ export function RichTextEditor({
         const tableRect = currentTable.getBoundingClientRect();
         const scrollTop = editorWrapperRef.current.scrollTop;
         const scrollLeft = editorWrapperRef.current.scrollLeft;
-        
+
         setDeleteButtonPosition({
           top: tableRect.top - editorRect.top + scrollTop + 4,
           right: editorRect.right - tableRect.right + scrollLeft + 4,
@@ -360,7 +368,9 @@ export function RichTextEditor({
     setLinkText("");
   }
 
-  async function handleImageFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageFileSelect(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0];
     if (!file || !editor) return;
 
@@ -470,7 +480,7 @@ export function RichTextEditor({
       title={title}
       className={cn(
         "h-8 w-8 p-0",
-        isActive && "bg-accent text-accent-foreground"
+        isActive && "bg-accent text-accent-foreground",
       )}
     >
       {children}
@@ -484,7 +494,7 @@ export function RichTextEditor({
         "border-input bg-background rounded-md border",
         "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]",
         "transition-[color,box-shadow]",
-        className
+        className,
       )}
       style={{ minHeight }}
     >
@@ -492,7 +502,7 @@ export function RichTextEditor({
       <div
         className={cn(
           "border-input flex items-center gap-1 border-b px-2 py-1.5",
-          "flex-wrap"
+          "flex-wrap",
         )}
       >
         <ToolbarButton
@@ -535,10 +545,10 @@ export function RichTextEditor({
             editor.isActive("heading", { level: 1 })
               ? "h1"
               : editor.isActive("heading", { level: 2 })
-              ? "h2"
-              : editor.isActive("heading", { level: 3 })
-              ? "h3"
-              : "paragraph"
+                ? "h2"
+                : editor.isActive("heading", { level: 3 })
+                  ? "h3"
+                  : "paragraph"
           }
           onValueChange={(value) => {
             if (value === "h1") {
@@ -558,17 +568,17 @@ export function RichTextEditor({
               (editor.isActive("heading", { level: 1 }) ||
                 editor.isActive("heading", { level: 2 }) ||
                 editor.isActive("heading", { level: 3 })) &&
-                "bg-accent text-accent-foreground"
+                "bg-accent text-accent-foreground",
             )}
           >
             <SelectValue placeholder="Heading">
               {editor.isActive("heading", { level: 1 })
                 ? "Heading 1"
                 : editor.isActive("heading", { level: 2 })
-                ? "Heading 2"
-                : editor.isActive("heading", { level: 3 })
-                ? "Heading 3"
-                : "Paragraph"}
+                  ? "Heading 2"
+                  : editor.isActive("heading", { level: 3 })
+                    ? "Heading 3"
+                    : "Paragraph"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -587,8 +597,8 @@ export function RichTextEditor({
             editor.isActive("bulletList")
               ? "bullet"
               : editor.isActive("orderedList")
-              ? "numbered"
-              : "none"
+                ? "numbered"
+                : "none"
           }
           onValueChange={(value) => {
             if (value === "bullet") {
@@ -624,8 +634,9 @@ export function RichTextEditor({
               "[&>div:last-child_svg]:size-2 [&>div:last-child_svg]:h-2 [&>div:last-child_svg]:w-2",
               "[&_svg:last-of-type]:size-2 [&_svg:last-of-type]:h-2 [&_svg:last-of-type]:w-2",
               "[&_[data-slot='select-value']]:gap-0.5",
-              (editor.isActive("bulletList") || editor.isActive("orderedList")) &&
-                "bg-accent text-accent-foreground"
+              (editor.isActive("bulletList") ||
+                editor.isActive("orderedList")) &&
+                "bg-accent text-accent-foreground",
             )}
           >
             <SelectValue>
@@ -639,29 +650,33 @@ export function RichTextEditor({
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="p-1 min-w-fit w-auto [&_[data-slot='select-item']>span[class*='absolute']]:hidden">
-            <SelectItem 
-              value="bullet" 
+            <SelectItem
+              value="bullet"
               className={cn(
                 "flex items-center justify-center px-2 py-1.5 pr-2",
-                editor.isActive("bulletList") && "bg-accent text-accent-foreground"
+                editor.isActive("bulletList") &&
+                  "bg-accent text-accent-foreground",
               )}
             >
               <List className="h-4 w-4" />
             </SelectItem>
-            <SelectItem 
-              value="numbered" 
+            <SelectItem
+              value="numbered"
               className={cn(
                 "flex items-center justify-center px-2 py-1.5 pr-2",
-                editor.isActive("orderedList") && "bg-accent text-accent-foreground"
+                editor.isActive("orderedList") &&
+                  "bg-accent text-accent-foreground",
               )}
             >
               <ListOrdered className="h-4 w-4" />
             </SelectItem>
-            <SelectItem 
-              value="none" 
+            <SelectItem
+              value="none"
               className={cn(
                 "flex items-center justify-center px-2 py-1.5 pr-2",
-                !editor.isActive("bulletList") && !editor.isActive("orderedList") && "bg-accent text-accent-foreground"
+                !editor.isActive("bulletList") &&
+                  !editor.isActive("orderedList") &&
+                  "bg-accent text-accent-foreground",
               )}
             >
               <X className="h-4 w-4" />
@@ -703,7 +718,7 @@ export function RichTextEditor({
               "[&>div:last-child_svg]:size-2 [&>div:last-child_svg]:h-2 [&>div:last-child_svg]:w-2",
               "[&_svg:last-of-type]:size-2 [&_svg:last-of-type]:h-2 [&_svg:last-of-type]:w-2",
               "[&_[data-slot='select-value']]:gap-0.5",
-              editor.isActive("table") && "bg-accent text-accent-foreground"
+              editor.isActive("table") && "bg-accent text-accent-foreground",
             )}
           >
             <Table2 className="h-4 w-4" />
@@ -906,10 +921,10 @@ export function RichTextEditor({
             "[&_.ProseMirror_[style*='text-align:left']]:text-left",
             "[&_.ProseMirror_[style*='text-align:center']]:text-center",
             "[&_.ProseMirror_[style*='text-align:right']]:text-right",
-            "[&_.ProseMirror_[style*='text-align:justify']]:text-justify"
+            "[&_.ProseMirror_[style*='text-align:justify']]:text-justify",
           )}
         />
-        
+
         {/* Table Delete Button - appears when table is selected */}
         {selectedTable && deleteButtonPosition && (
           <div
@@ -1115,4 +1130,3 @@ export function RichTextEditor({
     </div>
   );
 }
-

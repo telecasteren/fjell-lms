@@ -41,13 +41,13 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /sign in/i })
+      screen.getByRole("button", { name: /sign in/i }),
     ).toBeInTheDocument();
   });
 
@@ -56,7 +56,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const submitButton = screen.getByRole("button", { name: /sign in/i });
@@ -81,7 +81,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const emailInput = screen.getByLabelText(/email/i);
@@ -101,7 +101,7 @@ describe("Authentication", () => {
     render(
       <SessionProvider session={null}>
         <SignInPage />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const signUpLink = screen.getByRole("link", { name: /sign up/i });

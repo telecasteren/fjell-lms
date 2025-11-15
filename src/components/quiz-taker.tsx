@@ -32,9 +32,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, number[]>
   >({});
-  const [textAnswers, setTextAnswers] = useState<
-    Record<string, string>
-  >({});
+  const [textAnswers, setTextAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
   const [quizResults, setQuizResults] = useState<Record<string, boolean>>({});
   const [passed, setPassed] = useState<boolean | null>(null);
@@ -52,7 +50,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
   }
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
-  
+
   // Safety check: ensure current question exists
   if (!currentQuestion) {
     return (
@@ -73,19 +71,19 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
 
     // For radio questions, replace the selection
     if (questionType === "radio") {
-      setSelectedAnswers(prev => ({
+      setSelectedAnswers((prev) => ({
         ...prev,
         [questionId]: [optionIndex],
       }));
     } else {
       // For checkbox questions, toggle the selection
       if (current.includes(optionIndex)) {
-        setSelectedAnswers(prev => ({
+        setSelectedAnswers((prev) => ({
           ...prev,
-          [questionId]: current.filter(i => i !== optionIndex),
+          [questionId]: current.filter((i) => i !== optionIndex),
         }));
       } else {
-        setSelectedAnswers(prev => ({
+        setSelectedAnswers((prev) => ({
           ...prev,
           [questionId]: [...current, optionIndex],
         }));
@@ -95,7 +93,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
 
   function handleTextAnswerChange(value: string) {
     const questionId = currentQuestion.id;
-    setTextAnswers(prev => ({
+    setTextAnswers((prev) => ({
       ...prev,
       [questionId]: value,
     }));
@@ -105,13 +103,15 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
     const results: Record<string, boolean> = {};
     let correctCount = 0;
 
-    quiz.questions.forEach(question => {
+    quiz.questions.forEach((question) => {
       const questionType = question.type || "checkbox";
       let isCorrect = false;
 
       if (questionType === "text") {
         // For text questions, compare the answer (case-insensitive, trimmed)
-        const userAnswer = (textAnswers[question.id] || "").trim().toLowerCase();
+        const userAnswer = (textAnswers[question.id] || "")
+          .trim()
+          .toLowerCase();
         const expectedAnswer = (question.options[0] || "").trim().toLowerCase();
         isCorrect = userAnswer === expectedAnswer;
       } else {
@@ -119,7 +119,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
         const selected = selectedAnswers[question.id] || [];
         isCorrect =
           selected.length === question.correctAnswers.length &&
-          selected.every(answer => question.correctAnswers.includes(answer));
+          selected.every((answer) => question.correctAnswers.includes(answer));
       }
 
       results[question.id] = isCorrect;
@@ -132,7 +132,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
     const quizPassed = correctCount >= Math.ceil(quiz.questions.length * 0.7); // 70% pass rate
     const percentage = Math.round((correctCount / quiz.questions.length) * 100);
     setPassed(quizPassed);
-    setAttempts(prev => prev + 1);
+    setAttempts((prev) => prev + 1);
 
     // Save quiz completion to database
     try {
@@ -168,7 +168,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
     if (isLastQuestion) {
       submitQuiz();
     } else {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
     }
   }
 
@@ -232,7 +232,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
                     <>
                       Correct answers:{" "}
                       {question.correctAnswers
-                        .map(i => question.options[i])
+                        .map((i) => question.options[i])
                         .join(", ")}
                     </>
                   )}
@@ -305,18 +305,25 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
                     type="radio"
                     id={`option-${index}`}
                     name={`question-${currentQuestion.id}`}
-                    checked={(selectedAnswers[currentQuestion.id] || []).includes(index)}
+                    checked={(
+                      selectedAnswers[currentQuestion.id] || []
+                    ).includes(index)}
                     onChange={() => handleAnswerToggle(index)}
                     className="h-4 w-4"
                   />
                 ) : (
                   <Checkbox
                     id={`option-${index}`}
-                    checked={(selectedAnswers[currentQuestion.id] || []).includes(index)}
+                    checked={(
+                      selectedAnswers[currentQuestion.id] || []
+                    ).includes(index)}
                     onCheckedChange={() => handleAnswerToggle(index)}
                   />
                 )}
-                <label htmlFor={`option-${index}`} className="text-sm cursor-pointer">
+                <label
+                  htmlFor={`option-${index}`}
+                  className="text-sm cursor-pointer"
+                >
                   {option}
                 </label>
               </div>
@@ -328,7 +335,7 @@ export function QuizTaker({ quiz, onComplete }: QuizTakerProps) {
           <Button
             variant="outline"
             onClick={() =>
-              setCurrentQuestionIndex(prev => Math.max(0, prev - 1))
+              setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
             }
             disabled={currentQuestionIndex === 0}
           >

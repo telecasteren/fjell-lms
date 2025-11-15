@@ -14,7 +14,10 @@ export async function GET(req: NextRequest) {
     // So we don't apply status filter at the database level - we'll filter in frontend
     // For BASIC users, we still filter by status at database level for performance
     const includeStatusFilter = user.role === "BASIC";
-    const whereClause = await getCourseWhereClause(user.id, includeStatusFilter);
+    const whereClause = await getCourseWhereClause(
+      user.id,
+      includeStatusFilter,
+    );
 
     // Get courses with enrollment counts
     const courses = await prisma.course.findMany({
@@ -27,7 +30,7 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         departmentId: true,
         department: {
-          select: { 
+          select: {
             id: true,
             name: true,
             parentDepartmentId: true,
@@ -71,9 +74,11 @@ export async function GET(req: NextRequest) {
         createdAt: course.createdAt,
         departmentId: course.departmentId,
         departmentName: course.department?.name,
-        isFoxLmsCourse: foxLmsDepartment ? course.departmentId === foxLmsDepartment.id : false,
+        isFoxLmsCourse: foxLmsDepartment
+          ? course.departmentId === foxLmsDepartment.id
+          : false,
         enrollmentCount: course.enrollments.length,
-      })
+      }),
     );
 
     return NextResponse.json({
@@ -109,7 +114,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
     const { title, description } = validation.data;
-    
+
     // WRITER can only create courses in their own department
     // AUTHOR can create courses in any department (but defaults to their own)
     const course = await prisma.course.create({

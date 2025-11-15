@@ -23,23 +23,23 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
   const { user, loading } = useCurrentUser();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
-  
+
   // Use fresh user data from database, fall back to initial user if loading
   const currentUser = user || initialUser;
   const userRole = currentUser?.role;
-  
+
   // Auto-hide sidebar on mobile when navigating to different pages
   useEffect(() => {
     // Auto-hide sidebar on mobile when navigating
     // This will be handled by CSS media queries in the className
     setIsOpen(false);
   }, [pathname]);
-  
+
   // Don't render sidebar if user is not authenticated
   if (!currentUser && !loading) {
     return null;
   }
-  
+
   // Show loading state while checking authentication
   if (loading) {
     return null;
@@ -60,13 +60,15 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
       </div>
 
       {/* Sidebar */}
-      <aside className={`
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:block'}
+      <aside
+        className={`
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:block"}
         fixed lg:static inset-y-0 left-0 z-40
         w-64 lg:w-64 border-r bg-background p-4 space-y-4
         transition-transform duration-300 ease-in-out
         lg:transition-none
-      `}>
+      `}
+      >
         <Logo size="md" />
         <Separator />
         <nav className="grid gap-2">
@@ -110,14 +112,16 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
                 <div className="text-xs text-muted-foreground">{userRole}</div>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="w-full"
-              onClick={() => signOut({ 
-                callbackUrl: "/sign-in",
-                redirect: true 
-              })}
+              onClick={() =>
+                signOut({
+                  callbackUrl: "/sign-in",
+                  redirect: true,
+                })
+              }
             >
               Sign out
             </Button>
@@ -127,7 +131,7 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
 
       {/* Overlay for mobile */}
       {isOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/50 z-30"
           onClick={() => setIsOpen(false)}
         />

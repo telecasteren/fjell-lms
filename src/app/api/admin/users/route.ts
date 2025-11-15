@@ -12,11 +12,12 @@ export async function GET(req: NextRequest) {
 
     // Get accessible department IDs (includes sub-departments for ADMIN)
     const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
-    
+
     // AUTHOR can see all users, ADMIN can only see users in their department and sub-departments
-    const whereClause = accessibleDepartmentIds === null 
-      ? {} // AUTHOR sees all
-      : { departmentId: { in: accessibleDepartmentIds } };
+    const whereClause =
+      accessibleDepartmentIds === null
+        ? {} // AUTHOR sees all
+        : { departmentId: { in: accessibleDepartmentIds } };
 
     const users = await prisma.user.findMany({
       where: whereClause,
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (!body.name || !body.email) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -69,8 +70,10 @@ export async function POST(req: NextRequest) {
       // ADMIN users can only create BASIC, ADMIN, or WRITER users
       if (role !== "BASIC" && role !== "ADMIN" && role !== "WRITER") {
         return NextResponse.json(
-          { error: "ADMIN users can only create BASIC, ADMIN, or WRITER users" },
-          { status: 403 }
+          {
+            error: "ADMIN users can only create BASIC, ADMIN, or WRITER users",
+          },
+          { status: 403 },
         );
       }
     } else if (user.role === "AUTHOR") {
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
     if (existingUser) {
       return NextResponse.json(
         { error: "User already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     if (!user.departmentId) {
       return NextResponse.json(
         { error: "User has no department assigned" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       if (!department) {
         return NextResponse.json(
           { error: "Department not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -68,9 +68,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Database error",
-          details: prismaError instanceof Error ? prismaError.message : "Unknown error",
+          details:
+            prismaError instanceof Error
+              ? prismaError.message
+              : "Unknown error",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
@@ -81,14 +84,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: message }, { status });
     }
     console.error("Get current department error:", error);
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack");
-    console.error("Error name:", error instanceof Error ? error.name : "Unknown");
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack",
+    );
+    console.error(
+      "Error name:",
+      error instanceof Error ? error.name : "Unknown",
+    );
     return NextResponse.json(
       {
         error: "Failed to get department",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

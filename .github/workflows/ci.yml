@@ -170,7 +170,7 @@ jobs:
         run: npm run test:e2e
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
@@ -213,7 +213,7 @@ jobs:
           bundlesize
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: .next/

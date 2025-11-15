@@ -7,6 +7,7 @@ This LMS application implements comprehensive security measures to protect again
 ## Security Features Implemented
 
 ### 1. Rate Limiting
+
 - **Purpose**: Prevent brute force attacks, API abuse, and DDoS
 - **Implementation**: Upstash Redis-based rate limiting
 - **Limits**:
@@ -17,19 +18,22 @@ This LMS application implements comprehensive security measures to protect again
   - Reports: 10 requests per minute per user
 
 ### 2. CSRF Protection
+
 - **Purpose**: Prevent Cross-Site Request Forgery attacks
 - **Implementation**: Origin validation and session token verification
 - **Headers**: X-CSRF-Token validation
 
 ### 3. Secure Session Management
+
 - **Purpose**: Protect user sessions from hijacking
-- **Implementation**: 
+- **Implementation**:
   - JWT tokens with 24-hour expiration
   - Secure HTTP-only cookies
   - SameSite cookie policy
   - Secure flag in production
 
 ### 4. Input Validation
+
 - **Purpose**: Prevent injection attacks and data corruption
 - **Implementation**: Zod schema validation for all API endpoints
 - **Features**:
@@ -39,6 +43,7 @@ This LMS application implements comprehensive security measures to protect again
   - XSS prevention via input sanitization
 
 ### 5. Error Handling
+
 - **Purpose**: Prevent information disclosure
 - **Implementation**: Centralized error handling with sanitized responses
 - **Features**:
@@ -124,12 +129,14 @@ The application enforces strict password requirements:
 ## Role-Based Access Control (RBAC)
 
 ### Roles
+
 - **BASIC**: Can view and enroll in published courses from their department and parent department
 - **ADMIN**: Can manage users and enrollments in their department and sub-departments
 - **WRITER**: Can create/edit courses and content within their own department only
 - **AUTHOR**: Can create/edit courses and manage all users across all departments
 
 ### Permissions
+
 - Course creation: AUTHOR and WRITER (WRITER limited to own department)
 - User management: ADMIN and AUTHOR
 - Course enrollment: ADMIN and self-enrollment
@@ -139,22 +146,26 @@ The application enforces strict password requirements:
 ## Security Best Practices
 
 ### 1. Regular Updates
+
 - Keep dependencies updated
 - Monitor security advisories
 - Update NextAuth and Prisma regularly
 
 ### 2. Monitoring
+
 - Monitor rate limiting metrics
 - Set up error alerting
 - Track failed authentication attempts
 
 ### 3. Production Deployment
+
 - Use HTTPS in production
 - Set secure cookie flags
 - Enable CSP headers
 - Use environment-specific configurations
 
 ### 4. Database Security
+
 - Use connection pooling
 - Enable SSL connections
 - Regular backups
@@ -163,6 +174,7 @@ The application enforces strict password requirements:
 ## Testing Security
 
 ### 1. Rate Limiting Tests
+
 ```bash
 # Test rate limiting
 for i in {1..10}; do
@@ -173,6 +185,7 @@ done
 ```
 
 ### 2. CSRF Tests
+
 ```bash
 # Test CSRF protection
 curl -X POST http://localhost:3000/api/courses \
@@ -182,6 +195,7 @@ curl -X POST http://localhost:3000/api/courses \
 ```
 
 ### 3. Authentication Tests
+
 ```bash
 # Test brute force protection
 for i in {1..10}; do
@@ -213,6 +227,7 @@ done
 ### Debug Mode
 
 Enable debug logging by setting:
+
 ```bash
 NODE_ENV=development
 ```
@@ -237,6 +252,7 @@ This will show detailed error messages and stack traces.
 ## Support
 
 For security issues or questions:
+
 - Check the logs for detailed error messages
 - Review the error handling implementation
 - Test with the provided security test commands

@@ -28,7 +28,7 @@ export async function GET() {
     if (!foxLmsDepartment) {
       return NextResponse.json(
         { error: "FOX-LMS department not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -40,8 +40,7 @@ export async function GET() {
         error: "Failed to fetch FOX-LMS footer data",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

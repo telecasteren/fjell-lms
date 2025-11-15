@@ -114,8 +114,8 @@ export function MultimediaUploader({
       }
 
       // Check file extension as fallback
-      const hasValidExtension = format.extensions.some(ext =>
-        fileName.endsWith(ext)
+      const hasValidExtension = format.extensions.some((ext) =>
+        fileName.endsWith(ext),
       );
       if (hasValidExtension) {
         if (fileSize > format.maxSize) {
@@ -130,7 +130,7 @@ export function MultimediaUploader({
 
     // If no valid format found
     const allowedFormats = allowedTypes
-      .map(type => SUPPORTED_FORMATS[type].extensions)
+      .map((type) => SUPPORTED_FORMATS[type].extensions)
       .flat();
     return {
       valid: false,
@@ -145,14 +145,14 @@ export function MultimediaUploader({
 
     if (
       SUPPORTED_FORMATS.images.types.includes(fileType) ||
-      SUPPORTED_FORMATS.images.extensions.some(ext => fileName.endsWith(ext))
+      SUPPORTED_FORMATS.images.extensions.some((ext) => fileName.endsWith(ext))
     ) {
       return "image";
     }
 
     if (
       SUPPORTED_FORMATS.videos.types.includes(fileType) ||
-      SUPPORTED_FORMATS.videos.extensions.some(ext => fileName.endsWith(ext))
+      SUPPORTED_FORMATS.videos.extensions.some((ext) => fileName.endsWith(ext))
     ) {
       return "video";
     }
@@ -172,7 +172,7 @@ export function MultimediaUploader({
       const errors: string[] = [];
 
       // Validate files first
-      newFiles.forEach(file => {
+      newFiles.forEach((file) => {
         const validation = validateFile(file);
 
         if (validation.valid) {
@@ -203,12 +203,12 @@ export function MultimediaUploader({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [files, maxFiles, allowedTypes, onFilesChange]
+    [files, maxFiles, allowedTypes, onFilesChange],
   );
 
   // Handle file input change
   const handleFileInputChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const selectedFiles = Array.from(event.target.files || []);
     if (selectedFiles.length > 0) {
@@ -254,7 +254,7 @@ export function MultimediaUploader({
 
     try {
       const formData = new FormData();
-      files.forEach(file => {
+      files.forEach((file) => {
         formData.append("files", file.file);
       });
 
@@ -265,9 +265,15 @@ export function MultimediaUploader({
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
         console.error("Upload error response:", errorData);
-        toast.error(errorData.details || errorData.error || `Upload failed: ${response.status}`);
+        toast.error(
+          errorData.details ||
+            errorData.error ||
+            `Upload failed: ${response.status}`,
+        );
         return;
       }
 
@@ -285,7 +291,7 @@ export function MultimediaUploader({
     } catch (error) {
       toast.error(
         "Upload failed: " +
-          (error instanceof Error ? error.message : "Unknown error")
+          (error instanceof Error ? error.message : "Unknown error"),
       );
     } finally {
       setIsUploading(false);
@@ -294,7 +300,7 @@ export function MultimediaUploader({
 
   // Remove file
   const removeFile = (fileId: string) => {
-    const updatedFiles = files.filter(f => f.id !== fileId);
+    const updatedFiles = files.filter((f) => f.id !== fileId);
     setFiles(updatedFiles);
     onFilesChange?.(updatedFiles);
   };
@@ -325,7 +331,7 @@ export function MultimediaUploader({
   // Get accepted file types for input
   const getAcceptedTypes = () => {
     return allowedTypes
-      .map(type => SUPPORTED_FORMATS[type].types)
+      .map((type) => SUPPORTED_FORMATS[type].types)
       .flat()
       .join(",");
   };
@@ -350,7 +356,9 @@ export function MultimediaUploader({
             {disabled ? "Upload disabled" : "Click to upload or drag and drop"}
           </p>
           <p className="text-muted-foreground text-center text-xs">
-            {allowedTypes.map(type => SUPPORTED_FORMATS[type].label).join(", ")}{" "}
+            {allowedTypes
+              .map((type) => SUPPORTED_FORMATS[type].label)
+              .join(", ")}{" "}
             files
           </p>
           <p className="text-muted-foreground mt-1 text-xs">
@@ -389,7 +397,7 @@ export function MultimediaUploader({
             )}
           </div>
           <div className="space-y-2">
-            {files.map(file => (
+            {files.map((file) => (
               <Card key={file.id} className="p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -426,7 +434,7 @@ export function MultimediaUploader({
             <AlertCircle className="text-muted-foreground mt-0.5 h-4 w-4" />
             <div className="text-muted-foreground text-xs">
               <p className="mb-1 font-medium">Supported Formats:</p>
-              {allowedTypes.map(type => {
+              {allowedTypes.map((type) => {
                 const format = SUPPORTED_FORMATS[type];
                 return (
                   <p key={type} className="mb-1">

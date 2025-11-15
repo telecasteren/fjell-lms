@@ -23,10 +23,9 @@ export async function validateCSRF(request: NextRequest): Promise<boolean> {
   const allowedOrigins = [
     process.env.NEXTAUTH_URL,
     // Allow localhost for local development
-    ...(process.env.NODE_ENV === 'development' 
+    ...(process.env.NODE_ENV === "development"
       ? ["http://localhost:3000", "https://localhost:3000"]
-      : []
-    ),
+      : []),
   ].filter(Boolean);
 
   const requestOrigin = origin || (referer ? new URL(referer).origin : null);
@@ -68,7 +67,7 @@ export function addCSRFHeaders(response: Response): Response {
   // Add CSP header for additional protection
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;",
   );
 
   return response;
@@ -77,7 +76,7 @@ export function addCSRFHeaders(response: Response): Response {
 // CSRF middleware wrapper
 export async function withCSRFProtection(
   request: NextRequest,
-  handler: (request: NextRequest) => Promise<Response>
+  handler: (request: NextRequest) => Promise<Response>,
 ): Promise<Response> {
   const isValid = await validateCSRF(request);
 

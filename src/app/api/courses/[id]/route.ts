@@ -5,7 +5,7 @@ import { canManageCourse } from "@/lib/department-utils";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -17,7 +17,7 @@ export async function PATCH(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -49,12 +49,12 @@ export async function DELETE(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to delete this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // Use a transaction to delete course and all related data
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       // Get all modules and their lessons for this course
       const modules = await tx.module.findMany({
         where: { courseId: id },
@@ -69,8 +69,8 @@ export async function DELETE(
       });
 
       // Delete all progress records for lessons in this course
-      const lessonIds = modules.flatMap(module =>
-        module.lessons.map(lesson => lesson.id)
+      const lessonIds = modules.flatMap((module) =>
+        module.lessons.map((lesson) => lesson.id),
       );
 
       if (lessonIds.length > 0) {
@@ -80,10 +80,10 @@ export async function DELETE(
       }
 
       // Delete all quizzes for lessons in this course
-      const quizIds = modules.flatMap(module =>
+      const quizIds = modules.flatMap((module) =>
         module.lessons
-          .filter(lesson => lesson.quiz)
-          .map(lesson => lesson.quiz!.id)
+          .filter((lesson) => lesson.quiz)
+          .map((lesson) => lesson.quiz!.id),
       );
 
       if (quizIds.length > 0) {
@@ -125,7 +125,7 @@ export async function DELETE(
     }
     return NextResponse.json(
       { error: "Failed to delete course" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

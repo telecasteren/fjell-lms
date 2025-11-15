@@ -16,7 +16,7 @@ In the course management interface, expand a module and click "Add Lesson" to cr
 
 When creating or editing a lesson, you'll see two tabs:
 
-1. **Content Tab**: 
+1. **Content Tab**:
    - Enter the lesson title
    - Select the content type (Text Editor, SCORM, or Multimedia)
    - For **Text Editor** content:
@@ -35,7 +35,7 @@ When creating or editing a lesson, you'll see two tabs:
 
 ## How do I add quizzes to lessons?
 
-When editing a lesson, switch to the "Quiz" tab to add questions and answer options. 
+When editing a lesson, switch to the "Quiz" tab to add questions and answer options.
 
 ### Quiz Question Types
 
@@ -46,6 +46,7 @@ You can create three types of questions:
 3. **Short Text Answer**: Students type their answer in a text field (case-insensitive matching)
 
 For each question:
+
 - Enter the question text
 - Add answer options (for radio/checkbox questions)
 - Mark which answers are correct
@@ -68,22 +69,27 @@ Yes, you can set a course status to "Archived" to hide it from BASIC and ADMIN u
 The dashboard uses different logic for displaying course progress to help users prioritize their learning:
 
 ### Ongoing Courses
+
 - **Definition**: All courses where the user has completed at least one lesson but hasn't finished the entire course
 - **Display**: Shows ALL ongoing courses in a list format
 - **Purpose**: Gives users an overview of all courses they're actively working on
 
 ### Current Course in Focus
+
 - **Definition**: The SINGLE ongoing course with the highest completion percentage
 - **Display**: Shows ONE course prominently with special blue styling and a "Continue Learning" button
 - **Purpose**: Highlights the course the user is most likely to continue working on
 
 ### Example Scenario
+
 If a user has:
+
 - Course A: 80% complete (8/10 lessons)
-- Course B: 30% complete (3/10 lessons)  
+- Course B: 30% complete (3/10 lessons)
 - Course C: 60% complete (6/10 lessons)
 
 Then:
+
 - **Ongoing Courses**: Shows A, B, and C
 - **Current Course in Focus**: Shows only Course A (highest percentage)
 

@@ -5,7 +5,7 @@ import { Role } from "@prisma/client";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAuthorOnly(req); // Authorization check only
@@ -16,7 +16,7 @@ export async function PATCH(
     if (!name || !email || !role) {
       return NextResponse.json(
         { error: "Name, email, and role are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,7 +36,7 @@ export async function PATCH(
     if (existingUser) {
       return NextResponse.json(
         { error: "Email already taken by another user" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -63,14 +63,14 @@ export async function PATCH(
     console.error("Update user error:", error);
     return NextResponse.json(
       { error: "Failed to update user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await requireAuthorOnly(req); // Authorization check only
@@ -80,12 +80,12 @@ export async function DELETE(
     if (id === currentUser.id) {
       return NextResponse.json(
         { error: "Cannot delete yourself" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Delete user with cascade delete of related records in a transaction
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       // Delete user's progress records
       await tx.progress.deleteMany({
         where: { userId: id },
@@ -122,19 +122,25 @@ export async function DELETE(
     console.error("Delete user error:", error);
 
     // Handle foreign key constraint violations
-    if (error && typeof error === "object" && error !== null && "code" in error && error.code === "P2003") {
+    if (
+      error &&
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2003"
+    ) {
       return NextResponse.json(
         {
           error:
             "Cannot delete user. This user has associated records that must be deleted first.",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to delete user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

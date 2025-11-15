@@ -50,7 +50,9 @@ export default function ProfilePage() {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [avatarImage, setAvatarImage] = useState<string | null | undefined>(null);
+  const [avatarImage, setAvatarImage] = useState<string | null | undefined>(
+    null,
+  );
   const [avatarImageError, setAvatarImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,7 +126,9 @@ export default function ProfilePage() {
 
       if (res.ok) {
         const result = await res.json();
-        setProfileData(prev => (prev ? { ...prev, user: result.user } : null));
+        setProfileData((prev) =>
+          prev ? { ...prev, user: result.user } : null,
+        );
         await update({
           ...session,
           user: {
@@ -158,13 +162,13 @@ export default function ProfilePage() {
       if (res.ok) {
         toast.success("Email updated successfully");
         emailForm.reset();
-        setProfileData(prev =>
+        setProfileData((prev) =>
           prev
             ? {
                 ...prev,
                 user: { ...prev.user, email: data.email },
               }
-            : null
+            : null,
         );
         await update({
           ...session,
@@ -256,7 +260,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -289,7 +295,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setAvatarImage(data.image);
         setAvatarImageError(false); // Reset error state on successful upload
-        
+
         // Update session with new image
         await update({
           ...session,
@@ -340,7 +346,7 @@ export default function ProfilePage() {
     if (user.name) {
       return user.name
         .split(" ")
-        .map(n => n[0])
+        .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2);
@@ -363,8 +369,8 @@ export default function ProfilePage() {
           >
             <Avatar className="h-20 w-20">
               {!avatarImageError && avatarImage ? (
-                <AvatarImage 
-                  src={avatarImage} 
+                <AvatarImage
+                  src={avatarImage}
                   alt={user.name || user.email || "User"}
                   onError={() => setAvatarImageError(true)}
                 />
@@ -373,7 +379,7 @@ export default function ProfilePage() {
                 {getInitials()}
               </AvatarFallback>
             </Avatar>
-            
+
             {/* Edit icon overlay */}
             <>
               <input
@@ -478,8 +484,8 @@ export default function ProfilePage() {
               <TabsContent value="theme" className="space-y-4">
                 <div className="space-y-2">
                   <Label>Theme</Label>
-                  <Tabs 
-                    value={theme ?? "light"} 
+                  <Tabs
+                    value={theme ?? "light"}
                     onValueChange={(newTheme) => handleThemeChange(newTheme)}
                   >
                     <TabsList>
@@ -626,7 +632,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {recentActivity.map(activity => (
+              {recentActivity.map((activity) => (
                 <div
                   key={activity.id}
                   className="bg-muted flex items-center justify-between rounded p-2"

@@ -8,7 +8,7 @@ import { canManageLesson } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -19,7 +19,7 @@ export async function GET(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to access this lesson" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -72,7 +72,7 @@ export async function PATCH(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this lesson" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -103,7 +103,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -114,7 +114,7 @@ export async function DELETE(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to delete this lesson" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -145,28 +145,32 @@ export async function DELETE(
           url?: string;
           metadata?: { fullPath?: string };
         };
-        const multimediaFiles = (lesson.multimediaFiles as MultimediaFile[]);
+        const multimediaFiles = lesson.multimediaFiles as MultimediaFile[];
         console.log(
           "Found multimedia files to delete:",
-          multimediaFiles.length
+          multimediaFiles.length,
         );
 
         for (const file of multimediaFiles) {
           try {
             // Use the metadata fullPath or construct from file structure
             const metadataFullPath = file.metadata?.fullPath;
-            const filePath: string = 
-              (typeof metadataFullPath === "string" ? metadataFullPath : null) ||
+            const filePath: string =
+              (typeof metadataFullPath === "string"
+                ? metadataFullPath
+                : null) ||
               (typeof file.id === "string" ? file.id : null) ||
               (typeof file.url === "string" ? file.url : null) ||
               "";
-            
+
             if (!filePath) {
-              console.error(`Unable to determine file path for ${file.name || "unknown"}`);
+              console.error(
+                `Unable to determine file path for ${file.name || "unknown"}`,
+              );
               fileDeletionErrors.push(file.name || "unknown");
               continue;
             }
-            
+
             console.log("Deleting file:", filePath);
 
             // Delete from Bunny Storage
@@ -180,7 +184,7 @@ export async function DELETE(
           } catch (error) {
             console.error(
               `Failed to delete file ${file.name || "unknown"}:`,
-              error
+              error,
             );
             fileDeletionErrors.push(file.name || "unknown");
             // Continue deleting other files even if one fails

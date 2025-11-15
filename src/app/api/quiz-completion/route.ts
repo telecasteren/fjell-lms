@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (!enrollment && !courseAccess) {
       return NextResponse.json(
         { error: "Not enrolled in this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
     console.error("Quiz completion error:", error);
     return NextResponse.json(
       { error: "Failed to save quiz completion" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
     console.error("Quiz completion fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch quiz completion" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -156,7 +156,7 @@ export async function DELETE(req: NextRequest) {
     if (!quizCompletion) {
       return NextResponse.json(
         { error: "Quiz completion not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -186,7 +186,7 @@ export async function DELETE(req: NextRequest) {
     console.error("Quiz completion delete error:", error);
     return NextResponse.json(
       { error: "Failed to delete quiz completion" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

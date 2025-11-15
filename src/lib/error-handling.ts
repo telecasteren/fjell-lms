@@ -9,7 +9,7 @@ export class AppError extends Error {
   constructor(
     public message: string,
     public statusCode: number = 500,
-    public code?: string
+    public code?: string,
   ) {
     super(message);
     this.name = "AppError";
@@ -108,7 +108,7 @@ export function handleError(error: unknown, request?: Request): NextResponse {
       {
         error: authError.message || "Unauthorized",
       },
-      { status: authError.status }
+      { status: authError.status },
     );
   }
 
@@ -129,7 +129,7 @@ export function handleError(error: unknown, request?: Request): NextResponse {
     const response: ErrorResponse = {
       error: "Validation failed",
       code: "VALIDATION_ERROR",
-      details: error.issues.map(err => ({
+      details: error.issues.map((err) => ({
         field: err.path.map(String).join("."),
         message: err.message,
       })),
@@ -202,7 +202,7 @@ export function handleError(error: unknown, request?: Request): NextResponse {
 
 // Async error handler wrapper
 export function withErrorHandling<T extends unknown[]>(
-  handler: (...args: T) => Promise<Response | undefined>
+  handler: (...args: T) => Promise<Response | undefined>,
 ) {
   return async (...args: T): Promise<Response> => {
     try {
@@ -211,13 +211,13 @@ export function withErrorHandling<T extends unknown[]>(
       if (!result) {
         return handleError(
           new Error("Handler returned undefined"),
-          args[0] as Request
+          args[0] as Request,
         );
       }
       return result;
     } catch (error) {
       // Extract request from args if available
-      const request = args.find(arg => arg instanceof Request) as
+      const request = args.find((arg) => arg instanceof Request) as
         | Request
         | undefined;
       return handleError(error, request);
@@ -230,7 +230,7 @@ export function apiHandler(
   handler: (
     request: Request,
     ...args: unknown[]
-  ) => Promise<Response | undefined>
+  ) => Promise<Response | undefined>,
 ) {
   return withErrorHandling(handler);
 }
@@ -238,7 +238,7 @@ export function apiHandler(
 // Success response helper
 export function successResponse(
   data: unknown,
-  status: number = 200
+  status: number = 200,
 ): NextResponse {
   return NextResponse.json(
     {
@@ -246,7 +246,7 @@ export function successResponse(
       data,
       timestamp: new Date().toISOString(),
     },
-    { status }
+    { status },
   );
 }
 
@@ -255,7 +255,7 @@ export function paginatedResponse(
   data: unknown[],
   page: number,
   limit: number,
-  total: number
+  total: number,
 ): NextResponse {
   return NextResponse.json({
     success: true,

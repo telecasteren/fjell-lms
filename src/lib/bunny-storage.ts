@@ -19,7 +19,7 @@ export class BunnyStorageProvider implements StorageProvider {
     this.bucket = bucket.trim();
     // Use global storage endpoint without region
     this.baseUrl = `https://storage.bunnycdn.com/${this.bucket}`;
-    
+
     // Log configuration (without exposing full key)
     console.log("BunnyStorageProvider initialized:", {
       bucket: this.bucket,
@@ -33,7 +33,7 @@ export class BunnyStorageProvider implements StorageProvider {
   async uploadFile(
     file: File | Blob | Buffer,
     path: string,
-    metadata?: FileMetadata
+    metadata?: FileMetadata,
   ): Promise<UploadResult> {
     try {
       // Get file name and type - handle both File and generic types
@@ -52,9 +52,13 @@ export class BunnyStorageProvider implements StorageProvider {
 
       // Create the full path for Bunny Storage
       // Remove leading/trailing slashes and normalize path
-      const normalizedPath = path.replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
-      const normalizedFileName = fileName.replace(/^\/+|\/+$/g, '');
-      const fullPath = normalizedPath ? `${normalizedPath}/${normalizedFileName}` : normalizedFileName;
+      const normalizedPath = path
+        .replace(/^\/+|\/+$/g, "")
+        .replace(/\/+/g, "/");
+      const normalizedFileName = fileName.replace(/^\/+|\/+$/g, "");
+      const fullPath = normalizedPath
+        ? `${normalizedPath}/${normalizedFileName}`
+        : normalizedFileName;
       const uploadUrl = `${this.baseUrl}/${fullPath}`;
 
       console.log("Uploading to Bunny Storage:", {
@@ -90,7 +94,7 @@ export class BunnyStorageProvider implements StorageProvider {
         console.error(
           "Bunny Storage upload failed:",
           response.status,
-          errorText
+          errorText,
         );
         console.error("Request details:", {
           uploadUrl,
@@ -102,15 +106,16 @@ export class BunnyStorageProvider implements StorageProvider {
               : "MISSING",
           },
         });
-        
+
         // Provide more helpful error messages
         let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
         if (response.status === 401 || response.status === 403) {
-          errorMessage = "Forbidden - Check your Bunny Storage API key. It may be invalid, expired, or lack write permissions.";
+          errorMessage =
+            "Forbidden - Check your Bunny Storage API key. It may be invalid, expired, or lack write permissions.";
         } else if (errorText) {
           errorMessage += ` - ${errorText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -164,7 +169,7 @@ export class BunnyStorageProvider implements StorageProvider {
 
       const success = response.ok;
       console.log(
-        success ? "✓ File deleted" : `✗ Delete failed: ${response.status}`
+        success ? "✓ File deleted" : `✗ Delete failed: ${response.status}`,
       );
 
       return success;
@@ -204,7 +209,7 @@ export class BunnyStorageProvider implements StorageProvider {
       const files = (await response.json()) as BunnyFile[];
 
       // Convert Bunny Storage response to our StorageFile format
-      return files.map(file => ({
+      return files.map((file) => ({
         id: file.ObjectName,
         name: file.ObjectName.split("/").pop() || file.ObjectName,
         url: `https://${this.bucket}.b-cdn.net/${file.ObjectName}`,
@@ -267,7 +272,7 @@ export class BunnyStorageProvider implements StorageProvider {
 export function createBunnyStorageProvider(
   apiKey: string,
   region: string,
-  bucket: string
+  bucket: string,
 ): BunnyStorageProvider {
   return new BunnyStorageProvider(apiKey, region, bucket);
 }

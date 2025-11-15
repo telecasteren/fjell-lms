@@ -21,15 +21,15 @@ Contact: [insert contact email]
 You must be at least 18 years old and have the legal capacity to enter into agreements under Norwegian law.
 
 4. Use of the Service
-	•	You agree to use the Service only for lawful purposes and in accordance with these Terms.
-	•	You are responsible for maintaining the confidentiality of your login credentials.
-	•	You must not misuse, copy, or reverse-engineer the Service.
+   • You agree to use the Service only for lawful purposes and in accordance with these Terms.
+   • You are responsible for maintaining the confidentiality of your login credentials.
+   • You must not misuse, copy, or reverse-engineer the Service.
 
 5. Subscription and Payment
-	•	Access to certain features may require a paid subscription.
-	•	Subscription fees, billing periods, and payment methods are specified at the time of purchase.
-	•	Unless otherwise stated, all prices are shown in NOK and exclude applicable taxes.
-	•	Subscriptions automatically renew unless cancelled before the renewal date.
+   • Access to certain features may require a paid subscription.
+   • Subscription fees, billing periods, and payment methods are specified at the time of purchase.
+   • Unless otherwise stated, all prices are shown in NOK and exclude applicable taxes.
+   • Subscriptions automatically renew unless cancelled before the renewal date.
 
 6. Termination
 
@@ -37,11 +37,11 @@ We may suspend or terminate your access to the Service if you breach these Terms
 You may cancel your subscription at any time; however, no refunds will be issued for unused periods unless required by Norwegian consumer law.
 
 7. Data Protection and Privacy (GDPR Compliance)
-	•	We process personal data in accordance with the EU General Data Protection Regulation (GDPR) and the Norwegian Personal Data Act.
-	•	Our Privacy Policy explains how we collect, use, and protect your personal data.
-	•	We act as a data controller for account information and as a data processor for customer data you upload to the Service.
-	•	You retain ownership of all data you input or upload to the Service.
-	•	We implement appropriate technical and organizational measures to protect personal data.
+   • We process personal data in accordance with the EU General Data Protection Regulation (GDPR) and the Norwegian Personal Data Act.
+   • Our Privacy Policy explains how we collect, use, and protect your personal data.
+   • We act as a data controller for account information and as a data processor for customer data you upload to the Service.
+   • You retain ownership of all data you input or upload to the Service.
+   • We implement appropriate technical and organizational measures to protect personal data.
 
 For details, please review our [Privacy Policy link].
 
@@ -75,7 +75,7 @@ Address: [insert company address]
 ⸻
 
 ⚖️ Notes:
-	•	You should also create a separate Privacy Policy, referenced in Section 7.
-	•	If your SaaS targets EU or EEA customers, this version is GDPR-compliant.
-	•	If the SaaS is B2B, you might add a Data Processing Agreement (DPA) appendix.
-	•	Consider adding consumer rights clauses if you serve Norwegian individuals (B2C).
+• You should also create a separate Privacy Policy, referenced in Section 7.
+• If your SaaS targets EU or EEA customers, this version is GDPR-compliant.
+• If the SaaS is B2B, you might add a Data Processing Agreement (DPA) appendix.
+• Consider adding consumer rights clauses if you serve Norwegian individuals (B2C).

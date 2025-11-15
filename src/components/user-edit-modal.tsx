@@ -153,8 +153,8 @@ export function UserEditModal({ user, onUserUpdate }: UserEditModalProps) {
             <Input
               id="name"
               value={formData.name}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, name: e.target.value }))
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
               }
             />
           </div>
@@ -164,8 +164,8 @@ export function UserEditModal({ user, onUserUpdate }: UserEditModalProps) {
               id="email"
               type="email"
               value={formData.email}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, email: e.target.value }))
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, email: e.target.value }))
               }
             />
           </div>
@@ -173,8 +173,8 @@ export function UserEditModal({ user, onUserUpdate }: UserEditModalProps) {
             <Label htmlFor="role">Role</Label>
             <Select
               value={formData.role}
-              onValueChange={value =>
-                setFormData(prev => ({ ...prev, role: value }))
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, role: value }))
               }
             >
               <SelectTrigger>

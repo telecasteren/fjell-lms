@@ -118,7 +118,7 @@ export function DepartmentCreationModal({
         `/api/users/search?q=${encodeURIComponent(query)}`,
         {
           credentials: "include",
-        }
+        },
       );
 
       if (res.ok) {
@@ -150,7 +150,10 @@ export function DepartmentCreationModal({
 
     // Use "ADMIN" as default role for display purposes (will be preserved on reassignment)
     const displayRole =
-      user.role === "BASIC" || user.role === "ADMIN" || user.role === "WRITER" || user.role === "AUTHOR"
+      user.role === "BASIC" ||
+      user.role === "ADMIN" ||
+      user.role === "WRITER" ||
+      user.role === "AUTHOR"
         ? user.role
         : "BASIC";
 
@@ -188,7 +191,7 @@ export function DepartmentCreationModal({
 
     // Validate users - separate existing and new users
     const validUsers = users.filter(
-      user => user.name.trim() && user.email.trim()
+      (user) => user.name.trim() && user.email.trim(),
     );
 
     if (validUsers.length === 0) {
@@ -197,7 +200,7 @@ export function DepartmentCreationModal({
     }
 
     // Check for duplicate emails
-    const emails = validUsers.map(u => u.email.toLowerCase());
+    const emails = validUsers.map((u) => u.email.toLowerCase());
     const uniqueEmails = new Set(emails);
     if (emails.length !== uniqueEmails.size) {
       toast.error("Duplicate email addresses found");
@@ -205,8 +208,8 @@ export function DepartmentCreationModal({
     }
 
     // Separate existing users and new users
-    const existingUsers = validUsers.filter(u => u.isExisting);
-    const newUsers = validUsers.filter(u => !u.isExisting);
+    const existingUsers = validUsers.filter((u) => u.isExisting);
+    const newUsers = validUsers.filter((u) => !u.isExisting);
 
     setLoading(true);
     try {
@@ -218,7 +221,7 @@ export function DepartmentCreationModal({
           orgNr: orgNr.trim() || null,
           parentDepartmentId: defaultParentDepartmentId || null,
           users: newUsers,
-          existingUsers: existingUsers.map(u => ({ userId: u.userId })),
+          existingUsers: existingUsers.map((u) => ({ userId: u.userId })),
         }),
         credentials: "include",
       });
@@ -234,7 +237,7 @@ export function DepartmentCreationModal({
         const error = await res.json();
         console.error("Department creation error:", error);
         toast.error(
-          error.details || error.error || "Failed to create department"
+          error.details || error.error || "Failed to create department",
         );
       }
     } catch {
@@ -263,7 +266,7 @@ export function DepartmentCreationModal({
                 <Input
                   id="departmentName"
                   value={departmentName}
-                  onChange={e => setDepartmentName(e.target.value)}
+                  onChange={(e) => setDepartmentName(e.target.value)}
                   placeholder="Enter company name"
                   required
                 />
@@ -273,7 +276,7 @@ export function DepartmentCreationModal({
                 <Input
                   id="orgNr"
                   value={orgNr}
-                  onChange={e => setOrgNr(e.target.value)}
+                  onChange={(e) => setOrgNr(e.target.value)}
                   placeholder="Enter organization number (optional)"
                 />
               </div>
@@ -322,7 +325,7 @@ export function DepartmentCreationModal({
                           type="text"
                           placeholder="Search by name or email..."
                           value={searchQueries[index] || ""}
-                          onChange={e => searchUsers(index, e.target.value)}
+                          onChange={(e) => searchUsers(index, e.target.value)}
                           onFocus={() =>
                             searchQueries[index] &&
                             searchQueries[index].length >= 2 &&
@@ -343,7 +346,7 @@ export function DepartmentCreationModal({
                         searchResults[index] &&
                         searchResults[index].length > 0 && (
                           <div className="max-h-48 overflow-y-auto rounded-md border">
-                            {searchResults[index].map(result => (
+                            {searchResults[index].map((result) => (
                               <div
                                 key={result.id}
                                 className="hover:bg-muted cursor-pointer border-b p-3 last:border-b-0"
@@ -387,7 +390,7 @@ export function DepartmentCreationModal({
                         <Input
                           id={`name-${index}`}
                           value={user.name}
-                          onChange={e =>
+                          onChange={(e) =>
                             updateUser(index, "name", e.target.value)
                           }
                           placeholder="Enter full name"
@@ -401,7 +404,7 @@ export function DepartmentCreationModal({
                           id={`email-${index}`}
                           type="email"
                           value={user.email}
-                          onChange={e =>
+                          onChange={(e) =>
                             updateUser(index, "email", e.target.value)
                           }
                           placeholder="Enter email address"
@@ -414,11 +417,11 @@ export function DepartmentCreationModal({
                         <select
                           id={`role-${index}`}
                           value={user.originalRole || user.role}
-                          onChange={e =>
+                          onChange={(e) =>
                             updateUser(
                               index,
                               "role",
-                              e.target.value as "BASIC" | "ADMIN" | "WRITER"
+                              e.target.value as "BASIC" | "ADMIN" | "WRITER",
                             )
                           }
                           disabled={user.isExisting}
@@ -456,10 +459,13 @@ export function DepartmentCreationModal({
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                const signupUrl = getSignUpUrl(user.email, user.role);
+                                const signupUrl = getSignUpUrl(
+                                  user.email,
+                                  user.role,
+                                );
                                 navigator.clipboard.writeText(signupUrl);
                                 toast.success(
-                                  "Sign-up link copied to clipboard"
+                                  "Sign-up link copied to clipboard",
                                 );
                               }}
                             >

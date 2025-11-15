@@ -11,7 +11,7 @@ Navigate to the "Courses" page and click on the course you're interested in. If 
 ## What are the different user roles?
 
 - **Basic User**: Can enroll in courses, take lessons, and complete quizzes
-- **Admin**: Can manage department users, view reports, and enroll in courses  
+- **Admin**: Can manage department users, view reports, and enroll in courses
 - **Author**: Can create and manage courses, modules, lessons, and quizzes
 
 ## How do I update my profile?

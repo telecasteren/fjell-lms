@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     for (const enrollment of enrollments) {
       const { completedCount, totalCount } = await calculateCourseProgress(
         enrollment.userId,
-        enrollment.courseId
+        enrollment.courseId,
       );
 
       if (totalCount > 0) {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         ? Math.round(
             (completedCoursesArray.reduce((a, b) => a + b, 0) /
               completedCoursesArray.length) *
-              10
+              10,
           ) / 10
         : 0;
 
@@ -111,7 +111,11 @@ export async function GET(req: NextRequest) {
       name: string;
       parentDepartmentId: string | null;
       parentDepartment: { id: string; name: string } | null;
-      subDepartments: Array<{ id: string; name: string; _count: { users: number; courses: number } }>;
+      subDepartments: Array<{
+        id: string;
+        name: string;
+        _count: { users: number; courses: number };
+      }>;
       courses: Array<CourseWithModules>;
       users: Array<{ id: string }>;
     };
@@ -127,11 +131,11 @@ export async function GET(req: NextRequest) {
                 (moduleAcc: number, module: ModuleWithLessons) => {
                   return moduleAcc + module.lessons.length;
                 },
-                0
+                0,
               )
             );
           },
-          0
+          0,
         );
 
         // Calculate completed lessons across all users in department
@@ -162,7 +166,7 @@ export async function GET(req: NextRequest) {
             completionRate,
           },
         };
-      })
+      }),
     );
 
     return NextResponse.json({
@@ -183,12 +187,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: message }, { status });
     }
     console.error("Author dashboard error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error("Author dashboard error details:", { errorMessage, errorStack });
+    console.error("Author dashboard error details:", {
+      errorMessage,
+      errorStack,
+    });
     return NextResponse.json(
       { error: "Internal server error", details: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

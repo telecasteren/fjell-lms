@@ -77,7 +77,7 @@ Course (1) → (N) Module (1) → (N) Lesson (1) → (0..1) Quiz
 // Current implementation in progress-utils.ts
 export async function isLessonCompleted(
   userId: string,
-  lessonId: string
+  lessonId: string,
 ): Promise<boolean> {
   // Check Progress table first
   const progress = await prisma.progress.findUnique({
@@ -98,7 +98,7 @@ export async function isLessonCompleted(
 // Current implementation in progress-utils.ts
 export async function calculateCourseProgress(
   userId: string,
-  courseId: string
+  courseId: string,
 ): Promise<{
   completedCount: number;
   totalCount: number;
@@ -118,7 +118,7 @@ export async function calculateCourseProgress(
     return { completedCount: 0, totalCount: 0, percentage: 0 };
   }
 
-  const lessonIds = lessons.map(l => l.id);
+  const lessonIds = lessons.map((l) => l.id);
   const completionMap = await getLessonCompletions(userId, lessonIds);
 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
@@ -234,11 +234,11 @@ All Modules Complete → Course Complete → Progress Updated
 const calculateQuizScore = (questions, selectedAnswers) => {
   let correctCount = 0;
 
-  questions.forEach(question => {
+  questions.forEach((question) => {
     const selected = selectedAnswers[question.id] || [];
     const isCorrect =
       selected.length === question.correctAnswers.length &&
-      selected.every(answer => question.correctAnswers.includes(answer));
+      selected.every((answer) => question.correctAnswers.includes(answer));
 
     if (isCorrect) correctCount++;
   });

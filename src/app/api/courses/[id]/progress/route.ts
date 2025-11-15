@@ -5,7 +5,7 @@ import { calculateCourseProgress } from "@/lib/progress-utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireAuth(req);
@@ -32,7 +32,7 @@ export async function GET(
     if (!enrollment && !courseAccess) {
       return NextResponse.json(
         { error: "Not enrolled in this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function GET(
       completedAt: Date | null;
     };
 
-    const lessonIds = lessons.map(l => l.id);
+    const lessonIds = lessons.map((l) => l.id);
     const progressMap = await prisma.progress
       .findMany({
         where: {
@@ -69,14 +69,14 @@ export async function GET(
           completedAt: true,
         },
       })
-      .then(progress =>
+      .then((progress) =>
         progress.reduce(
           (acc, p: ProgressEntry) => {
             acc[p.lessonId] = p;
             return acc;
           },
-          {} as Record<string, ProgressEntry>
-        )
+          {} as Record<string, ProgressEntry>,
+        ),
       );
 
     return NextResponse.json({

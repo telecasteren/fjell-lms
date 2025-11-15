@@ -1,20 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { checkRateLimit, getClientIP, withRateLimit } from '@/lib/rate-limit'
-import { simpleRateLimiters } from '@/lib/simple-rate-limit'
-import type { Ratelimit } from '@upstash/ratelimit'
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { checkRateLimit, getClientIP, withRateLimit } from "@/lib/rate-limit";
+import { simpleRateLimiters } from "@/lib/simple-rate-limit";
+import type { Ratelimit } from "@upstash/ratelimit";
 
 // Mock type for Ratelimit that matches the interface
 type MockRatelimit = {
   limit: (identifier: string) => Promise<{
-    success: boolean
-    limit: number
-    remaining: number
-    reset: number
-  }>
-}
+    success: boolean;
+    limit: number;
+    remaining: number;
+    reset: number;
+  }>;
+};
 
 // Mock the simple rate limiter
-vi.mock('@/lib/simple-rate-limit', () => ({
+vi.mock("@/lib/simple-rate-limit", () => ({
   simpleRateLimiters: {
     auth: {
       checkLimit: vi.fn(),
@@ -23,135 +23,150 @@ vi.mock('@/lib/simple-rate-limit', () => ({
       checkLimit: vi.fn(),
     },
   },
-}))
+}));
 
-describe('Rate Limiting', () => {
+describe("Rate Limiting", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
-  describe('getClientIP', () => {
-    it('extracts IP from x-forwarded-for header', () => {
-      const request = new Request('http://localhost:3000/api/test', {
+  describe("getClientIP", () => {
+    it("extracts IP from x-forwarded-for header", () => {
+      const request = new Request("http://localhost:3000/api/test", {
         headers: {
-          'x-forwarded-for': '192.168.1.1, 10.0.0.1',
+          "x-forwarded-for": "192.168.1.1, 10.0.0.1",
         },
-      })
+      });
 
-      const ip = getClientIP(request)
-      expect(ip).toBe('192.168.1.1')
-    })
+      const ip = getClientIP(request);
+      expect(ip).toBe("192.168.1.1");
+    });
 
-    it('extracts IP from x-real-ip header', () => {
-      const request = new Request('http://localhost:3000/api/test', {
+    it("extracts IP from x-real-ip header", () => {
+      const request = new Request("http://localhost:3000/api/test", {
         headers: {
-          'x-real-ip': '192.168.1.1',
+          "x-real-ip": "192.168.1.1",
         },
-      })
+      });
 
-      const ip = getClientIP(request)
-      expect(ip).toBe('192.168.1.1')
-    })
+      const ip = getClientIP(request);
+      expect(ip).toBe("192.168.1.1");
+    });
 
-    it('extracts IP from cf-connecting-ip header', () => {
-      const request = new Request('http://localhost:3000/api/test', {
+    it("extracts IP from cf-connecting-ip header", () => {
+      const request = new Request("http://localhost:3000/api/test", {
         headers: {
-          'cf-connecting-ip': '192.168.1.1',
+          "cf-connecting-ip": "192.168.1.1",
         },
-      })
+      });
 
-      const ip = getClientIP(request)
-      expect(ip).toBe('192.168.1.1')
-    })
+      const ip = getClientIP(request);
+      expect(ip).toBe("192.168.1.1");
+    });
 
-    it('returns unknown when no IP headers present', () => {
-      const request = new Request('http://localhost:3000/api/test')
+    it("returns unknown when no IP headers present", () => {
+      const request = new Request("http://localhost:3000/api/test");
 
-      const ip = getClientIP(request)
-      expect(ip).toBe('unknown')
-    })
-  })
+      const ip = getClientIP(request);
+      expect(ip).toBe("unknown");
+    });
+  });
 
-  describe('withRateLimit', () => {
-    it('allows request when rate limit not exceeded', async () => {
-      const mockCheckLimit = vi.mocked(simpleRateLimiters.auth.checkLimit)
+  describe("withRateLimit", () => {
+    it("allows request when rate limit not exceeded", async () => {
+      const mockCheckLimit = vi.mocked(simpleRateLimiters.auth.checkLimit);
       mockCheckLimit.mockResolvedValue({
         success: true,
         limit: 5,
         remaining: 4,
         reset: Date.now() + 60000,
-      })
+      });
 
-      const request = new Request('http://localhost:3000/api/test')
-      const result = await withRateLimit(request, null, undefined, simpleRateLimiters.auth)
+      const request = new Request("http://localhost:3000/api/test");
+      const result = await withRateLimit(
+        request,
+        null,
+        undefined,
+        simpleRateLimiters.auth,
+      );
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(true);
       expect(result.headers).toEqual({
-        'X-RateLimit-Limit': '5',
-        'X-RateLimit-Remaining': '4',
-        'X-RateLimit-Reset': expect.any(String),
-      })
-    })
+        "X-RateLimit-Limit": "5",
+        "X-RateLimit-Remaining": "4",
+        "X-RateLimit-Reset": expect.any(String),
+      });
+    });
 
-    it('blocks request when rate limit exceeded', async () => {
-      const mockCheckLimit = vi.mocked(simpleRateLimiters.auth.checkLimit)
+    it("blocks request when rate limit exceeded", async () => {
+      const mockCheckLimit = vi.mocked(simpleRateLimiters.auth.checkLimit);
       mockCheckLimit.mockResolvedValue({
         success: false,
         limit: 5,
         remaining: 0,
         reset: Date.now() + 60000,
-      })
+      });
 
-      const request = new Request('http://localhost:3000/api/test')
-      const result = await withRateLimit(request, null, undefined, simpleRateLimiters.auth)
+      const request = new Request("http://localhost:3000/api/test");
+      const result = await withRateLimit(
+        request,
+        null,
+        undefined,
+        simpleRateLimiters.auth,
+      );
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBeInstanceOf(Response)
-      expect(result.error?.status).toBe(429)
-    })
+      expect(result.success).toBe(false);
+      expect(result.error).toBeInstanceOf(Response);
+      expect(result.error?.status).toBe(429);
+    });
 
-    it('handles missing fallback limiter gracefully', async () => {
-      const request = new Request('http://localhost:3000/api/test')
-      const result = await withRateLimit(request, null, undefined, null)
+    it("handles missing fallback limiter gracefully", async () => {
+      const request = new Request("http://localhost:3000/api/test");
+      const result = await withRateLimit(request, null, undefined, null);
 
-      expect(result.success).toBe(true)
-      expect(result.headers).toEqual({})
-    })
+      expect(result.success).toBe(true);
+      expect(result.headers).toEqual({});
+    });
 
-    it('includes rate limit headers in successful response', async () => {
-      const mockCheckLimit = vi.mocked(simpleRateLimiters.general.checkLimit)
+    it("includes rate limit headers in successful response", async () => {
+      const mockCheckLimit = vi.mocked(simpleRateLimiters.general.checkLimit);
       mockCheckLimit.mockResolvedValue({
         success: true,
         limit: 100,
         remaining: 99,
         reset: Date.now() + 60000,
-      })
+      });
 
-      const request = new Request('http://localhost:3000/api/test')
-      const result = await withRateLimit(request, null, undefined, simpleRateLimiters.general)
+      const request = new Request("http://localhost:3000/api/test");
+      const result = await withRateLimit(
+        request,
+        null,
+        undefined,
+        simpleRateLimiters.general,
+      );
 
-      expect(result.success).toBe(true)
-      expect(result.headers).toHaveProperty('X-RateLimit-Limit')
-      expect(result.headers).toHaveProperty('X-RateLimit-Remaining')
-      expect(result.headers).toHaveProperty('X-RateLimit-Reset')
-    })
-  })
+      expect(result.success).toBe(true);
+      expect(result.headers).toHaveProperty("X-RateLimit-Limit");
+      expect(result.headers).toHaveProperty("X-RateLimit-Remaining");
+      expect(result.headers).toHaveProperty("X-RateLimit-Reset");
+    });
+  });
 
-  describe('checkRateLimit', () => {
-    it('handles rate limiter errors gracefully', async () => {
+  describe("checkRateLimit", () => {
+    it("handles rate limiter errors gracefully", async () => {
       const mockLimiter: MockRatelimit = {
-        limit: vi.fn().mockRejectedValue(new Error('Rate limiter error')),
-      }
+        limit: vi.fn().mockRejectedValue(new Error("Rate limiter error")),
+      };
 
-      const result = await checkRateLimit(mockLimiter as Ratelimit, 'test-id')
+      const result = await checkRateLimit(mockLimiter as Ratelimit, "test-id");
 
-      expect(result.success).toBe(true)
-      expect(result.limit).toBe(0)
-      expect(result.remaining).toBe(0)
-      expect(result.reset).toBe(0)
-    })
+      expect(result.success).toBe(true);
+      expect(result.limit).toBe(0);
+      expect(result.remaining).toBe(0);
+      expect(result.reset).toBe(0);
+    });
 
-    it('returns rate limit result when successful', async () => {
+    it("returns rate limit result when successful", async () => {
       const mockLimiter: MockRatelimit = {
         limit: vi.fn().mockResolvedValue({
           success: true,
@@ -159,14 +174,14 @@ describe('Rate Limiting', () => {
           remaining: 9,
           reset: Date.now() + 60000,
         }),
-      }
+      };
 
-      const result = await checkRateLimit(mockLimiter as Ratelimit, 'test-id')
+      const result = await checkRateLimit(mockLimiter as Ratelimit, "test-id");
 
-      expect(result.success).toBe(true)
-      expect(result.limit).toBe(10)
-      expect(result.remaining).toBe(9)
-      expect(result.reset).toBeGreaterThan(Date.now())
-    })
-  })
-})
+      expect(result.success).toBe(true);
+      expect(result.limit).toBe(10);
+      expect(result.remaining).toBe(9);
+      expect(result.reset).toBeGreaterThan(Date.now());
+    });
+  });
+});

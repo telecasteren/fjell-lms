@@ -26,7 +26,7 @@ export default function SignInPage() {
   const email = watch("email");
   const password = watch("password");
 
-  const onSubmit = handleSubmit(async data => {
+  const onSubmit = handleSubmit(async (data) => {
     setLoading(true);
     setError(null);
 
@@ -68,12 +68,12 @@ export default function SignInPage() {
                 id="email"
                 type="email"
                 className="bg-background w-full rounded-md border px-3 py-2"
-                {...register("email", { 
+                {...register("email", {
                   required: "Email is required",
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Invalid email address"
-                  }
+                    message: "Invalid email address",
+                  },
                 })}
               />
               {errors.email && (
@@ -94,9 +94,15 @@ export default function SignInPage() {
                 </p>
               )}
             </div>
-            <Button 
-              type="submit" 
-              disabled={loading || !email || !password || !!errors.email || !!errors.password} 
+            <Button
+              type="submit"
+              disabled={
+                loading ||
+                !email ||
+                !password ||
+                !!errors.email ||
+                !!errors.password
+              }
               className="w-full"
             >
               {loading ? "Signing in..." : "Sign in"}

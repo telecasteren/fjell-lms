@@ -5,22 +5,22 @@
  * Usage: node scripts/kill-db-locks.mjs [--force]
  */
 
-import { execSync } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import readline from 'readline';
+import { execSync } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
+import readline from "readline";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DB_PATH = path.join(__dirname, '..', 'prisma', 'dev.db');
-const FORCE_KILL = process.argv.includes('--force');
+const DB_PATH = path.join(__dirname, "..", "prisma", "dev.db");
+const FORCE_KILL = process.argv.includes("--force");
 
 function exec(command) {
   try {
-    return execSync(command, { encoding: 'utf-8', stdio: 'pipe' });
+    return execSync(command, { encoding: "utf-8", stdio: "pipe" });
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -28,9 +28,9 @@ function getLockingProcesses() {
   try {
     const output = exec(`lsof "${DB_PATH}" 2>/dev/null`);
     if (!output.trim()) return [];
-    
-    const lines = output.trim().split('\n').slice(1); // Skip header
-    return lines.map(line => {
+
+    const lines = output.trim().split("\n").slice(1); // Skip header
+    return lines.map((line) => {
       const parts = line.trim().split(/\s+/);
       return {
         pid: parts[1],
@@ -46,15 +46,17 @@ function getLockingProcesses() {
 
 function getPrismaProcesses() {
   try {
-    const output = exec('ps aux | grep -E "(prisma|schema-engine)" | grep -v grep | grep -v "kill-db-locks"');
+    const output = exec(
+      'ps aux | grep -E "(prisma|schema-engine)" | grep -v grep | grep -v "kill-db-locks"',
+    );
     if (!output.trim()) return [];
-    
-    const lines = output.trim().split('\n');
-    return lines.map(line => {
+
+    const lines = output.trim().split("\n");
+    return lines.map((line) => {
       const parts = line.trim().split(/\s+/);
       return {
         pid: parts[1],
-        command: parts.slice(10).join(' '),
+        command: parts.slice(10).join(" "),
         user: parts[0],
       };
     });
@@ -81,39 +83,41 @@ function isProcessRunning(pid) {
   }
 }
 
-console.log('🔍 Checking for processes locking the database...\n');
+console.log("🔍 Checking for processes locking the database...\n");
 
 const lockingProcesses = getLockingProcesses();
 const prismaProcesses = getPrismaProcesses();
 
 if (lockingProcesses.length === 0 && prismaProcesses.length === 0) {
-  console.log('✅ No processes are locking the database');
+  console.log("✅ No processes are locking the database");
   process.exit(0);
 }
 
 if (lockingProcesses.length > 0) {
-  console.log('⚠️  Found processes locking the database:\n');
-  lockingProcesses.forEach(p => {
+  console.log("⚠️  Found processes locking the database:\n");
+  lockingProcesses.forEach((p) => {
     console.log(`  - PID: ${p.pid} | Command: ${p.command} | User: ${p.user}`);
   });
-  console.log('');
+  console.log("");
 }
 
 if (prismaProcesses.length > 0) {
-  console.log('⚠️  Found related Prisma processes:\n');
-  prismaProcesses.forEach(p => {
-    console.log(`  - PID: ${p.pid} | Command: ${p.command.substring(0, 60)}...`);
+  console.log("⚠️  Found related Prisma processes:\n");
+  prismaProcesses.forEach((p) => {
+    console.log(
+      `  - PID: ${p.pid} | Command: ${p.command.substring(0, 60)}...`,
+    );
   });
-  console.log('');
+  console.log("");
 }
 
 // Collect all PIDs to kill
 const allPids = new Set();
-lockingProcesses.forEach(p => allPids.add(p.pid));
-prismaProcesses.forEach(p => allPids.add(p.pid));
+lockingProcesses.forEach((p) => allPids.add(p.pid));
+prismaProcesses.forEach((p) => allPids.add(p.pid));
 
 if (allPids.size === 0) {
-  console.log('✅ No processes to kill');
+  console.log("✅ No processes to kill");
   process.exit(0);
 }
 
@@ -123,10 +127,10 @@ if (!FORCE_KILL) {
     output: process.stdout,
   });
 
-  rl.question('❓ Kill these processes? (y/N): ', (answer) => {
+  rl.question("❓ Kill these processes? (y/N): ", (answer) => {
     rl.close();
     if (!answer.match(/^[Yy]$/)) {
-      console.log('❌ Cancelled');
+      console.log("❌ Cancelled");
       process.exit(0);
     }
     killProcesses();
@@ -136,11 +140,12 @@ if (!FORCE_KILL) {
 }
 
 function killProcesses() {
-  console.log('\n🔪 Killing processes...\n');
+  console.log("\n🔪 Killing processes...\n");
 
-  allPids.forEach(pid => {
+  allPids.forEach((pid) => {
     if (isProcessRunning(pid)) {
-      const command = exec(`ps -p ${pid} -o comm= 2>/dev/null`).trim() || 'unknown';
+      const command =
+        exec(`ps -p ${pid} -o comm= 2>/dev/null`).trim() || "unknown";
       if (killProcess(pid)) {
         console.log(`  ✅ Killed PID ${pid} (${command})`);
       } else {
@@ -151,20 +156,21 @@ function killProcesses() {
 
   // Wait a moment for processes to release locks
   setTimeout(() => {
-    console.log('\n🔍 Verifying database is unlocked...\n');
+    console.log("\n🔍 Verifying database is unlocked...\n");
 
     const remaining = getLockingProcesses();
     if (remaining.length > 0) {
-      console.log('  ⚠️  Database may still be locked. Remaining processes:');
-      remaining.forEach(p => {
+      console.log("  ⚠️  Database may still be locked. Remaining processes:");
+      remaining.forEach((p) => {
         console.log(`    - PID: ${p.pid} | Command: ${p.command}`);
       });
-      console.log('\n  💡 Try running with --force or manually kill remaining processes');
+      console.log(
+        "\n  💡 Try running with --force or manually kill remaining processes",
+      );
       process.exit(1);
     } else {
-      console.log('  ✅ Database is now unlocked!');
+      console.log("  ✅ Database is now unlocked!");
       process.exit(0);
     }
   }, 1000);
 }
-

@@ -23,7 +23,7 @@ export function ConfirmationDialog({
   message,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  variant = "destructive"
+  variant = "destructive",
 }: ConfirmationDialogProps) {
   if (!isOpen) return null;
 
@@ -50,10 +50,7 @@ export function ConfirmationDialog({
             <Button variant="outline" onClick={onClose}>
               {cancelText}
             </Button>
-            <Button 
-              variant={variant} 
-              onClick={handleConfirm}
-            >
+            <Button variant={variant} onClick={handleConfirm}>
               {confirmText}
             </Button>
           </div>

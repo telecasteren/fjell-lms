@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest) {
     if (existing && existing.id !== user.id) {
       return NextResponse.json(
         { error: "Email already in use" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest) {
     console.error("Email update error:", error);
     return NextResponse.json(
       { error: "Failed to update email" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -6,7 +6,7 @@ import { CourseStatus } from "@prisma/client";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const user = await requireWriterOrAdminOrAuthor(req);
@@ -22,7 +22,7 @@ export async function PATCH(
     if (!canManage) {
       return NextResponse.json(
         { error: "You don't have permission to manage this course" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 

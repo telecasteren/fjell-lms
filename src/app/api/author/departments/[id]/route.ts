@@ -6,7 +6,7 @@ import { getAccessibleDepartmentIds } from "@/lib/department-utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Allow AUTHOR and ADMIN users
@@ -15,10 +15,13 @@ export async function GET(
 
     // Check if user has access to this department
     const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
-    if (accessibleDepartmentIds !== null && !accessibleDepartmentIds.includes(id)) {
+    if (
+      accessibleDepartmentIds !== null &&
+      !accessibleDepartmentIds.includes(id)
+    ) {
       return NextResponse.json(
         { error: "You don't have permission to access this department" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -98,7 +101,7 @@ export async function GET(
     if (!department) {
       return NextResponse.json(
         { error: "Department not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 

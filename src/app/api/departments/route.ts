@@ -2,7 +2,10 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { requireAuthorOnly, requireAdminOrAuthor } from "@/lib/rbac";
-import { isInChildDepartmentOfFoxLms, getDepartmentWhereClause } from "@/lib/department-utils";
+import {
+  isInChildDepartmentOfFoxLms,
+  getDepartmentWhereClause,
+} from "@/lib/department-utils";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -15,13 +18,13 @@ const createDepartmentSchema = z.object({
       name: z.string().min(1, "Name is required"),
       email: z.string().email("Valid email is required"),
       role: z.enum(["BASIC", "ADMIN", "WRITER"]),
-    })
+    }),
   ),
   existingUsers: z
     .array(
       z.object({
         userId: z.string(),
-      })
+      }),
     )
     .optional(),
 });
@@ -44,30 +47,42 @@ export async function POST(req: NextRequest) {
           error: "Validation failed",
           details: validation.error.issues,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { name, orgNr, parentDepartmentId, users, existingUsers = [] } = validation.data;
+    const {
+      name,
+      orgNr,
+      parentDepartmentId,
+      users,
+      existingUsers = [],
+    } = validation.data;
 
     // AUTHOR can create departments anywhere
     // ADMIN can only create sub-departments under their own department (if they're in a child department of FOX-LMS)
     if (user.role === "ADMIN") {
       // Check if ADMIN is in a child department of FOX-LMS
       const isChildDept = await isInChildDepartmentOfFoxLms(user.id);
-      
+
       if (!isChildDept) {
         return NextResponse.json(
-          { error: "ADMIN users can only create sub-departments if they are in a child department of FOX-LMS" },
-          { status: 403 }
+          {
+            error:
+              "ADMIN users can only create sub-departments if they are in a child department of FOX-LMS",
+          },
+          { status: 403 },
         );
       }
 
       // ADMIN must create sub-departments under their own department
       if (!parentDepartmentId || parentDepartmentId !== user.departmentId) {
         return NextResponse.json(
-          { error: "ADMIN users can only create sub-departments under their own department" },
-          { status: 403 }
+          {
+            error:
+              "ADMIN users can only create sub-departments under their own department",
+          },
+          { status: 403 },
         );
       }
     }
@@ -81,7 +96,7 @@ export async function POST(req: NextRequest) {
       if (!parentDepartment) {
         return NextResponse.json(
           { error: "Parent department not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -99,7 +114,7 @@ export async function POST(req: NextRequest) {
         {
           error: "Department with this name already exists",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -107,7 +122,7 @@ export async function POST(req: NextRequest) {
     const existingEmails = await prisma.user.findMany({
       where: {
         email: {
-          in: users.map(u => u.email.toLowerCase()),
+          in: users.map((u) => u.email.toLowerCase()),
         },
       },
       select: { email: true },
@@ -116,14 +131,14 @@ export async function POST(req: NextRequest) {
     if (existingEmails.length > 0) {
       return NextResponse.json(
         {
-          error: `Email addresses already exist: ${existingEmails.map(u => u.email).join(", ")}`,
+          error: `Email addresses already exist: ${existingEmails.map((u) => u.email).join(", ")}`,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     // Create department and users in a transaction
-    const result = await prisma.$transaction(async tx => {
+    const result = await prisma.$transaction(async (tx) => {
       // Create department
       const department = await tx.department.create({
         data: {
@@ -139,10 +154,10 @@ export async function POST(req: NextRequest) {
       if (users.length > 0) {
         const placeholderPasswordHash = await bcrypt.hash(
           "PLACEHOLDER_PASSWORD",
-          12
+          12,
         );
         const createdUsers = await tx.user.createMany({
-          data: users.map(user => ({
+          data: users.map((user) => ({
             name: user.name,
             email: user.email.toLowerCase(),
             role: user.role,
@@ -158,7 +173,7 @@ export async function POST(req: NextRequest) {
         const assignedUsers = await tx.user.updateMany({
           where: {
             id: {
-              in: existingUsers.map(u => u.userId),
+              in: existingUsers.map((u) => u.userId),
             },
           },
           data: {
@@ -188,7 +203,7 @@ export async function POST(req: NextRequest) {
         error: "Failed to create department",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -225,7 +240,7 @@ export async function GET(req: NextRequest) {
       {
         error: "Failed to fetch departments",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -243,7 +258,7 @@ export async function DELETE(req: NextRequest) {
     if (!departmentId) {
       return NextResponse.json(
         { error: "Department ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -263,7 +278,7 @@ export async function DELETE(req: NextRequest) {
     if (!department) {
       return NextResponse.json(
         { error: "Department not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -271,17 +286,17 @@ export async function DELETE(req: NextRequest) {
     if (department.id === currentUser.departmentId) {
       return NextResponse.json(
         { error: "Cannot delete your own department" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Prevent deleting departments with active users
     if (department._count.users > 0) {
       return NextResponse.json(
-        { 
-          error: `Cannot delete department with ${department._count.users} active user(s). Please reassign users to another department first.` 
+        {
+          error: `Cannot delete department with ${department._count.users} active user(s). Please reassign users to another department first.`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -295,9 +310,9 @@ export async function DELETE(req: NextRequest) {
       message += `. ${department._count.courses} course(s) were also deleted.`;
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message
+      message,
     });
   } catch (error) {
     console.error("Delete department error:", error);
@@ -306,7 +321,7 @@ export async function DELETE(req: NextRequest) {
         error: "Failed to delete department",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

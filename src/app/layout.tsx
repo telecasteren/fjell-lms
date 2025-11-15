@@ -37,7 +37,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let session = null;
-  
+
   // Try to get session, but catch JWT decryption errors gracefully
   // Middleware already clears stale cookies on auth pages, so this should work
   try {
@@ -47,12 +47,14 @@ export default async function RootLayout({
     // Middleware clears these cookies, so just continue without session
     if (error instanceof Error) {
       // Ignore decryption errors (handled gracefully)
-      if (error.message.includes('decryption')) {
+      if (error.message.includes("decryption")) {
         return;
       }
       // Ignore Next.js dynamic server usage warnings (expected for authenticated pages)
-      if (error.message.includes('Dynamic server usage') || 
-          error.message.includes('couldn\'t be rendered statically')) {
+      if (
+        error.message.includes("Dynamic server usage") ||
+        error.message.includes("couldn't be rendered statically")
+      ) {
         return;
       }
       // Only log actual errors

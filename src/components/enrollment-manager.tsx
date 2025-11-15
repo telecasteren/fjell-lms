@@ -68,7 +68,7 @@ export function EnrollmentManager() {
 
   async function createEnrollment() {
     if (!formData.userId || !formData.courseId) return;
-    
+
     setLoading(true);
     const res = await fetch("/api/admin/enrollments", {
       method: "POST",
@@ -76,7 +76,7 @@ export function EnrollmentManager() {
       body: JSON.stringify(formData),
     });
     setLoading(false);
-    
+
     if (res.ok) {
       setFormData({ userId: "", courseId: "" });
       await loadData();
@@ -92,7 +92,9 @@ export function EnrollmentManager() {
             <select
               id="user"
               value={formData.userId}
-              onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, userId: e.target.value })
+              }
               className="w-full rounded-md border px-3 py-2 bg-background"
             >
               <option value="">Select user</option>
@@ -108,7 +110,9 @@ export function EnrollmentManager() {
             <select
               id="course"
               value={formData.courseId}
-              onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, courseId: e.target.value })
+              }
               className="w-full rounded-md border px-3 py-2 bg-background"
             >
               <option value="">Select course</option>
@@ -120,7 +124,11 @@ export function EnrollmentManager() {
             </select>
           </div>
         </div>
-        <Button onClick={createEnrollment} disabled={loading} className="w-full">
+        <Button
+          onClick={createEnrollment}
+          disabled={loading}
+          className="w-full"
+        >
           {loading ? "Enrolling..." : "Enroll User"}
         </Button>
       </div>
@@ -132,9 +140,13 @@ export function EnrollmentManager() {
         ) : (
           <div className="space-y-2">
             {enrollments.map((enrollment) => (
-              <div key={enrollment.id} className="flex items-center justify-between p-2 border rounded text-sm">
+              <div
+                key={enrollment.id}
+                className="flex items-center justify-between p-2 border rounded text-sm"
+              >
                 <div>
-                  <span className="font-medium">{enrollment.user.name}</span> enrolled in{" "}
+                  <span className="font-medium">{enrollment.user.name}</span>{" "}
+                  enrolled in{" "}
                   <span className="font-medium">{enrollment.course.title}</span>
                 </div>
                 <div className="text-muted-foreground">

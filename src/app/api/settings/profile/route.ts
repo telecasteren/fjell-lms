@@ -11,14 +11,18 @@ const profileUpdateSchema = z.object({
 export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
     const validation = profileUpdateSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json({ 
-        error: validation.error.issues[0]?.message || "Invalid data" 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: validation.error.issues[0]?.message || "Invalid data",
+        },
+        { status: 400 },
+      );
     }
     const { name } = validation.data;
 
@@ -37,7 +41,10 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
-    console.error('Profile update error:', error);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    console.error("Profile update error:", error);
+    return NextResponse.json(
+      { error: "Failed to update profile" },
+      { status: 500 },
+    );
   }
 }

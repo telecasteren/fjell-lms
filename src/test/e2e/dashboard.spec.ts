@@ -14,7 +14,7 @@ test.describe("Dashboard & Reports", () => {
 
     // Look for dashboard content - statistics or department management
     const dashboardContent = page.locator(
-      "text=/statistics|total|users|courses|departments|management/i"
+      "text=/statistics|total|users|courses|departments|management/i",
     );
     if ((await dashboardContent.count()) > 0) {
       await expect(dashboardContent.first()).toBeVisible();

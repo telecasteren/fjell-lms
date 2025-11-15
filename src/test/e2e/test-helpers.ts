@@ -15,7 +15,7 @@ export class TestAuthHelper {
     await this.page.getByRole("button", { name: "Sign in" }).click();
 
     // Simplified navigation wait with reduced timeout
-    await this.page.waitForURL(url => !url.toString().includes("/sign-in"), {
+    await this.page.waitForURL((url) => !url.toString().includes("/sign-in"), {
       timeout: 5000,
     });
 
@@ -31,7 +31,7 @@ export class TestAuthHelper {
     await this.page.getByLabel("Password").fill("test321");
     await this.page.getByRole("button", { name: "Sign in" }).click();
 
-    await this.page.waitForURL(url => !url.toString().includes("/sign-in"), {
+    await this.page.waitForURL((url) => !url.toString().includes("/sign-in"), {
       timeout: 5000,
     });
     await this.verifySession();
@@ -45,7 +45,7 @@ export class TestAuthHelper {
     await this.page.getByLabel("Password").fill("test321");
     await this.page.getByRole("button", { name: "Sign in" }).click();
 
-    await this.page.waitForURL(url => !url.toString().includes("/sign-in"), {
+    await this.page.waitForURL((url) => !url.toString().includes("/sign-in"), {
       timeout: 5000,
     });
     await this.verifySession();
@@ -65,7 +65,7 @@ export class TestAuthHelper {
           return false;
         }
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
   }
 

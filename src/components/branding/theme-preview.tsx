@@ -1,33 +1,45 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { useBrandingValue } from '@/components/providers/branding-provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
-import { Logo } from './logo'
-import { cn } from '@/lib/utils'
+import React from "react";
+import { useBrandingValue } from "@/components/providers/branding-provider";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Logo } from "./logo";
+import { cn } from "@/lib/utils";
 
 interface ThemePreviewProps {
-  className?: string
+  className?: string;
 }
 
 export function ThemePreview({ className }: ThemePreviewProps) {
-  const colors = useBrandingValue('colors')
-  const typography = useBrandingValue('typography')
-  const appName = useBrandingValue('appName')
+  const colors = useBrandingValue("colors");
+  const typography = useBrandingValue("typography");
+  const appName = useBrandingValue("appName");
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       <div className="text-center space-y-2">
         <Logo size="lg" />
-        <h2 className="text-2xl font-bold" style={{ fontFamily: typography.fontFamily }}>
+        <h2
+          className="text-2xl font-bold"
+          style={{ fontFamily: typography.fontFamily }}
+        >
           {appName} Theme Preview
         </h2>
-        <p className="text-muted-foreground" style={{ fontFamily: typography.fontFamily }}>
+        <p
+          className="text-muted-foreground"
+          style={{ fontFamily: typography.fontFamily }}
+        >
           See how your branding will look across the application
         </p>
       </div>
@@ -54,9 +66,9 @@ export function ThemePreview({ className }: ThemePreviewProps) {
                 <p className="text-sm text-muted-foreground">Student</p>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Course Progress</span>
@@ -64,15 +76,17 @@ export function ThemePreview({ className }: ThemePreviewProps) {
               </div>
               <Progress value={75} className="h-2" />
             </div>
-            
+
             <div className="flex gap-2">
               <Badge variant="default">Active</Badge>
               <Badge variant="secondary">Enrolled</Badge>
             </div>
-            
+
             <div className="flex gap-2">
               <Button size="sm">Continue Learning</Button>
-              <Button variant="outline" size="sm">View Progress</Button>
+              <Button variant="outline" size="sm">
+                View Progress
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -81,9 +95,7 @@ export function ThemePreview({ className }: ThemePreviewProps) {
         <Card>
           <CardHeader>
             <CardTitle>Course Management</CardTitle>
-            <CardDescription>
-              Manage your courses and content
-            </CardDescription>
+            <CardDescription>Manage your courses and content</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
@@ -102,9 +114,9 @@ export function ThemePreview({ className }: ThemePreviewProps) {
                 <span>2 hours</span>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
@@ -112,7 +124,9 @@ export function ThemePreview({ className }: ThemePreviewProps) {
                 </Avatar>
                 <span className="text-sm">Created by Author</span>
               </div>
-              <Button variant="ghost" size="sm">Edit</Button>
+              <Button variant="ghost" size="sm">
+                Edit
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -121,9 +135,7 @@ export function ThemePreview({ className }: ThemePreviewProps) {
         <Card>
           <CardHeader>
             <CardTitle>Navigation</CardTitle>
-            <CardDescription>
-              Main navigation elements
-            </CardDescription>
+            <CardDescription>Main navigation elements</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <nav className="space-y-1">
@@ -140,13 +152,17 @@ export function ThemePreview({ className }: ThemePreviewProps) {
                 Settings
               </Button>
             </nav>
-            
+
             <Separator />
-            
+
             <div className="space-y-2">
               <Button className="w-full">Primary Action</Button>
-              <Button variant="outline" className="w-full">Secondary Action</Button>
-              <Button variant="ghost" className="w-full">Tertiary Action</Button>
+              <Button variant="outline" className="w-full">
+                Secondary Action
+              </Button>
+              <Button variant="ghost" className="w-full">
+                Tertiary Action
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -169,7 +185,7 @@ export function ThemePreview({ className }: ThemePreviewProps) {
                 style={{ fontFamily: typography.fontFamily }}
               />
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Password</label>
               <input
@@ -179,18 +195,14 @@ export function ThemePreview({ className }: ThemePreviewProps) {
                 style={{ fontFamily: typography.fontFamily }}
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="remember"
-                className="rounded"
-              />
+              <input type="checkbox" id="remember" className="rounded" />
               <label htmlFor="remember" className="text-sm">
                 Remember me
               </label>
             </div>
-            
+
             <Button className="w-full">Sign In</Button>
           </CardContent>
         </Card>
@@ -200,9 +212,7 @@ export function ThemePreview({ className }: ThemePreviewProps) {
       <Card>
         <CardHeader>
           <CardTitle>Color Palette</CardTitle>
-          <CardDescription>
-            Your custom color scheme
-          </CardDescription>
+          <CardDescription>Your custom color scheme</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -254,33 +264,50 @@ export function ThemePreview({ className }: ThemePreviewProps) {
       <Card>
         <CardHeader>
           <CardTitle>Typography</CardTitle>
-          <CardDescription>
-            Font family and text styles
-          </CardDescription>
+          <CardDescription>Font family and text styles</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <h1 style={{ fontFamily: typography.fontFamily }} className="text-4xl font-bold">
+            <h1
+              style={{ fontFamily: typography.fontFamily }}
+              className="text-4xl font-bold"
+            >
               Heading 1
             </h1>
-            <h2 style={{ fontFamily: typography.fontFamily }} className="text-3xl font-semibold">
+            <h2
+              style={{ fontFamily: typography.fontFamily }}
+              className="text-3xl font-semibold"
+            >
               Heading 2
             </h2>
-            <h3 style={{ fontFamily: typography.fontFamily }} className="text-2xl font-medium">
+            <h3
+              style={{ fontFamily: typography.fontFamily }}
+              className="text-2xl font-medium"
+            >
               Heading 3
             </h3>
-            <h4 style={{ fontFamily: typography.fontFamily }} className="text-xl font-medium">
+            <h4
+              style={{ fontFamily: typography.fontFamily }}
+              className="text-xl font-medium"
+            >
               Heading 4
             </h4>
-            <p style={{ fontFamily: typography.fontFamily }} className="text-base">
-              This is a paragraph of text showing how your chosen font family will appear in regular content.
+            <p
+              style={{ fontFamily: typography.fontFamily }}
+              className="text-base"
+            >
+              This is a paragraph of text showing how your chosen font family
+              will appear in regular content.
             </p>
-            <p style={{ fontFamily: typography.fontFamily }} className="text-sm text-muted-foreground">
+            <p
+              style={{ fontFamily: typography.fontFamily }}
+              className="text-sm text-muted-foreground"
+            >
               This is smaller text, often used for descriptions and captions.
             </p>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

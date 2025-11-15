@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest) {
     if (!isValid) {
       return NextResponse.json(
         { error: "Current password is incorrect" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest) {
   } catch {
     return NextResponse.json(
       { error: "Failed to update password" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

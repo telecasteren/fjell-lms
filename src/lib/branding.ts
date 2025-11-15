@@ -195,7 +195,7 @@ export const brandingUtils = {
   // Merge branding configurations
   mergeBranding: (
     base: BrandingConfig,
-    override: Partial<BrandingConfig>
+    override: Partial<BrandingConfig>,
   ): BrandingConfig => {
     return {
       ...base,
@@ -238,7 +238,7 @@ export const brandingUtils = {
   generateThemeCSS: (branding: BrandingConfig): string => {
     const colorVars = brandingUtils.getColorVariables(branding.colors);
     const typographyVars = brandingUtils.getTypographyVariables(
-      branding.typography
+      branding.typography,
     );
 
     const cssVars = Object.entries({ ...colorVars, ...typographyVars })

@@ -44,7 +44,7 @@ function SignUpForm() {
     // Note: Role is handled on the backend based on the user's existing record
   }, [searchParams, setValue]);
 
-  const onSubmit = handleSubmit(async data => {
+  const onSubmit = handleSubmit(async (data) => {
     if (data.password !== data.confirmPassword) {
       toast.error("Passwords do not match.");
       return;
@@ -212,18 +212,20 @@ function SignUpForm() {
 
 export default function SignUpPage() {
   return (
-    <Suspense fallback={
-      <div className="container mx-auto max-w-md p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create account</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">Loading...</div>
-          </CardContent>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="container mx-auto max-w-md p-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create account</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">Loading...</div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
       <SignUpForm />
     </Suspense>
   );

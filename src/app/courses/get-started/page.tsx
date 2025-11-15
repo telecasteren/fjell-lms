@@ -29,9 +29,10 @@ export default function GetStartedPage() {
   const [loading, setLoading] = useState(true);
 
   // Check if user has permission to view this page
-  const canView = session?.user?.role === "AUTHOR" || 
-                  session?.user?.role === "WRITER" || 
-                  session?.user?.role === "ADMIN";
+  const canView =
+    session?.user?.role === "AUTHOR" ||
+    session?.user?.role === "WRITER" ||
+    session?.user?.role === "ADMIN";
 
   useEffect(() => {
     // Redirect if user doesn't have permission
@@ -51,7 +52,8 @@ export default function GetStartedPage() {
       const data = await res.json();
       // Filter only FOX-LMS courses
       const foxLmsCourses = data.courses.filter(
-        (c: Course & { isFoxLmsCourse?: boolean }) => c.isFoxLmsCourse && c.status === "PUBLISHED"
+        (c: Course & { isFoxLmsCourse?: boolean }) =>
+          c.isFoxLmsCourse && c.status === "PUBLISHED",
       );
       setCourses(foxLmsCourses);
     }
@@ -65,7 +67,6 @@ export default function GetStartedPage() {
     }
     setLoading(false);
   }
-
 
   async function enrollInCourse(courseId: string) {
     const res = await fetch("/api/enrollments", {
@@ -88,7 +89,7 @@ export default function GetStartedPage() {
   }
 
   function isEnrolled(courseId: string) {
-    return enrollments.some(e => e.course.id === courseId);
+    return enrollments.some((e) => e.course.id === courseId);
   }
 
   // Don't render if user doesn't have permission
@@ -135,8 +136,9 @@ export default function GetStartedPage() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
-            Explore our foundational courses to get started with your learning journey.
-            These courses are designed to help you build a strong foundation.
+            Explore our foundational courses to get started with your learning
+            journey. These courses are designed to help you build a strong
+            foundation.
           </p>
         </CardContent>
       </Card>
@@ -151,7 +153,7 @@ export default function GetStartedPage() {
         </Card>
       ) : (
         <div className="grid gap-3">
-          {courses.map(c => (
+          {courses.map((c) => (
             <Card key={c.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -197,4 +199,3 @@ export default function GetStartedPage() {
     </div>
   );
 }
-

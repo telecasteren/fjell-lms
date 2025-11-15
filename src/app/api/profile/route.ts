@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const recentActivity = enrollments.slice(0, 3).map(enrollment => {
+    const recentActivity = enrollments.slice(0, 3).map((enrollment) => {
       return {
         id: enrollment.id,
         courseTitle: enrollment.course.title,
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     console.error("Error fetching profile:", error);
     return NextResponse.json(
       { error: "Failed to fetch profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
