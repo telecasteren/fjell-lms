@@ -72,7 +72,7 @@ jobs:
         run: npm run build
 
       - name: Setup E2E test data
-        run: node scripts/create-e2e-test-users.mjs
+        run: node scripts/users/create-test-users.js
 
       - name: E2E Tests
         run: |
