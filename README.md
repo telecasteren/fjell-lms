@@ -1,5 +1,7 @@
 # LMS Web Application
 
+wwefbwekgbergbearbg
+
 A comprehensive Learning Management System built with Next.js 15, featuring multi-tenant architecture, role-based access control, and modern security practices.
 
 ## Tech Stack
