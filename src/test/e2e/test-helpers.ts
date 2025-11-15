@@ -15,11 +15,11 @@ export class TestAuthHelper {
     await this.page.waitForFunction(
       () => {
         const button = document.querySelector(
-          'button[type="submit"]'
+          'button[type="submit"]',
         ) as HTMLButtonElement;
         return button && !button.disabled;
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     await this.page.getByRole("button", { name: "Sign in" }).click();
@@ -45,11 +45,11 @@ export class TestAuthHelper {
     await this.page.waitForFunction(
       () => {
         const button = document.querySelector(
-          'button[type="submit"]'
+          'button[type="submit"]',
         ) as HTMLButtonElement;
         return button && !button.disabled;
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     await this.page.getByRole("button", { name: "Sign in" }).click();
@@ -72,11 +72,11 @@ export class TestAuthHelper {
     await this.page.waitForFunction(
       () => {
         const button = document.querySelector(
-          'button[type="submit"]'
+          'button[type="submit"]',
         ) as HTMLButtonElement;
         return button && !button.disabled;
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     await this.page.getByRole("button", { name: "Sign in" }).click();
@@ -104,7 +104,7 @@ export class TestAuthHelper {
           return false;
         }
       },
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
   }
 
