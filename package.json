@@ -96,7 +96,7 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "*.{js,mjs,jsx,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
