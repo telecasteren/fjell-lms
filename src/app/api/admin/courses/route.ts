@@ -14,9 +14,12 @@ export async function GET(req: NextRequest) {
     // Use reusable utility to get course where clause based on role and hierarchy
     const whereClause = await getCourseWhereClause(user.id, false);
 
-    // Get courses from accessible departments
+    // Get courses from accessible departments (only PUBLISHED for enrollments)
     const courses = await prisma.course.findMany({
-      where: whereClause,
+      where: {
+        ...whereClause,
+        status: "PUBLISHED",
+      },
       select: {
         id: true,
         title: true,

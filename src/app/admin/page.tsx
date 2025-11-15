@@ -45,6 +45,7 @@ type Course = {
   id: string;
   title: string;
   departmentId: string;
+  status: string;
 };
 
 type DepartmentDetails = {

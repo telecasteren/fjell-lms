@@ -29,6 +29,7 @@ type Course = {
   id: string;
   title: string;
   departmentId?: string;
+  status?: string;
 };
 
 type EnrollmentManagerProps = {
@@ -74,12 +75,14 @@ export function EnrollmentManager({
         ? allUsers.filter((user) => user.departmentId === targetDepartmentId)
         : allUsers;
 
-      // Filter courses by department
+      // Filter courses by department and status (only PUBLISHED)
       const departmentCourses = targetDepartmentId
         ? allCourses.filter(
-            (course) => course.departmentId === targetDepartmentId
+            (course) =>
+              course.departmentId === targetDepartmentId &&
+              course.status === "PUBLISHED",
           )
-        : allCourses;
+        : allCourses.filter((course) => course.status === "PUBLISHED");
 
       setUsers(departmentUsers);
       setCourses(departmentCourses);
