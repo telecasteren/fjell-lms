@@ -249,12 +249,12 @@ jobs:
         run: |
           DEPLOYMENT_URL="${{ needs.vercel-deployment.outputs.deployment-url }}"
           echo "Waiting for deployment to be ready at $DEPLOYMENT_URL"
-          
+
           if [ -z "$DEPLOYMENT_URL" ]; then
             echo "❌ No deployment URL found from Vercel deployment"
             exit 1
           fi
-          
+
           for i in {1..30}; do
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" || echo "000")
             if [ "$HTTP_STATUS" -eq 200 ]; then
@@ -269,14 +269,14 @@ jobs:
       - name: Health check
         run: |
           DEPLOYMENT_URL="${{ needs.vercel-deployment.outputs.deployment-url }}"
-          
+
           if [ -z "$DEPLOYMENT_URL" ]; then
             echo "❌ No deployment URL found"
             exit 1
           fi
-          
+
           echo "🔍 Running health checks against: $DEPLOYMENT_URL"
-          
+
           # Test main page
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL" || echo "000")
           if [ "$HTTP_STATUS" -eq 200 ]; then
@@ -287,7 +287,7 @@ jobs:
             curl -s -I "$DEPLOYMENT_URL" || echo "Failed to get headers"
             exit 1
           fi
-          
+
           # Test API health endpoint (optional - don't fail if it doesn't exist)
           API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL/api/health" || echo "000")
           if [ "$API_STATUS" -eq 200 ]; then
