@@ -100,8 +100,9 @@ export async function POST(req: NextRequest) {
       const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
 
       // Check if user has access to the target department
+      // null means AUTHOR can access all departments
       if (
-        accessibleDepartmentIds === null ||
+        accessibleDepartmentIds !== null &&
         !accessibleDepartmentIds.includes(departmentId)
       ) {
         return NextResponse.json(
