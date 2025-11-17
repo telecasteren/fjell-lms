@@ -18,6 +18,8 @@ const sizeClasses = {
   md: "h-8 w-8",
   lg: "h-12 w-12",
   xl: "h-16 w-16",
+  xxl: "h-20 w-20",
+  xxxl: "h-24 w-24",
 };
 
 const textSizeClasses = {

@@ -237,9 +237,7 @@ export function DepartmentBrandingSettings({
 
       if (res.ok) {
         const data = await res.json();
-        toast.success(
-          data.message || "Department branding updated successfully",
-        );
+        toast.success(data.message || "Department branding updated");
         setLogoFile(null);
         setDarkModeLogoFile(null);
       } else {

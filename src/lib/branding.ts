@@ -78,11 +78,11 @@ export interface BrandingConfig {
 export const defaultBranding: BrandingConfig = {
   appName: "FOX-LMS",
   appVersion: "1.0.0",
-  appDescription: "May the force be with us",
+  appDescription: "Knowledge is power.",
   companyName: "FOX-LMS",
 
   logo: {
-    light: "/fox-lms-sharp.svg",
+    light: "/fox-lms-sharp.png",
     dark: "/fox-lms-sharp-white.png",
     favicon: "/fox-lms-sharp.svg",
     alt: "App Logo",
