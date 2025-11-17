@@ -44,11 +44,10 @@ describe("Validation Schemas", () => {
   describe("userRegistrationSchema", () => {
     it("validates correct registration data", () => {
       const validData = {
-        name: "John Doe",
         email: "john@example.com",
         password: "Password123!",
         confirmPassword: "Password123!",
-        department: "Engineering",
+        token: "valid-invitation-token",
       };
 
       expect(() => userRegistrationSchema.parse(validData)).not.toThrow();
@@ -56,11 +55,10 @@ describe("Validation Schemas", () => {
 
     it("rejects mismatched passwords", () => {
       const invalidData = {
-        name: "John Doe",
         email: "john@example.com",
         password: "Password123!",
         confirmPassword: "Different123!",
-        department: "Engineering",
+        token: "valid-invitation-token",
       };
 
       expect(() => userRegistrationSchema.parse(invalidData)).toThrow();
@@ -68,23 +66,20 @@ describe("Validation Schemas", () => {
 
     it("rejects invalid email format", () => {
       const invalidData = {
-        name: "John Doe",
         email: "invalid-email",
         password: "Password123!",
         confirmPassword: "Password123!",
-        department: "Engineering",
+        token: "valid-invitation-token",
       };
 
       expect(() => userRegistrationSchema.parse(invalidData)).toThrow();
     });
 
-    it("rejects empty name", () => {
+    it("rejects missing token", () => {
       const invalidData = {
-        name: "",
         email: "john@example.com",
         password: "Password123!",
         confirmPassword: "Password123!",
-        department: "Engineering",
       };
 
       expect(() => userRegistrationSchema.parse(invalidData)).toThrow();
@@ -237,11 +232,10 @@ describe("Validation Schemas", () => {
   describe("validateRequestBody", () => {
     it("returns success for valid data", () => {
       const validData = {
-        name: "John Doe",
         email: "john@example.com",
         password: "Password123!",
         confirmPassword: "Password123!",
-        department: "Engineering",
+        token: "valid-invitation-token",
       };
 
       const result = validateRequestBody(userRegistrationSchema, validData);
@@ -254,20 +248,34 @@ describe("Validation Schemas", () => {
 
     it("returns error for invalid data", () => {
       const invalidData = {
-        name: "",
         email: "invalid-email",
         password: "weak",
-        confirmPassword: "different",
-        department: "",
+        confirmPassword: "weak", // Same as password to avoid mismatch error
+        token: "", // Empty token instead of missing
       };
 
       const result = validateRequestBody(userRegistrationSchema, invalidData);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain("Name is required");
         expect(result.error).toContain("Invalid email format");
         expect(result.error).toContain("Password must contain");
+        expect(result.error).toContain("Invitation token is required");
+      }
+    });
+
+    it("returns error for password mismatch", () => {
+      const invalidData = {
+        email: "john@example.com",
+        password: "Password123!",
+        confirmPassword: "Different123!",
+        token: "valid-token",
+      };
+
+      const result = validateRequestBody(userRegistrationSchema, invalidData);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
         expect(result.error).toContain("Passwords don't match");
       }
     });

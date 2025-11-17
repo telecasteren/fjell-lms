@@ -57,7 +57,6 @@ test.describe("Authentication Flow", () => {
     await expect(page.getByLabel("Email")).toBeVisible();
     await expect(page.getByLabel("Password").first()).toBeVisible();
     await expect(page.getByLabel("Confirm password")).toBeVisible();
-    await expect(page.getByLabel("Department (Optional)")).toBeVisible();
   });
 
   test("should redirect to dashboard after successful sign-in", async ({
