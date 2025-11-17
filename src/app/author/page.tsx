@@ -131,7 +131,7 @@ export default function AuthorDashboard() {
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(
-    null
+    null,
   );
   const [departmentSearchQuery, setDepartmentSearchQuery] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -439,11 +439,11 @@ export default function AuthorDashboard() {
                   console.log("selectedDepartment:", selectedDepartment);
                   console.log(
                     "currentUser departmentId:",
-                    currentUser?.departmentId
+                    currentUser?.departmentId,
                   );
                   console.log(
                     "Computed defaultParentDepartmentId:",
-                    selectedDepartment || currentUser?.departmentId
+                    selectedDepartment || currentUser?.departmentId,
                   );
                   setShowCreateDepartment(true);
                 }}
@@ -484,8 +484,8 @@ export default function AuthorDashboard() {
                           dept.name
                             .toLowerCase()
                             .includes(
-                              departmentSearchQuery.toLowerCase().trim()
-                            )
+                              departmentSearchQuery.toLowerCase().trim(),
+                            ),
                         )
                       : data.departments
                     ).map((dept) => (
@@ -504,7 +504,7 @@ export default function AuthorDashboard() {
                     const filtered = data.departments.filter((dept) =>
                       dept.name
                         .toLowerCase()
-                        .includes(value.toLowerCase().trim())
+                        .includes(value.toLowerCase().trim()),
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -817,7 +817,7 @@ export default function AuthorDashboard() {
                             onClick={() => {
                               const signupUrl = getSignUpUrl(
                                 formData.email,
-                                formData.role
+                                formData.role,
                               );
                               navigator.clipboard.writeText(signupUrl);
                               toast.success("Sign-up link copied to clipboard");
