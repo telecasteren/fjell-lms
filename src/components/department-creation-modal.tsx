@@ -118,7 +118,7 @@ export function DepartmentCreationModal({
         `/api/users/search?q=${encodeURIComponent(query)}`,
         {
           credentials: "include",
-        }
+        },
       );
 
       if (res.ok) {
@@ -193,14 +193,14 @@ export function DepartmentCreationModal({
       toast.error("Parent department is required");
       console.error(
         "defaultParentDepartmentId is missing:",
-        defaultParentDepartmentId
+        defaultParentDepartmentId,
       );
       return;
     }
 
     // Validate users - separate existing and new users
     const validUsers = users.filter(
-      (user) => user.name.trim() && user.email.trim()
+      (user) => user.name.trim() && user.email.trim(),
     );
 
     if (validUsers.length === 0) {
@@ -252,7 +252,7 @@ export function DepartmentCreationModal({
         const error = await res.json();
         console.error("Department creation error:", error);
         toast.error(
-          error.details || error.error || "Failed to create department"
+          error.details || error.error || "Failed to create department",
         );
       }
     } catch {
@@ -436,7 +436,7 @@ export function DepartmentCreationModal({
                             updateUser(
                               index,
                               "role",
-                              e.target.value as "BASIC" | "ADMIN" | "WRITER"
+                              e.target.value as "BASIC" | "ADMIN" | "WRITER",
                             )
                           }
                           disabled={user.isExisting}
@@ -476,11 +476,11 @@ export function DepartmentCreationModal({
                               onClick={() => {
                                 const signupUrl = getLegacySignUpUrl(
                                   user.email,
-                                  user.role
+                                  user.role,
                                 );
                                 navigator.clipboard.writeText(signupUrl);
                                 toast.success(
-                                  "Sign-up link copied to clipboard"
+                                  "Sign-up link copied to clipboard",
                                 );
                               }}
                             >

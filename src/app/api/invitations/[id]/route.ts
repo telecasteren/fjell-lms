@@ -5,7 +5,7 @@ import { requireAdminOrAuthor } from "@/lib/rbac";
 // DELETE /api/invitations/[id] - Cancel/delete invitation
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireAdminOrAuthor(req);
@@ -29,7 +29,7 @@ export async function DELETE(
     console.error("Error deleting invitation:", error);
     return NextResponse.json(
       { error: "Failed to delete invitation" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 }

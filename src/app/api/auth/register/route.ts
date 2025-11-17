@@ -16,7 +16,7 @@ export const POST = apiHandler(async (req: Request) => {
     req,
     rateLimiters.registration,
     undefined,
-    simpleRateLimiters.registration
+    simpleRateLimiters.registration,
   );
   if (!rateLimitResult.success) {
     return rateLimitResult.error;

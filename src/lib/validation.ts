@@ -10,7 +10,7 @@ export const passwordPolicy = z
   .regex(/[0-9]/, "Password must contain at least one number")
   .regex(
     /[^A-Za-z0-9]/,
-    "Password must contain at least one special character"
+    "Password must contain at least one special character",
   );
 
 // User validation schemas
@@ -110,7 +110,7 @@ export const quizQuestionSchema = z.object({
     .max(500, "Question too long"),
   options: z
     .array(
-      z.string().min(1, "Option cannot be empty").max(200, "Option too long")
+      z.string().min(1, "Option cannot be empty").max(200, "Option too long"),
     )
     .min(2, "At least 2 options required"),
   correctAnswers: z
@@ -168,7 +168,7 @@ export const invitationTokenSchema = z.object({
 // Helper function to validate request body
 export function validateRequestBody<T>(
   schema: z.ZodSchema<T>,
-  body: unknown
+  body: unknown,
 ): { success: true; data: T } | { success: false; error: string } {
   try {
     const data = schema.parse(body);

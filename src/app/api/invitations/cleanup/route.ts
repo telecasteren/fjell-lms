@@ -15,7 +15,7 @@ export async function POST() {
     console.error("Error during invitation cleanup:", error);
     return NextResponse.json(
       { error: "Failed to cleanup invitations" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

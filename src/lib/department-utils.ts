@@ -17,7 +17,7 @@ export function isMainDepartment(departmentName: string): boolean {
  * - BASIC: Returns array with only their department ID
  */
 export async function getAccessibleDepartmentIds(
-  userId: string
+  userId: string,
 ): Promise<string[] | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -80,7 +80,7 @@ export async function getAccessibleDepartmentIds(
  * Returns an object that can be used directly in Prisma queries
  */
 export async function getDepartmentWhereClause(
-  userId: string
+  userId: string,
 ): Promise<{ id?: { in: string[] } } | Record<string, never>> {
   const departmentIds = await getAccessibleDepartmentIds(userId);
 
@@ -104,7 +104,7 @@ export async function getDepartmentWhereClause(
 export async function getCourseWhereClause(
   userId: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _includeStatusFilter: boolean = false
+  _includeStatusFilter: boolean = false,
 ): Promise<Prisma.CourseWhereInput> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -201,7 +201,7 @@ export async function getCourseWhereClause(
  */
 export async function canAccessCourse(
   userId: string,
-  courseId: string
+  courseId: string,
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -283,7 +283,7 @@ export async function canAccessCourse(
  */
 export async function canManageCourse(
   userId: string,
-  courseId: string
+  courseId: string,
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -319,7 +319,7 @@ export async function canManageCourse(
  */
 export async function canManageModule(
   userId: string,
-  moduleId: string
+  moduleId: string,
 ): Promise<boolean> {
   const courseModule = await prisma.module.findUnique({
     where: { id: moduleId },
@@ -336,7 +336,7 @@ export async function canManageModule(
  */
 export async function canManageLesson(
   userId: string,
-  lessonId: string
+  lessonId: string,
 ): Promise<boolean> {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
@@ -358,7 +358,7 @@ export async function canManageLesson(
  * Traverses up the parent chain to find FOX-LMS
  */
 export async function isInChildDepartmentOfFoxLms(
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },

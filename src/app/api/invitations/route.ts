@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
           {
             error: "ADMIN users can only create BASIC, ADMIN, or WRITER users",
           },
-          { status: 403 }
+          { status: 403 },
         );
       }
     } else if (user.role === "AUTHOR") {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     if (existingUser) {
       return NextResponse.json(
         { error: "User with this email already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     if (existingInvitation) {
       return NextResponse.json(
         { error: "Pending invitation already exists for this email" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Access denied to target department" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
     if (!department) {
       return NextResponse.json(
         { error: "Department not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 

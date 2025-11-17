@@ -49,7 +49,7 @@ export async function POST() {
     console.error("Error cleaning up accepted invitations:", error);
     return NextResponse.json(
       { error: "Failed to cleanup invitations" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     if (!invitation) {
       return NextResponse.json(
         { error: "Invalid or expired invitation" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     console.error("Error validating invitation:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

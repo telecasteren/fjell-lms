@@ -396,8 +396,8 @@ export default function AdminPage() {
                           dept.name
                             .toLowerCase()
                             .includes(
-                              departmentSearchQuery.toLowerCase().trim()
-                            )
+                              departmentSearchQuery.toLowerCase().trim(),
+                            ),
                         )
                       : departments
                     ).map((dept) => (
@@ -415,7 +415,7 @@ export default function AdminPage() {
                     const filtered = departments.filter((dept) =>
                       dept.name
                         .toLowerCase()
-                        .includes(value.toLowerCase().trim())
+                        .includes(value.toLowerCase().trim()),
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -722,7 +722,7 @@ export default function AdminPage() {
                     const targetDepartmentId =
                       selectedDepartment || departmentStats?.department?.id;
                     const departmentUsers = users.filter(
-                      (user) => user.departmentId === targetDepartmentId
+                      (user) => user.departmentId === targetDepartmentId,
                     );
                     const filteredUsers = departmentUsers.filter((user) => {
                       return (
@@ -745,7 +745,7 @@ export default function AdminPage() {
                 const targetDepartmentId =
                   selectedDepartment || departmentStats?.department?.id;
                 const departmentUsers = users.filter(
-                  (user) => user.departmentId === targetDepartmentId
+                  (user) => user.departmentId === targetDepartmentId,
                 );
 
                 const filteredUsers = departmentUsers.filter((user) => {

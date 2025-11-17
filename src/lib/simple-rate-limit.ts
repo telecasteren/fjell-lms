@@ -11,7 +11,7 @@ export class SimpleRateLimiter {
 
   constructor(
     private maxRequests: number,
-    private windowMs: number
+    private windowMs: number,
   ) {}
 
   async checkLimit(identifier: string): Promise<{
@@ -86,5 +86,5 @@ setInterval(
   () => {
     Object.values(simpleRateLimiters).forEach((limiter) => limiter.cleanup());
   },
-  5 * 60 * 1000
+  5 * 60 * 1000,
 );
