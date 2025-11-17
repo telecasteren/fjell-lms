@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EnrollmentManager } from "@/components/enrollment-manager";
 import { AdminUserEditModal } from "@/components/admin-user-edit-modal";
 import { UserReassignmentModal } from "@/components/user-reassignment-modal";
@@ -20,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, Users, BookOpen, Building2, Link } from "lucide-react";
+import { TrendingUp, Users, BookOpen, Building2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSignUpUrl } from "@/lib/url";
 
@@ -157,7 +156,6 @@ export default function AdminPage() {
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     role: "BASIC",
   });
@@ -246,30 +244,49 @@ export default function AdminPage() {
     loadDepartmentStats();
   }
 
-  async function createUser() {
-    if (!formData.name || !formData.email) return;
+  async function createInvitation() {
+    if (!formData.email) return;
 
     // Use selected department or fallback to current department
     const targetDepartmentId =
       selectedDepartment || departmentStats?.department?.id;
 
     setLoading(true);
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        departmentId: targetDepartmentId,
-      }),
-    });
-    setLoading(false);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          departmentId: targetDepartmentId,
+        }),
+      });
 
-    if (res.ok) {
-      setFormData({ name: "", email: "", role: "BASIC" });
-      setShowCreateForm(false);
-      await loadUsers();
-      await loadCourses();
-      await loadDepartmentStats();
+      if (res.ok) {
+        const data = await res.json();
+        setFormData({ email: "", role: "BASIC" });
+        setShowCreateForm(false);
+        await loadUsers();
+        await loadCourses();
+        await loadDepartmentStats();
+
+        // Copy invitation link to clipboard
+        if (data.invitation?.token) {
+          const invitationUrl = getSignUpUrl(data.invitation.token);
+          navigator.clipboard.writeText(invitationUrl);
+          toast.success("Invitation created and link copied to clipboard");
+        } else {
+          toast.success("Invitation created successfully");
+        }
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to create invitation");
+      }
+    } catch (error) {
+      console.error("Create invitation error:", error);
+      toast.error("Failed to create invitation");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -379,8 +396,8 @@ export default function AdminPage() {
                           dept.name
                             .toLowerCase()
                             .includes(
-                              departmentSearchQuery.toLowerCase().trim(),
-                            ),
+                              departmentSearchQuery.toLowerCase().trim()
+                            )
                         )
                       : departments
                     ).map((dept) => (
@@ -398,7 +415,7 @@ export default function AdminPage() {
                     const filtered = departments.filter((dept) =>
                       dept.name
                         .toLowerCase()
-                        .includes(value.toLowerCase().trim()),
+                        .includes(value.toLowerCase().trim())
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -601,7 +618,7 @@ export default function AdminPage() {
               </p>
               <Button onClick={() => setShowCreateForm(true)}>
                 <Users className="mr-2 h-4 w-4" />
-                Add User
+                Invite User
               </Button>
             </div>
           )}
@@ -611,21 +628,10 @@ export default function AdminPage() {
       {showCreateForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Create New User</CardTitle>
+            <CardTitle>Create Invitation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="bg-background w-full rounded-md border px-3 py-2"
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <input
@@ -670,38 +676,13 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Sign-up Link</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  value={getSignUpUrl(formData.email, formData.role)}
-                  readOnly
-                  className="bg-background w-full rounded-md border px-3 py-2 text-sm"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const signupUrl = getSignUpUrl(
-                      formData.email,
-                      formData.role,
-                    );
-                    navigator.clipboard.writeText(signupUrl);
-                    toast.success("Sign-up link copied to clipboard");
-                  }}
-                >
-                  <Link className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                Copy this link and send it to the user to complete their
-                registration
-              </p>
-            </div>
+            <p className="text-muted-foreground text-sm">
+              An invitation link will be generated and copied to your clipboard
+              after creation.
+            </p>
             <div className="flex gap-2">
-              <Button onClick={createUser} disabled={loading}>
-                {loading ? "Creating..." : "Create User"}
+              <Button onClick={createInvitation} disabled={loading}>
+                {loading ? "Creating..." : "Create Invitation"}
               </Button>
               <Button
                 variant="outline"
@@ -741,7 +722,7 @@ export default function AdminPage() {
                     const targetDepartmentId =
                       selectedDepartment || departmentStats?.department?.id;
                     const departmentUsers = users.filter(
-                      (user) => user.departmentId === targetDepartmentId,
+                      (user) => user.departmentId === targetDepartmentId
                     );
                     const filteredUsers = departmentUsers.filter((user) => {
                       return (
@@ -764,7 +745,7 @@ export default function AdminPage() {
                 const targetDepartmentId =
                   selectedDepartment || departmentStats?.department?.id;
                 const departmentUsers = users.filter(
-                  (user) => user.departmentId === targetDepartmentId,
+                  (user) => user.departmentId === targetDepartmentId
                 );
 
                 const filteredUsers = departmentUsers.filter((user) => {

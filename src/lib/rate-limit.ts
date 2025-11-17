@@ -24,11 +24,11 @@ export const rateLimiters = {
       })
     : null,
 
-  // Registration - very strict to prevent spam
+  // Registration - balanced to prevent spam while allowing legitimate use
   registration: redis
     ? new Ratelimit({
         redis,
-        limiter: Ratelimit.slidingWindow(3, "1 h"), // 3 registrations per hour
+        limiter: Ratelimit.slidingWindow(15, "1 h"), // 15 registrations per hour
         analytics: true,
         prefix: "registration",
       })
@@ -102,7 +102,7 @@ export function getClientIP(request: Request): string {
 // Helper function to check rate limit
 export async function checkRateLimit(
   limiter: Ratelimit,
-  identifier: string,
+  identifier: string
 ): Promise<{
   success: boolean;
   limit: number;
@@ -125,7 +125,7 @@ export async function withRateLimit(
   request: Request,
   limiter: RatelimitType | SimpleRateLimiter | null,
   identifier?: string,
-  fallbackLimiter?: RatelimitType | SimpleRateLimiter | null,
+  fallbackLimiter?: RatelimitType | SimpleRateLimiter | null
 ) {
   const ip = getClientIP(request);
   const id = identifier || ip;
@@ -178,7 +178,7 @@ export async function withRateLimit(
             "X-RateLimit-Reset": new Date(reset).toISOString(),
             "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
           },
-        },
+        }
       ),
     };
   }

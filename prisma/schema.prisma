@@ -31,6 +31,7 @@ model Department {
   footerContactAddress2  String?
   appDescription         String?
   courses                Course[]
+  invitations            Invitation[]
   parentDepartment       Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id], onDelete: Cascade)
   subDepartments         Department[] @relation("DepartmentHierarchy")
   users                  User[]
@@ -53,6 +54,7 @@ model User {
   progresses      Progress[]
   quizCompletions QuizCompletion[]
   sessions        Session[]
+  invitations     Invitation[]
   department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 }
 
@@ -167,6 +169,26 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Invitation {
+  id           String           @id @default(cuid())
+  email        String
+  role         Role             @default(BASIC)
+  departmentId String
+  token        String           @unique
+  expiresAt    DateTime
+  createdById  String
+  acceptedAt   DateTime?
+  status       InvitationStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  department   Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdBy    User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([email])
+  @@index([status])
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -180,6 +202,13 @@ enum Role {
   ADMIN
   BASIC
   WRITER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
 }
 
 enum CourseStatus {

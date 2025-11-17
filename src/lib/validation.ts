@@ -10,17 +10,16 @@ export const passwordPolicy = z
   .regex(/[0-9]/, "Password must contain at least one number")
   .regex(
     /[^A-Za-z0-9]/,
-    "Password must contain at least one special character",
+    "Password must contain at least one special character"
   );
 
 // User validation schemas
 export const userRegistrationSchema = z
   .object({
-    name: z.string().min(1, "Name is required").max(100, "Name too long"),
     email: z.string().email("Invalid email format").max(255, "Email too long"),
     password: passwordPolicy,
     confirmPassword: z.string(),
-    department: z.string().max(100, "Department name too long").optional(),
+    token: z.string().min(1, "Invitation token is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -111,7 +110,7 @@ export const quizQuestionSchema = z.object({
     .max(500, "Question too long"),
   options: z
     .array(
-      z.string().min(1, "Option cannot be empty").max(200, "Option too long"),
+      z.string().min(1, "Option cannot be empty").max(200, "Option too long")
     )
     .min(2, "At least 2 options required"),
   correctAnswers: z
@@ -155,10 +154,21 @@ export const emailUpdateSchema = z.object({
   email: z.string().email("Invalid email format").max(255, "Email too long"),
 });
 
+// Invitation validation schemas
+export const invitationCreateSchema = z.object({
+  email: z.string().email("Invalid email format").max(255, "Email too long"),
+  role: z.enum(["BASIC", "ADMIN", "AUTHOR", "WRITER"]),
+  departmentId: z.string().min(1, "Department ID is required"),
+});
+
+export const invitationTokenSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+});
+
 // Helper function to validate request body
 export function validateRequestBody<T>(
   schema: z.ZodSchema<T>,
-  body: unknown,
+  body: unknown
 ): { success: true; data: T } | { success: false; error: string } {
   try {
     const data = schema.parse(body);

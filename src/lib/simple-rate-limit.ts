@@ -11,7 +11,7 @@ export class SimpleRateLimiter {
 
   constructor(
     private maxRequests: number,
-    private windowMs: number,
+    private windowMs: number
   ) {}
 
   async checkLimit(identifier: string): Promise<{
@@ -74,7 +74,7 @@ export class SimpleRateLimiter {
 // Create simple rate limiters
 export const simpleRateLimiters = {
   auth: new SimpleRateLimiter(5, 60 * 1000), // 5 requests per minute
-  registration: new SimpleRateLimiter(3, 60 * 60 * 1000), // 3 requests per hour
+  registration: new SimpleRateLimiter(15, 60 * 60 * 1000), // 15 requests per hour
   admin: new SimpleRateLimiter(10, 60 * 60 * 1000), // 10 requests per hour
   courses: new SimpleRateLimiter(20, 60 * 1000), // 20 requests per minute
   reports: new SimpleRateLimiter(5, 60 * 1000), // 5 requests per minute
@@ -86,5 +86,5 @@ setInterval(
   () => {
     Object.values(simpleRateLimiters).forEach((limiter) => limiter.cleanup());
   },
-  5 * 60 * 1000,
+  5 * 60 * 1000
 );

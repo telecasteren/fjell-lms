@@ -20,9 +20,18 @@ export function getBaseUrl(): string {
 }
 
 /**
- * Generate a sign-up URL with email and role parameters
+ * Generate a sign-up URL with invitation token
  */
-export function getSignUpUrl(email: string, role: string): string {
+export function getSignUpUrl(token: string): string {
+  const baseUrl = getBaseUrl();
+  return `${baseUrl}/sign-up?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Legacy function for backward compatibility - will be removed once all forms are updated
+ * @deprecated Use getSignUpUrl(token) instead
+ */
+export function getLegacySignUpUrl(email: string, role: string): string {
   const baseUrl = getBaseUrl();
   return `${baseUrl}/sign-up?email=${encodeURIComponent(email)}&role=${encodeURIComponent(role)}`;
 }

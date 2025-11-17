@@ -34,7 +34,7 @@ import {
 import { useDashboardRefresh } from "@/hooks/use-dashboard-refresh";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { getSignUpUrl } from "@/lib/url";
+import { getLegacySignUpUrl } from "@/lib/url";
 import toast from "react-hot-toast";
 
 type Department = {
@@ -131,7 +131,7 @@ export default function AuthorDashboard() {
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(
-    null,
+    null
   );
   const [departmentSearchQuery, setDepartmentSearchQuery] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -439,11 +439,11 @@ export default function AuthorDashboard() {
                   console.log("selectedDepartment:", selectedDepartment);
                   console.log(
                     "currentUser departmentId:",
-                    currentUser?.departmentId,
+                    currentUser?.departmentId
                   );
                   console.log(
                     "Computed defaultParentDepartmentId:",
-                    selectedDepartment || currentUser?.departmentId,
+                    selectedDepartment || currentUser?.departmentId
                   );
                   setShowCreateDepartment(true);
                 }}
@@ -484,8 +484,8 @@ export default function AuthorDashboard() {
                           dept.name
                             .toLowerCase()
                             .includes(
-                              departmentSearchQuery.toLowerCase().trim(),
-                            ),
+                              departmentSearchQuery.toLowerCase().trim()
+                            )
                         )
                       : data.departments
                     ).map((dept) => (
@@ -504,7 +504,7 @@ export default function AuthorDashboard() {
                     const filtered = data.departments.filter((dept) =>
                       dept.name
                         .toLowerCase()
-                        .includes(value.toLowerCase().trim()),
+                        .includes(value.toLowerCase().trim())
                     );
                     if (filtered.length === 1 && value.trim()) {
                       setSelectedDepartment(filtered[0].id);
@@ -806,7 +806,10 @@ export default function AuthorDashboard() {
                         <Label>Sign-up Link</Label>
                         <div className="flex items-center gap-2">
                           <input
-                            value={getSignUpUrl(formData.email, formData.role)}
+                            value={getLegacySignUpUrl(
+                              formData.email,
+                              formData.role
+                            )}
                             readOnly
                             className="bg-background w-full rounded-md border px-3 py-2 text-sm"
                           />
@@ -815,9 +818,9 @@ export default function AuthorDashboard() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const signupUrl = getSignUpUrl(
+                              const signupUrl = getLegacySignUpUrl(
                                 formData.email,
-                                formData.role,
+                                formData.role
                               );
                               navigator.clipboard.writeText(signupUrl);
                               toast.success("Sign-up link copied to clipboard");

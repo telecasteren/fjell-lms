@@ -17,9 +17,14 @@ function SignUpForm() {
     email: string;
     password: string;
     confirmPassword: string;
-    department?: string;
+    token: string;
   }>();
   const [loading, setLoading] = useState(false);
+  const [invitationData, setInvitationData] = useState<{
+    email: string;
+    role: string;
+    department: string;
+  } | null>(null);
 
   const password = watch("password", "");
 
@@ -34,15 +39,47 @@ function SignUpForm() {
 
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
 
-  // Pre-fill form with URL parameters
+  // Pre-fill form with URL parameters and validate token
   useEffect(() => {
+    const token = searchParams.get("token");
     const email = searchParams.get("email");
+    const role = searchParams.get("role");
 
-    if (email) {
+    if (token) {
+      // New token-based invitation flow
+      setValue("token", token);
+
+      // Validate token and get invitation details
+      fetch(`/api/invitations/validate?token=${encodeURIComponent(token)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.invitation) {
+            setInvitationData({
+              email: data.invitation.email,
+              role: data.invitation.role,
+              department: data.invitation.department.name,
+            });
+            setValue("email", data.invitation.email);
+          } else {
+            toast.error("Invalid or expired invitation link");
+          }
+        })
+        .catch(() => {
+          toast.error("Failed to validate invitation");
+        });
+    } else if (email && role) {
+      // Legacy email/role flow (temporary fallback)
       setValue("email", email);
+      setInvitationData({
+        email: email,
+        role: role,
+        department: "Legacy", // Placeholder for legacy flow
+      });
+      // Set a token that includes the role for legacy flow
+      setValue("token", `legacy:${role}`);
+    } else {
+      toast.error("Missing invitation link or invalid format");
     }
-
-    // Note: Role is handled on the backend based on the user's existing record
   }, [searchParams, setValue]);
 
   const onSubmit = handleSubmit(async (data) => {
@@ -76,13 +113,32 @@ function SignUpForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
+            {invitationData && (
+              <div className="space-y-2">
+                <Label>Invitation Details</Label>
+                <div className="bg-muted rounded p-3 text-sm">
+                  <p>
+                    <strong>Email:</strong> {invitationData.email}
+                  </p>
+                  <p>
+                    <strong>Role:</strong> {invitationData.role}
+                  </p>
+                  <p>
+                    <strong>Department:</strong> {invitationData.department}
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <input
                 id="email"
                 type="email"
-                className="bg-background w-full rounded-md border px-3 py-2"
+                className={`bg-background w-full rounded-md border px-3 py-2 ${
+                  invitationData ? "bg-muted" : ""
+                }`}
                 {...register("email")}
+                readOnly={!!invitationData}
               />
             </div>
             <div className="space-y-2">
@@ -187,19 +243,10 @@ function SignUpForm() {
                 {...register("confirmPassword")}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Department (Optional)</Label>
-              <input
-                id="department"
-                type="text"
-                className="bg-background w-full rounded-md border px-3 py-2"
-                placeholder="Enter department name (optional)"
-                {...register("department")}
-              />
-            </div>
+            <input type="hidden" {...register("token")} />
             <Button
               type="submit"
-              disabled={loading || !isPasswordValid}
+              disabled={loading || !isPasswordValid || !invitationData}
               className="w-full"
             >
               {loading ? "Creating..." : "Create account"}
