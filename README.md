@@ -21,7 +21,7 @@ Multi-tenant learning management app: departments, role-based access, courses (m
 
 ## Prerequisites
 
-- **Node.js** 20+ (see `.nvmrc` / `.node-version` and `package.json` `engines`)
+- **Node.js** 24+ (see `.nvmrc` / `.node-version` and `package.json` `engines`)
 - **npm** (lockfile: `package-lock.json`)
 - **PostgreSQL** for local or hosted DB ([Neon](https://neon.tech) or any Postgres; CI uses Postgres 15)
 
