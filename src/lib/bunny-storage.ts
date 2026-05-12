@@ -120,7 +120,7 @@ export class BunnyStorageProvider implements StorageProvider {
       }
 
       // Generate public URL using CDN Pull Zone
-      const publicUrl = `https://fox-lms-pull-zone.b-cdn.net/${fullPath}`;
+      const publicUrl = `https://fjell-lms.b-cdn.net/${fullPath}`;
 
       console.log("Bunny Storage upload successful:", publicUrl);
 
@@ -181,7 +181,7 @@ export class BunnyStorageProvider implements StorageProvider {
 
   async getFileUrl(fileId: string): Promise<string> {
     // Use CDN Pull Zone URL
-    return `https://fox-lms-pull-zone.b-cdn.net/${fileId}`;
+    return `https://fjell-lms.b-cdn.net/${fileId}`;
   }
 
   async listFiles(path: string): Promise<StorageFile[]> {
