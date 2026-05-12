@@ -1,6 +1,5 @@
 # Terms of service (template)
 
-
 ## Meta
 
 **Effective date:** [Insert date]
