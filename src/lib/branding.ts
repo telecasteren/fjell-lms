@@ -1,7 +1,8 @@
-// Centralized branding configuration for FOX-LMS
+// Centralized branding configuration for FJELL-LMS
 export interface BrandingConfig {
   // Application Identity
   appName: string;
+  appShortName: string;
   appVersion: string;
   appDescription: string;
   companyName: string;
@@ -76,16 +77,17 @@ export interface BrandingConfig {
 
 // Default branding configuration
 export const defaultBranding: BrandingConfig = {
-  appName: "FOX-LMS",
+  appName: "FJELL-LMS",
+  appShortName: "FJELL",
   appVersion: "1.0.0",
-  appDescription: "Knowledge is power.",
-  companyName: "FOX-LMS",
+  appDescription: "Reaching higher, together.",
+  companyName: "FJELL-LMS",
 
   logo: {
-    light: "/fox-lms-sharp.png",
-    dark: "/fox-lms-sharp-white.png",
-    favicon: "/fox-lms-sharp.svg",
-    alt: "App Logo",
+    light: "/fjell_lms-logo.svg",
+    dark: "/fjell_lms-logo-dark.svg",
+    favicon: "/fjell_lms-logo.svg",
+    alt: "FJELL-LMS Logo",
   },
 
   colors: {
@@ -254,20 +256,20 @@ export const brandingStorage = {
   // Save branding to localStorage
   saveBranding: (branding: BrandingConfig): void => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("fox-lms-branding", JSON.stringify(branding));
+      localStorage.setItem("fjell-lms-branding", JSON.stringify(branding));
     }
   },
 
   // Load branding from localStorage
   loadBranding: (): BrandingConfig | null => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("fox-lms-branding");
+      const stored = localStorage.getItem("fjell-lms-branding");
       if (stored) {
         try {
           return JSON.parse(stored);
         } catch (error) {
           console.error("Failed to parse stored branding:", error);
-          localStorage.removeItem("fox-lms-branding");
+          localStorage.removeItem("fjell-lms-branding");
         }
       }
     }
@@ -277,7 +279,7 @@ export const brandingStorage = {
   // Clear branding from localStorage
   clearBranding: (): void => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("fox-lms-branding");
+      localStorage.removeItem("fjell-lms-branding");
     }
   },
 };

@@ -23,7 +23,7 @@ jobs:
       NEXTAUTH_URL: http://localhost:3000
       # Required for Bunny CDN (can be dummy values for tests)
       BUNNY_API_KEY: dummy-key-for-tests
-      BUNNY_STORAGE_ZONE: fox-lms
+      BUNNY_STORAGE_ZONE: fjell-lms
     services:
       postgres:
         image: postgres:15
@@ -58,7 +58,7 @@ jobs:
         run: npm run lint
 
       - name: Format
-        run: npx prettier --write .
+        run: npx prettier --check .
 
       - name: Setup database
         run: |

@@ -43,23 +43,17 @@ export default async function RootLayout({
   try {
     session = await getServerSession(authOptions);
   } catch (error) {
-    // JWT decryption failed - likely old cookies with different secret
-    // Middleware clears these cookies, so just continue without session
-    if (error instanceof Error) {
-      // Ignore decryption errors (handled gracefully)
-      if (error.message.includes("decryption")) {
-        return;
-      }
-      // Ignore Next.js dynamic server usage warnings (expected for authenticated pages)
-      if (
-        error.message.includes("Dynamic server usage") ||
-        error.message.includes("couldn't be rendered statically")
-      ) {
-        return;
-      }
-      // Only log actual errors
+    // Always render a valid layout; treat session failures as unauthenticated.
+    // Middleware already clears stale cookies on auth pages, so this should be rare.
+    if (
+      error instanceof Error &&
+      !error.message.includes("decryption") &&
+      !error.message.includes("Dynamic server usage") &&
+      !error.message.includes("couldn't be rendered statically")
+    ) {
       console.warn("Session error:", error);
     }
+    session = null;
   }
   return (
     <html lang="en" suppressHydrationWarning>

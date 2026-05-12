@@ -1,36 +1,31 @@
-# Course Content
+# Course content
 
-## What types of content are available in lessons?
+## What types of content are in lessons?
 
-Lessons support multiple content types:
+Lessons may use:
 
-- **Text Editor**: Rich text WYSIWYG editor with formatting toolbar
-  - Format text with **bold**, _italic_, and <u>underline</u>
-  - Add headings (H1, H2, H3) for structure
-  - Create bulleted and numbered lists
-  - Insert links to external resources
-  - Undo/redo functionality
-- **SCORM**: Interactive e-learning packages (coming soon)
-- **Multimedia**: Video, audio, and interactive content (coming soon)
+- **Text** — Rich text with headings, lists, links, and basic formatting.
+- **SCORM** — May be available depending on your organization (check with your admin).
+- **Multimedia** — Video, audio, or other files your authors attach.
 
-Authors can choose the appropriate content type when creating lessons.
+Authors choose the type when building the lesson.
 
-## How do I navigate through course content?
+## How do I navigate through a course?
 
-Once enrolled in a course, you can access it from your dashboard or the courses page. Click "Learn" to start the course and navigate through modules and lessons in order.
+Open the course from your **dashboard** or **Courses**, then use **Learn** to move through modules and lessons in order.
 
 ## Can I skip lessons?
 
-Lessons are designed to be completed in order to ensure proper learning progression. You'll need to complete each lesson before moving to the next one.
+Lessons are meant to be completed in order. You usually need to finish a lesson before continuing.
 
-## What happens if I fail a quiz?
+## What if I fail a quiz?
 
-If you don't pass a quiz, you can retake it as many times as needed. Your progress will be tracked, and you can see your attempts and scores in the lesson details.
+You can **retake** the quiz until you pass (if your course is set up that way). Attempts and scores may be visible on the lesson screen.
 
 ## How do I access quizzes?
 
-Quizzes appear as buttons in lessons that have them. You'll see "Take Quiz", "Retake Quiz", or "Quiz Passed" depending on your completion status.
+If a lesson has a quiz, you will see actions such as **Take Quiz**, **Retake Quiz**, or **Quiz Passed** depending on your status.
 
 ## Can I see my quiz scores?
 
-Yes, quiz scores and attempts are displayed in the lesson details. You can see how many times you've attempted each quiz and whether you've passed.
+Yes — attempt counts and pass/fail are typically shown on the lesson where the quiz lives.

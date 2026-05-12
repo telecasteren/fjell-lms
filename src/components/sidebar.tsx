@@ -10,6 +10,8 @@ import { signOut } from "next-auth/react";
 import { Logo } from "@/components/branding/logo";
 import { UserAvatar } from "@/components/user-avatar";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { Role } from "@prisma/client";
+import { hasPermission } from "@/lib/permissions";
 
 interface SidebarProps {
   user: {
@@ -26,7 +28,16 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
 
   // Use fresh user data from database, fall back to initial user if loading
   const currentUser = user || initialUser;
-  const userRole = currentUser?.role;
+  const userRole = currentUser?.role as Role | undefined;
+  const canAccessAuthor = userRole
+    ? hasPermission(userRole, "author:access")
+    : false;
+  const canAccessReports = userRole
+    ? hasPermission(userRole, "reports:view")
+    : false;
+  const canAccessAdmin = userRole
+    ? hasPermission(userRole, "admin:access")
+    : false;
 
   // Auto-hide sidebar on mobile when navigating to different pages
   useEffect(() => {
@@ -72,7 +83,7 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
         <Logo size="md" />
         <Separator />
         <nav className="grid gap-2">
-          {userRole === "AUTHOR" ? (
+          {canAccessAuthor ? (
             <Button variant="ghost" asChild>
               <Link href="/author">Dashboard</Link>
             </Button>
@@ -87,12 +98,12 @@ export function Sidebar({ user: initialUser }: SidebarProps) {
           <Button variant="ghost" asChild>
             <Link href="/profile">Profile</Link>
           </Button>
-          {(userRole === "ADMIN" || userRole === "AUTHOR") && (
+          {canAccessReports && (
             <Button variant="ghost" asChild>
               <Link href="/reports">Reports</Link>
             </Button>
           )}
-          {userRole === "ADMIN" && (
+          {canAccessAdmin && (
             <Button variant="ghost" asChild>
               <Link href="/admin">Admin</Link>
             </Button>

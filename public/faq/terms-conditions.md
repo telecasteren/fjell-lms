@@ -1,81 +1,70 @@
-Terms of Service
+# Terms of service (template)
 
-Effective date: [Insert date]
 
-1. Introduction
+## Meta
 
-Welcome to [Company Name] (“Company”, “we”, “our”, “us”).
-These Terms of Service (“Terms”) govern your access to and use of our software-as-a-service platform (“Service”).
-By creating an account or using the Service, you agree to these Terms.
-If you do not agree, you may not use the Service.
+**Effective date:** [Insert date]
 
-2. Company Information
+**Important:** This is a **placeholder**. Replace bracketed text and have it reviewed by qualified legal counsel before use.
 
-[Company Name AS]
-Registered in Norway under org. no. [insert number]
-Registered address: [insert address]
-Contact: [insert contact email]
+## Introduction
 
-3. Eligibility
+Welcome to [Company Name] (“Company”, “we”, “our”, “us”). These Terms of Service (“Terms”) govern your access to and use of our software-as-a-service platform (“Service”). By creating an account or using the Service, you agree to these Terms. If you do not agree, do not use the Service.
 
-You must be at least 18 years old and have the legal capacity to enter into agreements under Norwegian law.
+## Company information
 
-4. Use of the Service
-   • You agree to use the Service only for lawful purposes and in accordance with these Terms.
-   • You are responsible for maintaining the confidentiality of your login credentials.
-   • You must not misuse, copy, or reverse-engineer the Service.
+| Field      | Placeholder                     |
+| ---------- | ------------------------------- |
+| Legal name | [Company Name AS]               |
+| Org. no.   | [Norwegian organisation number] |
+| Address    | [Registered address]            |
+| Contact    | [Email]                         |
 
-5. Subscription and Payment
-   • Access to certain features may require a paid subscription.
-   • Subscription fees, billing periods, and payment methods are specified at the time of purchase.
-   • Unless otherwise stated, all prices are shown in NOK and exclude applicable taxes.
-   • Subscriptions automatically renew unless cancelled before the renewal date.
+## Eligibility
 
-6. Termination
+You must be at least **18** years old and able to enter into binding agreements under **Norwegian law** (adjust if your jurisdiction differs).
 
-We may suspend or terminate your access to the Service if you breach these Terms or applicable law.
-You may cancel your subscription at any time; however, no refunds will be issued for unused periods unless required by Norwegian consumer law.
+## Use of the service
 
-7. Data Protection and Privacy (GDPR Compliance)
-   • We process personal data in accordance with the EU General Data Protection Regulation (GDPR) and the Norwegian Personal Data Act.
-   • Our Privacy Policy explains how we collect, use, and protect your personal data.
-   • We act as a data controller for account information and as a data processor for customer data you upload to the Service.
-   • You retain ownership of all data you input or upload to the Service.
-   • We implement appropriate technical and organizational measures to protect personal data.
+- Use the Service only for **lawful** purposes and these Terms.
+- Keep **login credentials** confidential.
+- Do not misuse, copy, or reverse-engineer the Service beyond what is allowed.
 
-For details, please review our [Privacy Policy link].
+## Subscription and payment
 
-8. Intellectual Property
+Some features may require a **paid subscription**. Fees, billing periods, and payment methods are stated at purchase. Unless stated otherwise, prices are in **NOK** excluding taxes. Subscriptions may **auto-renew** unless cancelled before renewal.
 
-All intellectual property rights in the Service, including trademarks, logos, and software, remain the property of [Company Name] or its licensors.
-You are granted a limited, non-exclusive, non-transferable license to use the Service as provided under these Terms.
+## Termination
 
-9. Disclaimer and Limitation of Liability
+We may **suspend or terminate** access for breach of these Terms or applicable law. You may cancel according to the product’s cancellation flow; **refunds** follow applicable law and your contract.
 
-The Service is provided “as is” without warranties of any kind.
-To the extent permitted by law, we disclaim all liability for indirect or consequential damages.
-Our total liability for any claim shall not exceed the amount paid by you for the Service in the previous 12 months.
+## Data protection
 
-10. Governing Law and Jurisdiction
+We process personal data under the **GDPR** and the **Norwegian Personal Data Act** where applicable. See your **Privacy Policy** for details. You retain ownership of content you upload; we implement appropriate **technical and organizational** measures.
 
-These Terms are governed by and interpreted in accordance with Norwegian law.
-Any disputes shall be subject to the exclusive jurisdiction of the courts of Norway.
+## Intellectual property
 
-11. Changes to These Terms
+The Service, branding, and software remain the property of the Company or licensors. You receive a **limited, non-exclusive** licence to use the Service as offered.
 
-We may update these Terms from time to time. The latest version will always be available on our website.
-Continued use of the Service after changes are posted constitutes acceptance of the updated Terms.
+## Disclaimer and liability
 
-12. Contact
+The Service is provided **as is**. To the extent permitted by law, **indirect or consequential** damages may be excluded; total liability may be **capped** (e.g. fees paid in the prior 12 months — set with legal advice).
 
-If you have any questions about these Terms, please contact us:
-Email: [insert email]
-Address: [insert company address]
+## Governing law
 
-⸻
+These Terms are governed by **Norwegian law**. **Venue** — Norwegian courts (customize if needed).
 
-⚖️ Notes:
-• You should also create a separate Privacy Policy, referenced in Section 7.
-• If your SaaS targets EU or EEA customers, this version is GDPR-compliant.
-• If the SaaS is B2B, you might add a Data Processing Agreement (DPA) appendix.
-• Consider adding consumer rights clauses if you serve Norwegian individuals (B2C).
+## Changes
+
+We may update these Terms; continued use after notice can mean acceptance. Check the published Terms regularly.
+
+## Contact
+
+**Email:** [insert email]  
+**Address:** [insert address]
+
+## Drafting notes
+
+- Add a separate **Privacy Policy** and link it from Section 7.
+- B2B customers may need a **Data Processing Agreement (DPA)**.
+- B2C may need extra **consumer rights** clauses for Norway/EU.

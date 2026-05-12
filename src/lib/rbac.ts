@@ -1,9 +1,10 @@
 import { getCurrentUser } from "./session";
 import { Role } from "@prisma/client";
 import { NextRequest } from "next/server";
+import { hasAnyPermission, hasPermission, Permission } from "./permissions";
 
 // Custom error class with status code
-class AuthError extends Error {
+export class AuthError extends Error {
   status: number;
 
   constructor(message: string, status: number) {
@@ -11,6 +12,10 @@ class AuthError extends Error {
     this.name = "AuthError";
     this.status = status;
   }
+}
+
+export function isAuthError(error: unknown): error is AuthError {
+  return error instanceof AuthError;
 }
 
 export async function requireAuth(req?: NextRequest) {
@@ -24,6 +29,28 @@ export async function requireAuth(req?: NextRequest) {
 export async function requireRole(allowedRoles: Role[], req?: NextRequest) {
   const user = await requireAuth(req);
   if (!allowedRoles.includes(user.role)) {
+    throw new AuthError("Forbidden", 403);
+  }
+  return user;
+}
+
+export async function requirePermission(
+  permission: Permission,
+  req?: NextRequest,
+) {
+  const user = await requireAuth(req);
+  if (!hasPermission(user.role, permission)) {
+    throw new AuthError("Forbidden", 403);
+  }
+  return user;
+}
+
+export async function requireAnyPermission(
+  permissions: Permission[],
+  req?: NextRequest,
+) {
+  const user = await requireAuth(req);
+  if (!hasAnyPermission(user.role, permissions)) {
     throw new AuthError("Forbidden", 403);
   }
   return user;

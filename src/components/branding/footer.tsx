@@ -28,7 +28,7 @@ export function Footer() {
     useState<DepartmentFooterData | null>(null);
   const { data: session, status: sessionStatus } = useSession();
   const currentYear = new Date().getFullYear();
-  const appName = useBrandingValue("appName");
+  const appShortName = useBrandingValue("appShortName");
   const appVersion = useBrandingValue("appVersion");
   const appDescription = useBrandingValue("appDescription");
   const links = useBrandingValue("links");
@@ -89,45 +89,43 @@ export function Footer() {
                 footerContactAddress2: currentDept.footerContactAddress2,
               });
             } else {
-              // Current department has no footer content, fetch FOX-LMS as fallback
+              // Current department has no footer content, fetch FJELL-LMS as fallback
               try {
-                const foxLmsRes = await fetch(
-                  "/api/departments/fox-lms-footer",
-                  {
-                    credentials: "include",
-                  },
-                );
-                if (foxLmsRes.ok) {
-                  const foxLmsData = await foxLmsRes.json();
-                  const foxLmsDept = foxLmsData.department;
+                const fjellLmsRes = await fetch("/api/departments/app-footer", {
+                  credentials: "include",
+                });
+                if (fjellLmsRes.ok) {
+                  const fjellLmsData = await fjellLmsRes.json();
+                  const fjellLmsDept = fjellLmsData.department;
 
-                  if (foxLmsDept && hasFooterContent(foxLmsDept)) {
-                    // Use FOX-LMS footer data
+                  if (fjellLmsDept && hasFooterContent(fjellLmsDept)) {
+                    // Use FJELL-LMS footer data
                     setDepartmentFooterData({
-                      logoText: foxLmsDept.logoText,
-                      footerLinkSectionTitle: foxLmsDept.footerLinkSectionTitle,
-                      footerLink1Url: foxLmsDept.footerLink1Url,
-                      footerLink1Text: foxLmsDept.footerLink1Text,
-                      footerLink2Url: foxLmsDept.footerLink2Url,
-                      footerLink2Text: foxLmsDept.footerLink2Text,
-                      footerLink3Url: foxLmsDept.footerLink3Url,
-                      footerLink3Text: foxLmsDept.footerLink3Text,
-                      footerContactEmail: foxLmsDept.footerContactEmail,
-                      footerContactPhone: foxLmsDept.footerContactPhone,
-                      footerContactAddress: foxLmsDept.footerContactAddress,
-                      footerContactAddress2: foxLmsDept.footerContactAddress2,
+                      logoText: fjellLmsDept.logoText,
+                      footerLinkSectionTitle:
+                        fjellLmsDept.footerLinkSectionTitle,
+                      footerLink1Url: fjellLmsDept.footerLink1Url,
+                      footerLink1Text: fjellLmsDept.footerLink1Text,
+                      footerLink2Url: fjellLmsDept.footerLink2Url,
+                      footerLink2Text: fjellLmsDept.footerLink2Text,
+                      footerLink3Url: fjellLmsDept.footerLink3Url,
+                      footerLink3Text: fjellLmsDept.footerLink3Text,
+                      footerContactEmail: fjellLmsDept.footerContactEmail,
+                      footerContactPhone: fjellLmsDept.footerContactPhone,
+                      footerContactAddress: fjellLmsDept.footerContactAddress,
+                      footerContactAddress2: fjellLmsDept.footerContactAddress2,
                     });
                   } else {
-                    // FOX-LMS also has no footer content, use null
+                    // FJELL-LMS also has no footer content, use null
                     setDepartmentFooterData(null);
                   }
                 } else {
                   setDepartmentFooterData(null);
                 }
-              } catch (foxLmsError) {
+              } catch (fjellLmsError) {
                 console.error(
-                  "Failed to fetch FOX-LMS footer data:",
-                  foxLmsError,
+                  "Failed to fetch FJELL-LMS footer data:",
+                  fjellLmsError,
                 );
                 setDepartmentFooterData(null);
               }
@@ -153,7 +151,7 @@ export function Footer() {
   }, [session, sessionStatus]);
 
   // Get logo text (use department-specific or default)
-  const logoText = departmentFooterData?.logoText || appName;
+  const logoText = departmentFooterData?.logoText || appShortName;
 
   // Get link section title (only if department has configured it)
   const linkSectionTitle = departmentFooterData?.footerLinkSectionTitle;
@@ -324,10 +322,10 @@ export function Footer() {
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-xs text-muted-foreground">
-                © {currentYear} FOX-LMS. All rights reserved.
+                © {currentYear} FJELL-LMS. All rights reserved.
               </div>
               <div className="text-xs text-muted-foreground">
-                FOX-LMS v{appVersion}
+                FJELL-LMS v{appVersion}
               </div>
             </div>
           </div>

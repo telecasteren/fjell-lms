@@ -1,66 +1,107 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuthorOnly } from "@/lib/rbac";
-import {
-  calculateCourseProgress,
-  calculateOverallProgress,
-} from "@/lib/progress-utils";
+import { requirePermission } from "@/lib/rbac";
 
 export async function GET(req: NextRequest) {
   try {
-    await requireAuthorOnly(req);
+    await requirePermission("author:access", req);
 
     // Get overall statistics
     const totalUsers = await prisma.user.count();
     const totalDepartments = await prisma.department.count();
     const totalCourses = await prisma.course.count();
 
-    // Calculate average completed courses per user
+    // Calculate average completed courses per user without N+1 queries.
+    // A course is considered completed for a user if they have completed progress records
+    // for all lessons in that course.
     const enrollments = await prisma.enrollment.findMany({
-      include: {
-        course: {
-          include: {
-            modules: {
-              include: {
-                lessons: true,
-              },
-            },
+      select: { userId: true, courseId: true },
+    });
+
+    const uniqueCourseIds = Array.from(
+      new Set(enrollments.map((e) => e.courseId)),
+    );
+
+    // Total lessons per course (sum of module lesson counts)
+    const coursesWithLessonCounts = await prisma.course.findMany({
+      where: { id: { in: uniqueCourseIds } },
+      select: {
+        id: true,
+        modules: {
+          select: {
+            _count: { select: { lessons: true } },
           },
         },
       },
     });
 
-    const userCourseCompletions = new Map<string, number>();
-
-    for (const enrollment of enrollments) {
-      const { completedCount, totalCount } = await calculateCourseProgress(
-        enrollment.userId,
-        enrollment.courseId,
+    const totalLessonsByCourseId = new Map<string, number>();
+    for (const course of coursesWithLessonCounts) {
+      const totalLessonsForCourse = course.modules.reduce(
+        (acc, m) => acc + m._count.lessons,
+        0,
       );
+      totalLessonsByCourseId.set(course.id, totalLessonsForCourse);
+    }
 
-      if (totalCount > 0) {
-        const isCompleted = completedCount >= totalCount;
+    // Completed lessons per (userId, courseId)
+    const completedProgressRows = await prisma.progress.findMany({
+      where: {
+        completed: true,
+        lesson: {
+          module: {
+            courseId: { in: uniqueCourseIds },
+          },
+        },
+      },
+      select: {
+        userId: true,
+        lesson: { select: { module: { select: { courseId: true } } } },
+      },
+    });
 
-        if (isCompleted) {
-          const current = userCourseCompletions.get(enrollment.userId) || 0;
-          userCourseCompletions.set(enrollment.userId, current + 1);
-        }
+    const completedLessonsByUserCourse = new Map<string, number>();
+    for (const row of completedProgressRows) {
+      const courseId = row.lesson.module.courseId;
+      const key = `${row.userId}:${courseId}`;
+      completedLessonsByUserCourse.set(
+        key,
+        (completedLessonsByUserCourse.get(key) || 0) + 1,
+      );
+    }
+
+    const completedCoursesByUserId = new Map<string, number>();
+    for (const enrollment of enrollments) {
+      const totalLessonsForCourse =
+        totalLessonsByCourseId.get(enrollment.courseId) || 0;
+      if (totalLessonsForCourse === 0) continue;
+      const completedLessonsForUserCourse =
+        completedLessonsByUserCourse.get(
+          `${enrollment.userId}:${enrollment.courseId}`,
+        ) || 0;
+      if (completedLessonsForUserCourse >= totalLessonsForCourse) {
+        completedCoursesByUserId.set(
+          enrollment.userId,
+          (completedCoursesByUserId.get(enrollment.userId) || 0) + 1,
+        );
       }
     }
 
-    const completedCoursesArray = Array.from(userCourseCompletions.values());
+    const totalCompletedCoursesAcrossUsers = Array.from(
+      completedCoursesByUserId.values(),
+    ).reduce((a, b) => a + b, 0);
+
     const averageCompletedCourses =
-      completedCoursesArray.length > 0
-        ? Math.round(
-            (completedCoursesArray.reduce((a, b) => a + b, 0) /
-              completedCoursesArray.length) *
-              10,
-          ) / 10
+      totalUsers > 0
+        ? Math.round((totalCompletedCoursesAcrossUsers / totalUsers) * 10) / 10
         : 0;
 
     // Get all departments with detailed progress info and hierarchy
     const departments = await prisma.department.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        parentDepartmentId: true,
         parentDepartment: {
           select: {
             id: true,
@@ -79,95 +120,94 @@ export async function GET(req: NextRequest) {
             },
           },
         },
-        users: {
-          select: { id: true },
-        },
-        courses: {
-          include: {
-            modules: {
-              include: {
-                lessons: {
-                  select: { id: true },
-                },
-              },
-            },
+        _count: {
+          select: {
+            users: true,
+            courses: true,
           },
         },
       },
       orderBy: { name: "asc" },
     });
 
-    // Calculate progress for each department
-    type ModuleWithLessons = {
-      lessons: Array<{ id: string }>;
-    };
+    const departmentIds = departments.map((d) => d.id);
 
-    type CourseWithModules = {
-      modules: Array<ModuleWithLessons>;
-    };
+    // Total lessons per department (sum of module lesson counts for courses in the department)
+    const coursesForDepartments = await prisma.course.findMany({
+      where: { departmentId: { in: departmentIds } },
+      select: {
+        departmentId: true,
+        modules: { select: { _count: { select: { lessons: true } } } },
+      },
+    });
 
-    type DepartmentWithData = {
-      id: string;
-      name: string;
-      parentDepartmentId: string | null;
-      parentDepartment: { id: string; name: string } | null;
-      subDepartments: Array<{
-        id: string;
-        name: string;
-        _count: { users: number; courses: number };
-      }>;
-      courses: Array<CourseWithModules>;
-      users: Array<{ id: string }>;
-    };
+    const totalLessonsByDepartmentId = new Map<string, number>();
+    for (const course of coursesForDepartments) {
+      const lessonCount = course.modules.reduce(
+        (acc, m) => acc + m._count.lessons,
+        0,
+      );
+      totalLessonsByDepartmentId.set(
+        course.departmentId,
+        (totalLessonsByDepartmentId.get(course.departmentId) || 0) +
+          lessonCount,
+      );
+    }
 
-    const departmentsWithProgress = await Promise.all(
-      departments.map(async (dept: DepartmentWithData) => {
-        // Calculate total lessons in department
-        const totalLessons = dept.courses.reduce(
-          (acc: number, course: CourseWithModules) => {
-            return (
-              acc +
-              course.modules.reduce(
-                (moduleAcc: number, module: ModuleWithLessons) => {
-                  return moduleAcc + module.lessons.length;
-                },
-                0,
-              )
-            );
+    // Completed lessons per department, scoped to:
+    // - users belonging to the department
+    // - lessons belonging to courses in the same department
+    const completedDeptProgressRows = await prisma.progress.findMany({
+      where: {
+        completed: true,
+        user: { departmentId: { in: departmentIds } },
+        lesson: { module: { course: { departmentId: { in: departmentIds } } } },
+      },
+      select: {
+        user: { select: { departmentId: true } },
+        lesson: {
+          select: {
+            module: { select: { course: { select: { departmentId: true } } } },
           },
-          0,
-        );
+        },
+      },
+    });
 
-        // Calculate completed lessons across all users in department
-        let totalCompletedLessons = 0;
-        for (const deptUser of dept.users) {
-          const overallProgress = await calculateOverallProgress(deptUser.id);
-          totalCompletedLessons += overallProgress.completedLessons;
-        }
+    const completedLessonsByDepartmentId = new Map<string, number>();
+    for (const row of completedDeptProgressRows) {
+      const userDeptId = row.user.departmentId;
+      const courseDeptId = row.lesson.module.course.departmentId;
+      if (userDeptId !== courseDeptId) continue;
+      completedLessonsByDepartmentId.set(
+        userDeptId,
+        (completedLessonsByDepartmentId.get(userDeptId) || 0) + 1,
+      );
+    }
 
-        const completionRate =
-          totalLessons > 0
-            ? Math.round((totalCompletedLessons / totalLessons) * 100)
-            : 0;
+    const departmentsWithProgress = departments.map((dept) => {
+      const totalLessons = totalLessonsByDepartmentId.get(dept.id) || 0;
+      const completedLessons = completedLessonsByDepartmentId.get(dept.id) || 0;
+      const userCount = dept._count.users;
 
-        return {
-          id: dept.id,
-          name: dept.name,
-          parentDepartmentId: dept.parentDepartmentId || null,
-          parentDepartment: dept.parentDepartment || null,
-          subDepartments: dept.subDepartments || [],
-          _count: {
-            users: dept.users.length,
-            courses: dept.courses.length,
-          },
-          progress: {
-            totalLessons,
-            completedLessons: totalCompletedLessons,
-            completionRate,
-          },
-        };
-      }),
-    );
+      const completionRate =
+        totalLessons > 0 && userCount > 0
+          ? Math.round((completedLessons / (totalLessons * userCount)) * 100)
+          : 0;
+
+      return {
+        id: dept.id,
+        name: dept.name,
+        parentDepartmentId: dept.parentDepartmentId || null,
+        parentDepartment: dept.parentDepartment || null,
+        subDepartments: dept.subDepartments || [],
+        _count: dept._count,
+        progress: {
+          totalLessons,
+          completedLessons,
+          completionRate,
+        },
+      };
+    });
 
     return NextResponse.json({
       overallStats: {

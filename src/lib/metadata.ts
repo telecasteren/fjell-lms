@@ -50,12 +50,12 @@ export const pageMetadata = {
     "Department analytics and progress reports",
     ["reports", "analytics", "progress", "statistics"],
   ),
-  signIn: generatePageMetadata("Sign In", "Sign in to your FOX-LMS account", [
+  signIn: generatePageMetadata("Sign In", "Sign in to your FJELL-LMS account", [
     "sign in",
     "login",
     "authentication",
   ]),
-  signUp: generatePageMetadata("Sign Up", "Create a new FOX-LMS account", [
+  signUp: generatePageMetadata("Sign Up", "Create a new FJELL-LMS account", [
     "sign up",
     "register",
     "create account",

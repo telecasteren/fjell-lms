@@ -58,7 +58,11 @@ export default function SignInPage() {
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <div
+                className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+                role="alert"
+                aria-live="polite"
+              >
                 {error}
               </div>
             )}
@@ -67,7 +71,10 @@ export default function SignInPage() {
               <input
                 id="email"
                 type="email"
+                autoComplete="email"
                 className="bg-background w-full rounded-md border px-3 py-2"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "email-error" : undefined}
                 {...register("email", {
                   required: "Email is required",
                   pattern: {
@@ -77,7 +84,9 @@ export default function SignInPage() {
                 })}
               />
               {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
+                <p id="email-error" className="text-sm text-red-600">
+                  {errors.email.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -85,11 +94,16 @@ export default function SignInPage() {
               <input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 className="bg-background w-full rounded-md border px-3 py-2"
+                aria-invalid={!!errors.password}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
                 {...register("password", { required: "Password is required" })}
               />
               {errors.password && (
-                <p className="text-sm text-red-600">
+                <p id="password-error" className="text-sm text-red-600">
                   {errors.password.message}
                 </p>
               )}

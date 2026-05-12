@@ -86,7 +86,7 @@ export function Logo({
 
   // Determine which logo URL to use
   const logoUrl = departmentBranding?.logoUrl || logo.light;
-  const logoTextDisplay = departmentBranding?.logoText || "FOX-LMS";
+  const logoTextDisplay = departmentBranding?.logoText || "FJELL-LMS";
 
   return (
     <div className={cn("flex items-center gap-2", className)}>

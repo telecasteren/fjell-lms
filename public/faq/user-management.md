@@ -1,48 +1,34 @@
-# User Management (Admins)
+# User management (admins)
 
-## How do I add new users?
+## Add users
 
-Go to the "Admin" page and click "Add User". Fill in the user details and they'll receive a sign-up link to complete their registration.
+On the **Admin** page, use **Add user** (or your company's invitation flow). The person completes registration via the **sign-up link** they receive.
 
-## Can I change user roles?
+## Roles
 
-Yes, Admins can change user roles between Basic and Admin. Only Authors can assign Author roles.
+- **Admins** can often switch users between **Basic** and **Admin** within their scope.
+- **Author** role assignment is usually restricted to **Authors**.
 
-## How do I view department statistics?
+## Reports
 
-The "Reports" section provides detailed statistics about course completion rates, user progress, and department performance.
+Open **Reports** for completion rates, user progress, and department stats (as your role allows).
 
-## How do I manage user enrollments?
+## Enrollments
 
-Use the "Enrollment Manager" on the Admin page to enroll users in courses or remove their enrollments.
+Use the **Enrollment manager** (or equivalent on the Admin page) to add or remove course enrollments.
 
-## Can I deactivate users?
+## Deactivate or delete users
 
-Currently, there is no functionality to deactivate users. You can delete users if needed, but this permanently removes them from the system.
+**Deactivation** may not be available. **Deletion** permanently removes the user — use only when intended.
 
-## How do I reassign users to different departments?
+## Reassign departments
 
-As an Author, you can use the "User Reassignment" feature to move users between departments.
+**Authors** can move users between departments using **User reassignment** (if enabled for your tenant).
 
-## What information can I see about users?
+## What you can see
 
-You can view user details including:
+Typically: name, email, role, department, enrollments, progress, and registration date — subject to your permissions.
 
-- Name and email
-- Role and department
-- Enrollment status
-- Course progress
-- Registration date
+## Department branding (authors)
 
-## How do I customize my department's branding?
-
-As an Author, you can customize your department's branding:
-
-1. Navigate to your Author dashboard
-2. Select a department from the dropdown
-3. Scroll to the "Department Branding" section
-4. Upload a custom logo image (PNG, JPG, SVG - max 5MB)
-5. Set custom logo text (default: "FOX-LMS")
-6. Click "Save Branding" to apply changes
-
-Your custom logo and text will appear in the navbar for all users in your department. The branding is stored in Bunny Storage and can be updated at any time.
+Authors can set **department branding** (e.g. logo and label text) where the product exposes **Department branding** or **Settings → branding**. Files may be stored in cloud storage; follow on-screen limits (formats and size).

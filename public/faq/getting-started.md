@@ -1,23 +1,23 @@
-# Getting Started
+# Getting started
 
 ## How do I access my courses?
 
-Once you're logged in, you can find all available courses in the "Courses" section of the navigation menu. Click on any course to view its details and enroll if needed.
+After you sign in, open **Courses** in the navigation. Select a course to view details and enroll if you are not enrolled yet.
 
 ## How do I enroll in a course?
 
-Navigate to the "Courses" page and click on the course you're interested in. If the course is published and you have access, you'll see an "Enroll" button. Click it to join the course.
+On the **Courses** page, open a published course you have access to and use **Enroll** when it is shown.
 
 ## What are the different user roles?
 
-- **Basic User**: Can enroll in courses, take lessons, and complete quizzes
-- **Admin**: Can manage department users, view reports, and enroll in courses
-- **Author**: Can create and manage courses, modules, lessons, and quizzes
+- **Basic** — Learn, enroll, complete lessons and quizzes.
+- **Admin** — Manage users and reports within your department scope (as configured by your organization).
+- **Author** — Create and manage content and users according to your organization’s rules.
 
 ## How do I update my profile?
 
-Click on "Profile" in the navigation menu to update your name, email, and other personal information.
+Go to **Profile** in the navigation to update your name, email (if allowed), and related settings.
 
 ## What if I forget my password?
 
-Contact your department administrator to reset your password or receive a new sign-up link.
+Contact your **department administrator** for a reset or a new invitation link.

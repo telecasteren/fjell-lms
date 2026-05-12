@@ -216,7 +216,7 @@ export function BrandingSettings() {
         <div>
           <h2 className="text-2xl font-bold">Branding Settings</h2>
           <p className="text-muted-foreground">
-            Customize the appearance and behavior of your FOX-LMS instance
+            Customize the appearance and behavior of your FJELL-LMS instance
           </p>
         </div>
         <div className="flex gap-2">
@@ -586,7 +586,7 @@ export function BrandingSettings() {
                     value={formData.links?.homepage || ""}
                     onChange={(e) => updateLinks("homepage", e.target.value)}
                     disabled={!isEditing}
-                    placeholder="https://fox-lms.com"
+                    placeholder="https://fjell-lms.com"
                   />
                 </div>
               </div>

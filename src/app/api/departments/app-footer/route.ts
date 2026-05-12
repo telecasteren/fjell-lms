@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Get FOX-LMS department footer data
+ * Get FJELL-LMS department footer data
  * This endpoint is public (no auth required) as it's used for footer fallback
  */
 export async function GET() {
   try {
     const foxLmsDepartment = await prisma.department.findUnique({
-      where: { name: "FOX-LMS" },
+      where: { name: "FJELL-LMS" },
       select: {
         logoText: true,
         footerLinkSectionTitle: true,
@@ -27,17 +27,17 @@ export async function GET() {
 
     if (!foxLmsDepartment) {
       return NextResponse.json(
-        { error: "FOX-LMS department not found" },
+        { error: "FJELL-LMS department not found" },
         { status: 404 },
       );
     }
 
     return NextResponse.json({ department: foxLmsDepartment });
   } catch (error) {
-    console.error("Error fetching FOX-LMS footer data:", error);
+    console.error("Error fetching FJELL-LMS footer data:", error);
     return NextResponse.json(
       {
-        error: "Failed to fetch FOX-LMS footer data",
+        error: "Failed to fetch FJELL-LMS footer data",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },

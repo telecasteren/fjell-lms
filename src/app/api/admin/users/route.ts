@@ -1,12 +1,12 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdminOrAuthor } from "@/lib/rbac";
+import { requirePermission } from "@/lib/rbac";
 import { getAccessibleDepartmentIds } from "@/lib/department-utils";
 import { withRateLimit, rateLimiters } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireAdminOrAuthor(req);
+    const user = await requirePermission("users:read", req);
 
     // Get accessible department IDs (includes sub-departments for ADMIN)
     const accessibleDepartmentIds = await getAccessibleDepartmentIds(user.id);
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return rateLimitResult.error;
     }
 
-    const user = await requireAdminOrAuthor(req);
+    const user = await requirePermission("users:invite", req);
     const body = await req.json();
 
     // Validate required fields

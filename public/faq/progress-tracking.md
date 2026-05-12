@@ -1,28 +1,19 @@
-# Progress Tracking
+# Progress tracking
 
-## How is my progress calculated?
+## How is progress calculated?
 
-Your progress is calculated based on completed lessons and passed quizzes. Each lesson counts toward your overall course completion percentage.
+Progress is based on **completed lessons** (and **passed quizzes** where a quiz exists). Your percentage is completed lessons divided by total lessons in the course.
 
-## Where can I see my progress?
+## Where do I see progress?
 
-Your progress is displayed on your dashboard, showing ongoing courses, completed courses, and overall completion statistics.
+- **Dashboard** — Overall stats and active courses
+- **Course page** — Progress for that course
+- **Learning view** — Status while you move through modules and lessons
 
-## How do I track my course completion?
+## What counts as completing a course?
 
-- **Dashboard**: Shows overall progress across all enrolled courses
-- **Course Page**: Shows progress for individual courses
-- **Learning Page**: Shows progress within specific courses
+A course is complete when **every lesson** in **every module** is done, including any **required quizzes**.
 
-## What counts as course completion?
+## Detailed reports
 
-A course is considered completed when all lessons within all modules are finished. This includes passing any required quizzes.
-
-## Can I see detailed progress reports?
-
-Yes, your progress is tracked at multiple levels:
-
-- Overall completion percentage
-- Individual course progress
-- Lesson-by-lesson completion status
-- Quiz attempt history
+Depending on your role, **Reports** or admin tools may show department or user-level completion. Ask your administrator what you are allowed to see.

@@ -50,10 +50,10 @@ export function BrandingProvider({
     const themeCSS = brandingUtils.generateThemeCSS(branding);
 
     // Create or update style element
-    let styleElement = document.getElementById("fox-lms-branding-styles");
+    let styleElement = document.getElementById("fjell-lms-branding-styles");
     if (!styleElement) {
       styleElement = document.createElement("style");
-      styleElement.id = "fox-lms-branding-styles";
+      styleElement.id = "fjell-lms-branding-styles";
       document.head.appendChild(styleElement);
     }
 

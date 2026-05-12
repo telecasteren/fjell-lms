@@ -1,25 +1,25 @@
-# Technical Support
+# Technical support
 
-## What if I can't access a course?
+## I cannot open a course
 
-Make sure you're enrolled in the course and that it's published. If you're still having issues, contact your department administrator.
+Confirm you are **enrolled** and the course is **published**. If it still fails, contact your **department administrator**.
 
-## Is there a mobile app?
+## Mobile app
 
-Currently, the LMS is web-based and works on mobile browsers. A dedicated mobile app may be available in the future.
+The product is **web-based**. Use a current mobile browser; a native app may or may not exist for your organization.
 
-## What browsers are supported?
+## Supported browsers
 
-The LMS works best with modern browsers including Chrome, Firefox, Safari, and Edge. Make sure your browser is up to date.
+Use an up-to-date **Chrome**, **Firefox**, **Safari**, or **Edge**.
 
-## What if I experience slow loading?
+## Slow loading
 
-Try refreshing the page or clearing your browser cache. If problems persist, contact your administrator.
+Try **refresh**, another network, or **clear cache**. If it continues, contact your administrator with your browser and device type.
 
-## How do I report technical issues?
+## Report an issue
 
-Contact your department administrator with details about the issue, including:
+Tell your administrator:
 
-- What you were trying to do
-- What error messages you saw
-- Your browser and device information
+- What you tried to do
+- Any **error message**
+- **Browser** and **device**
