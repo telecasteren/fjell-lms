@@ -1,0 +1,218 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id                     String       @id @default(cuid())
+  name                   String       @unique
+  orgNr                  String?
+  logoUrl                String?
+  darkModeLogoUrl        String?
+  logoText               String?
+  parentDepartmentId     String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  footerContactAddress   String?
+  footerContactEmail     String?
+  footerContactPhone     String?
+  footerLink1Text        String?
+  footerLink1Url         String?
+  footerLink2Text        String?
+  footerLink2Url         String?
+  footerLink3Text        String?
+  footerLink3Url         String?
+  footerLinkSectionTitle String?
+  footerContactAddress2  String?
+  appDescription         String?
+  courses                Course[]
+  invitations            Invitation[]
+  parentDepartment       Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id], onDelete: Cascade)
+  subDepartments         Department[] @relation("DepartmentHierarchy")
+  users                  User[]
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  image           String?
+  emailVerified   DateTime?
+  passwordHash    String
+  role            Role             @default(BASIC)
+  departmentId    String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  theme           String?          @default("light")
+  accounts        Account[]
+  enrollments     Enrollment[]
+  progresses      Progress[]
+  quizCompletions QuizCompletion[]
+  sessions        Session[]
+  invitations     Invitation[]
+  department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id           String       @id @default(cuid())
+  title        String
+  description  String?
+  status       CourseStatus @default(DRAFT)
+  global       Boolean      @default(false)
+  departmentId String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  enrollments  Enrollment[]
+  modules      Module[]
+
+  @@index([departmentId])
+  @@index([global])
+}
+
+model Module {
+  id       String   @id @default(cuid())
+  title    String
+  order    Int
+  courseId String
+  lessons  Lesson[]
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Lesson {
+  id              String     @id @default(cuid())
+  title           String
+  content         String?
+  multimediaFiles Json?
+  contentType     String?
+  order           Int
+  moduleId        String
+  module          Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress        Progress[]
+  quiz            Quiz?
+}
+
+model Quiz {
+  id          String           @id @default(cuid())
+  lessonId    String           @unique
+  questions   Json
+  mandatory   Boolean          @default(false)
+  lesson      Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completions QuizCompletion[]
+}
+
+model QuizCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  passed      Boolean
+  score       Int
+  attempts    Int      @default(1)
+  completedAt DateTime @default(now())
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quizId])
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model Progress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invitation {
+  id           String           @id @default(cuid())
+  email        String
+  role         Role             @default(BASIC)
+  departmentId String
+  token        String           @unique
+  expiresAt    DateTime
+  createdById  String
+  acceptedAt   DateTime?
+  status       InvitationStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  department   Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdBy    User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([email])
+  @@index([status])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum Role {
+  AUTHOR
+  ADMIN
+  BASIC
+  WRITER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
